@@ -4,15 +4,29 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {},
   "devDependencies": {
+    "@nx/esbuild": "22.5.1",
     "@nx/js": "22.5.1",
+    "@nx/node": "22.5.1",
+    "@nx/react": "22.5.1",
+    "@nx/vite": "22.5.1",
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
+    "@types/node": "20.19.9",
+    "esbuild": "^0.19.2",
     "nx": "22.5.1",
     "prettier": "^2.6.2",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@fastify/autoload": "~6.0.3",
+    "@fastify/sensible": "~6.0.2",
+    "fastify": "~5.2.1",
+    "fastify-plugin": "~5.0.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@swc/core", "bcrypt", "esbuild", "nx", "unrs-resolver", "@rollup/rollup-darwin-arm64", "@rollup/rollup-darwin-x64", "rollup"]
   }
 }
