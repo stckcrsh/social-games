@@ -1,0 +1,785 @@
+openapi: 3.1.0
+info:
+  title: meta-game-service
+  description: >
+    Server-authoritative backend for Clockwork Abyss (reusable across games).
+    Manages player accounts, static item/shop content, per-player inventories,
+    and an offer-driven shop with atomic idempotent purchases.
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Player registration, login, and password management
+  - name: Content
+    description: Read-only static item definitions (no auth required)
+  - name: Inventory
+    description: Per-player item inventories
+  - name: Shop
+    description: Shop offers and purchases
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    # ── Auth ────────────────────────────────────────────────────────────────
+
+    RegisterRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
+          example: alice
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          example: "hunter2hunter2"
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: Alice
+
+    RegisterResponse:
+      type: object
+      required: [playerId, username]
+      properties:
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: alice
+        password:
+          type: string
+          example: "hunter2hunter2"
+
+    LoginResponse:
+      type: object
+      required: [token, playerId, username]
+      properties:
+        token:
+          type: string
+          description: Signed JWT — include as `Authorization: Bearer <token>`
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          example: "hunter2hunter2"
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+          example: "correcthorsebatterystaple"
+
+    AdminResetPasswordRequest:
+      type: object
+      required: [targetUsername, newPassword]
+      properties:
+        targetUsername:
+          type: string
+          example: bob
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+          example: "correcthorsebatterystaple"
+
+    # ── Content ─────────────────────────────────────────────────────────────
+
+    ItemDef:
+      type: object
+      required: [defId, name, category, rarity, stackable, maxStack, description, effects, tradeable]
+      properties:
+        defId:
+          type: string
+          example: brass_dagger
+        name:
+          type: string
+          example: Brass Dagger
+        category:
+          type: string
+          enum: [consumable, gear, trinket, material, currency]
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, epic, legendary]
+        stackable:
+          type: boolean
+        maxStack:
+          type: integer
+          minimum: 1
+        description:
+          type: string
+        effects:
+          type: object
+          additionalProperties: true
+          description: Opaque game-specific effect data — not interpreted by the service
+          example: { damage: 8, speed: 1.4 }
+        tradeable:
+          type: boolean
+
+    # ── Inventory ───────────────────────────────────────────────────────────
+
+    ItemInstance:
+      type: object
+      required: [itemId, defId, createdAt]
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          description: Unique physical item ID (stable for the lifetime of this item)
+        defId:
+          type: string
+          example: brass_dagger
+        createdAt:
+          type: string
+          format: date-time
+        durability:
+          type: number
+        mods:
+          type: object
+          additionalProperties: true
+
+    PlayerInventory:
+      type: object
+      required: [playerId, instances, stacks]
+      properties:
+        playerId:
+          type: string
+          format: uuid
+        instances:
+          type: object
+          description: >
+            Non-stackable items keyed by their unique itemId.
+            Each item has its own identity and can carry per-instance state.
+          additionalProperties:
+            $ref: '#/components/schemas/ItemInstance'
+        stacks:
+          type: object
+          description: Stackable item quantities keyed by defId.
+          additionalProperties:
+            type: integer
+            minimum: 1
+          example: { scrap: 350, repair_potion: 2 }
+
+    GrantItem:
+      oneOf:
+        - type: object
+          required: [kind, defId, qty]
+          properties:
+            kind:
+              type: string
+              enum: [stack]
+            defId:
+              type: string
+            qty:
+              type: integer
+              minimum: 1
+        - type: object
+          required: [kind, defId, qty]
+          properties:
+            kind:
+              type: string
+              enum: [instance]
+            defId:
+              type: string
+            qty:
+              type: integer
+              minimum: 1
+
+    BurnItem:
+      oneOf:
+        - type: object
+          required: [kind, defId, qty]
+          description: Burn qty units from a stack
+          properties:
+            kind:
+              type: string
+              enum: [stack]
+            defId:
+              type: string
+            qty:
+              type: integer
+              minimum: 1
+        - type: object
+          required: [kind, itemId]
+          description: Burn a specific item instance
+          properties:
+            kind:
+              type: string
+              enum: [instance]
+            itemId:
+              type: string
+              format: uuid
+
+    TransferItem:
+      oneOf:
+        - type: object
+          required: [kind, defId, qty]
+          properties:
+            kind:
+              type: string
+              enum: [stack]
+            defId:
+              type: string
+            qty:
+              type: integer
+              minimum: 1
+        - type: object
+          required: [kind, itemId]
+          properties:
+            kind:
+              type: string
+              enum: [instance]
+            itemId:
+              type: string
+              format: uuid
+
+    GrantRequest:
+      type: object
+      required: [playerId, items]
+      properties:
+        playerId:
+          type: string
+          format: uuid
+          description: Target player to receive the items
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/GrantItem'
+
+    BurnRequest:
+      type: object
+      required: [playerId, items]
+      properties:
+        playerId:
+          type: string
+          format: uuid
+          description: Player whose items will be removed
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BurnItem'
+
+    TransferRequest:
+      type: object
+      required: [fromPlayerId, toPlayerId, items]
+      properties:
+        fromPlayerId:
+          type: string
+          format: uuid
+        toPlayerId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TransferItem'
+
+    TransferResponse:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          $ref: '#/components/schemas/PlayerInventory'
+        to:
+          $ref: '#/components/schemas/PlayerInventory'
+
+    # ── Shop ────────────────────────────────────────────────────────────────
+
+    ShopOffer:
+      type: object
+      required: [offerId, title, description, price, grant, stock]
+      properties:
+        offerId:
+          type: string
+          example: offer_brass_dagger
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: array
+          items:
+            type: object
+            required: [defId, qty]
+            properties:
+              defId:
+                type: string
+              qty:
+                type: integer
+                minimum: 1
+        grant:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrantItem'
+        stock:
+          oneOf:
+            - type: string
+              enum: [infinite]
+            - type: object
+              required: [kind, remaining]
+              properties:
+                kind:
+                  type: string
+                  enum: [limited]
+                remaining:
+                  type: integer
+                  minimum: 0
+        limitPerPlayer:
+          type: integer
+          minimum: 1
+          description: Maximum purchases per player (null = unlimited)
+        availability:
+          type: object
+          properties:
+            kind:
+              type: string
+              enum: [always, daily, weekly]
+
+    PurchaseRequest:
+      type: object
+      required: [offerId, idempotencyKey]
+      properties:
+        offerId:
+          type: string
+          example: offer_brass_dagger
+        idempotencyKey:
+          type: string
+          maxLength: 128
+          description: >
+            Caller-generated unique key (UUID recommended). Replaying the same
+            key returns the original result without re-charging the player.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    PurchaseResult:
+      type: object
+      required: [status, transactionId, offerId, idempotencyKey]
+      properties:
+        status:
+          type: string
+          enum: [success, insufficient_funds, offer_not_found]
+        transactionId:
+          type: string
+          format: uuid
+          description: Stable across idempotent replays
+        offerId:
+          type: string
+        idempotencyKey:
+          type: string
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+
+paths:
+
+  # Auth
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new player account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '409':
+          description: Username already taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive a JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Acknowledge logout (stateless — invalidate token client-side)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Missing or invalid token
+
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change your own password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed
+        '401':
+          description: Current password incorrect or token invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/admin/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset any player's password (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminResetPasswordRequest'
+      responses:
+        '204':
+          description: Password reset
+        '403':
+          description: Caller does not have admin role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Target player not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Content
+
+  /content/item-defs:
+    get:
+      tags: [Content]
+      summary: List all item definitions
+      description: Returns the full catalogue of item types loaded from `data/item_defs.json`.
+      responses:
+        '200':
+          description: Array of item definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDef'
+
+  /content/item-defs/{defId}:
+    get:
+      tags: [Content]
+      summary: Get a single item definition
+      parameters:
+        - name: defId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: brass_dagger
+      responses:
+        '200':
+          description: Item definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDef'
+        '404':
+          description: Unknown defId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Inventory
+
+  /players/me/inventory:
+    get:
+      tags: [Inventory]
+      summary: Get your inventory
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Caller's full inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerInventory'
+        '401':
+          description: Missing or invalid token
+
+  /players/me/inventory/grant:
+    post:
+      tags: [Inventory]
+      summary: Grant items to a player (admin only)
+      description: >
+        Creates new stack quantities or mints new item instances for any player.
+        All defIds must exist in the item catalogue.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantRequest'
+            examples:
+              grant_currency:
+                summary: Grant 500 scrap
+                value:
+                  playerId: "00000000-0000-0000-0000-000000000001"
+                  items:
+                    - kind: stack
+                      defId: scrap
+                      qty: 500
+              grant_weapon:
+                summary: Mint a brass dagger instance
+                value:
+                  playerId: "00000000-0000-0000-0000-000000000001"
+                  items:
+                    - kind: instance
+                      defId: brass_dagger
+                      qty: 1
+      responses:
+        '200':
+          description: Updated inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerInventory'
+        '400':
+          description: Unknown defId or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /players/me/inventory/burn:
+    post:
+      tags: [Inventory]
+      summary: Remove items from a player's inventory (admin only)
+      description: >
+        Deducts stack quantities or destroys specific item instances.
+        Fails if the player does not have enough of a stack, or if an instance ID is not found.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BurnRequest'
+            examples:
+              burn_stack:
+                summary: Burn 50 scrap
+                value:
+                  playerId: "00000000-0000-0000-0000-000000000001"
+                  items:
+                    - kind: stack
+                      defId: scrap
+                      qty: 50
+              burn_instance:
+                summary: Destroy a specific item
+                value:
+                  playerId: "00000000-0000-0000-0000-000000000001"
+                  items:
+                    - kind: instance
+                      itemId: "aaaaaaaa-0000-0000-0000-000000000001"
+      responses:
+        '200':
+          description: Updated inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerInventory'
+        '400':
+          description: Insufficient stack or instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /players/me/inventory/transfer:
+    post:
+      tags: [Inventory]
+      summary: Transfer items between two players (admin only)
+      description: >
+        Atomically moves stacks or instances from one player to another.
+        Fails if the source player doesn't own the specified items.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Both updated inventories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Source player lacks items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Shop
+
+  /shop/offers:
+    get:
+      tags: [Shop]
+      summary: List all shop offers
+      description: Returns offers loaded from `data/shop_offers.json`. No auth required.
+      responses:
+        '200':
+          description: Array of shop offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShopOffer'
+
+  /shop/purchase:
+    post:
+      tags: [Shop]
+      summary: Purchase a shop offer
+      description: >
+        Atomically deducts the offer price from the player's inventory and grants
+        the offer items. Idempotent: replaying the same `idempotencyKey` returns
+        the original result without re-charging the player.
+
+        `insufficient_funds` is **not** stored in the idempotency record — the
+        client may retry the same key after acquiring more currency.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+      responses:
+        '200':
+          description: Purchase result (check `status` field)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResult'
+              examples:
+                success:
+                  value:
+                    status: success
+                    transactionId: "550e8400-e29b-41d4-a716-446655440000"
+                    offerId: offer_brass_dagger
+                    idempotencyKey: "my-purchase-key-1"
+                insufficient_funds:
+                  value:
+                    status: insufficient_funds
+                    transactionId: "550e8400-e29b-41d4-a716-446655440001"
+                    offerId: offer_brass_dagger
+                    idempotencyKey: "my-purchase-key-1"
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResult'
+        '401':
+          description: Missing or invalid token

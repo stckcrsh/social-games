@@ -1,0 +1,30 @@
+{
+  "offer_repair_potion": {
+    "offerId": "offer_repair_potion",
+    "title": "Repair Potion",
+    "description": "Buy with Scrap.",
+    "price": [{ "defId": "scrap", "qty": 50 }],
+    "grant": [{ "kind": "stack", "defId": "repair_potion", "qty": 1 }],
+    "stock": "infinite",
+    "availability": { "kind": "always" }
+  },
+  "offer_brass_dagger": {
+    "offerId": "offer_brass_dagger",
+    "title": "Brass Dagger",
+    "description": "Unique weapon.",
+    "price": [{ "defId": "scrap", "qty": 200 }],
+    "grant": [{ "kind": "instance", "defId": "brass_dagger", "qty": 1 }],
+    "stock": "infinite",
+    "availability": { "kind": "always" }
+  },
+  "offer_seal_bundle": {
+    "offerId": "offer_seal_bundle",
+    "title": "Seal Bundle (x10)",
+    "description": "Access seal pack.",
+    "price": [{ "defId": "scrap", "qty": 500 }],
+    "grant": [{ "kind": "stack", "defId": "access_seal", "qty": 10 }],
+    "stock": { "kind": "limited", "remaining": 100 },
+    "limitPerPlayer": 1,
+    "availability": { "kind": "always" }
+  }
+}
