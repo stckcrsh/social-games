@@ -7,12 +7,11 @@ export const charger: AiBehavior = (ctx): Intent => {
   const dx = player.pos.x - self.pos.x;
   const dy = player.pos.y - self.pos.y;
 
-  // Check alignment: same row, same col, or same diagonal
+  // Check alignment: same row or same column
   const sameRow = dy === 0;
   const sameCol = dx === 0;
-  const sameDiag = Math.abs(dx) === Math.abs(dy);
 
-  if (sameRow || sameCol || sameDiag) {
+  if (sameRow || sameCol) {
     // Unit direction toward player
     const unitDx = dx === 0 ? 0 : dx > 0 ? 1 : -1;
     const unitDy = dy === 0 ? 0 : dy > 0 ? 1 : -1;
@@ -25,7 +24,7 @@ export const charger: AiBehavior = (ctx): Intent => {
   }
 
   // Not aligned — use A* like chase
-  const path = astar(grid, self.pos, player.pos, config);
+  const path = astar(grid, self.pos, player.pos);
   if (!path || path.length < 2) return { type: 'none' };
 
   const next = path[1];

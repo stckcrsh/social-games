@@ -2,8 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: __dirname,
+  base: mode === 'production' ? '/meta-ui/' : '/',
   cacheDir: '../../node_modules/.vite/packages/meta-game-ui',
 
   server: {
@@ -24,4 +25,4 @@ export default defineConfig({
     reportCompressedSize: true,
     commonjsOptions: { transformMixedEsModules: true },
   },
-});
+}));

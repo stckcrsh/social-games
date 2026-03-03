@@ -1,106 +1,138 @@
-# New Nx Repository
+# social-games
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+NX monorepo for **Clockwork Abyss** — a browser-based dungeon crawler with a server-authoritative meta-game layer.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Packages
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-## Finish your Nx platform setup
+| Package | Description | Dev port |
+|---|---|---|
+| `dungeon-engine` | Fastify game server — HTTP REST + WebSocket | 3001 |
+| `dungeon-ui` | React browser client for the dungeon game | 4201 |
+| `meta-game-service` | Fastify backend — auth, inventory, shop | 3000 |
+| `meta-game-ui` | React dev-tool UI for the meta-game service | 4200 |
+| `proxy` | Caddy reverse proxy — single entry point for sharing | 8080 |
 
-🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/j3jyYCWANI) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
-## Generate a library
+---
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+## Prerequisites
+
+- [Node.js](https://nodejs.org) 20+
+- [pnpm](https://pnpm.io) 9+
+- [Caddy](https://caddyserver.com/docs/install) (only needed for the proxy / friend-sharing flow)
+
+```bash
+# macOS
+brew install caddy
+
+# Install JS dependencies
+pnpm install
 ```
 
-## Run tasks
+---
 
-To build the library use:
+## Local development
 
-```sh
-npx nx build pkg1
+Each service runs independently. Start whichever you need:
+
+```bash
+pnpm nx serve dungeon-engine        # game server  → http://localhost:3001
+pnpm nx serve dungeon-ui            # game client  → http://localhost:4201
+pnpm nx serve meta-game-service     # meta server  → http://localhost:3000
+pnpm nx serve meta-game-ui          # meta UI      → http://localhost:4200
 ```
 
-To run any task with Nx use:
+`meta-game-service` requires a JWT secret:
 
-```sh
-npx nx <target> <project-name>
+```bash
+JWT_SECRET=your-secret-here pnpm nx serve meta-game-service
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+The dungeon-ui talks directly to `localhost:3001` in dev. No proxy needed.
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Versioning and releasing
+## Sharing with friends (proxy)
 
-To version and release the library use
+The `proxy` package exposes everything through a single port (8080) so you can share one URL — via [ngrok](https://ngrok.com), [Tailscale Funnel](https://tailscale.com/kb/1223/funnel), or any tunnel.
+
+### Architecture
 
 ```
-npx nx release
+tunnel URL → :8080 (Caddy)
+  /              → dungeon-ui built files
+  /meta-ui/      → meta-game-ui built files
+  /api/dungeon/* → localhost:3001 (dungeon-engine)
+  /api/meta/*    → localhost:3000 (meta-game-service)
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+WebSocket upgrades (used by the game client) are handled transparently by Caddy on the `/api/dungeon/*` route.
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Step 1 — Build the UIs for production
 
-## Keep TypeScript project references up to date
-
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+```bash
+pnpm nx build dungeon-ui
+pnpm nx build meta-game-ui
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+Build output goes to:
+- `packages/dungeon-ui/dist/` (dungeon game)
+- `dist/packages/meta-game-ui/` (meta-game dev tool)
 
-```sh
-npx nx sync:check
+### Step 2 — Start the backends
+
+```bash
+# Terminal 1
+pnpm nx serve dungeon-engine
+
+# Terminal 2
+JWT_SECRET=your-secret-here pnpm nx serve meta-game-service
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+### Step 3 — Start the proxy
 
-## Nx Cloud
-
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Set up CI (non-Github Actions CI)
-
-**Note:** This is only required if your CI provider is not GitHub Actions.
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```bash
+# Terminal 3
+pnpm nx serve proxy
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Caddy listens on `http://localhost:8080`. Verify locally first:
 
-## Install Nx Console
+- `http://localhost:8080` → dungeon game lobby
+- `http://localhost:8080/meta-ui/` → meta-game dev tool
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+### Step 4 — Open a tunnel
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# ngrok
+ngrok http 8080
 
-## Useful links
+# or Tailscale Funnel
+tailscale funnel 8080
+```
 
-Learn more:
+Share the printed URL with your friends.
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Verification checklist
 
-And join the Nx community:
+1. `http://localhost:8080` renders the dungeon game lobby
+2. Pick a preset → Start Game → the grid renders
+3. Open the browser Network tab: a WebSocket to `/api/dungeon/runs/<id>/ws` should show **Status 101**
+4. Arrow keys move the player; `e` interacts with levers
+5. `http://localhost:8080/meta-ui/` renders the meta-game dev tool and API calls succeed
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
+
+## Running tests
+
+```bash
+pnpm nx test dungeon-engine
+NODE_ENV=test JWT_SECRET=test-secret-at-least-16-chars pnpm nx test meta-game-service
+```
+
+---
+
+## Further reading
+
+- [`packages/dungeon-engine/API.md`](packages/dungeon-engine/API.md) — dungeon engine HTTP + WebSocket API reference
+- [`packages/dungeon-engine/CLI.md`](packages/dungeon-engine/CLI.md) — interactive CLI for the dungeon engine
+- [`packages/meta-game-service/README.md`](packages/meta-game-service/README.md) — meta-game service API reference

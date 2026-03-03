@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Grid, TileType, Entity, RunState, RunConfig } from './types.js';
+import type { Grid, TileType, Entity, RunState, RunConfig, InteractableDef, MechanismDef } from './types.js';
 
 const DEFAULT_CONFIG: RunConfig = {
   width: 20,
@@ -18,7 +18,7 @@ const PRESET_DEFAULT = [
   '#....#..1..#.......#',
   '#....#.....#.......#',
   '#....#####.........#',
-  '#..................#',
+  '#....I.............#',
   '#...2..............#',
   '#..................#',
   '#..................#',
@@ -77,6 +77,20 @@ const PRESET_MAZE = [
   '#.########.#.......#',
   '#..........#......X#',
   '####################',
+];
+
+const DEFAULT_INTERACTABLES: Record<string, InteractableDef> = {
+  '5,7': { id: 'lever-a', kind: 'lever', label: 'Lever A', state: 0, stateCount: 2 },
+};
+
+const DEFAULT_MECHANISMS: MechanismDef[] = [
+  {
+    id:           'mechanism-lever-door',
+    conditions:   [{ interactableId: 'lever-a', state: 1 }],
+    effects:      [{ type: 'tile_change', x: 5, y: 6, to: 'floor' }],
+    resetEffects: [{ type: 'tile_change', x: 5, y: 6, to: 'wall'  }],
+    satisfied: false,
+  },
 ];
 
 function parseTileChar(ch: string): TileType {
@@ -168,12 +182,24 @@ function makeEnemy(slot: number, pos: { x: number; y: number }, config: RunConfi
   };
 }
 
-function buildRunState(rows: string[], config: RunConfig): RunState {
+function buildRunState(
+  rows: string[],
+  config: RunConfig,
+  interactableDefs: Record<string, InteractableDef> = {},
+  mechanisms: MechanismDef[] = [],
+): RunState {
   const { grid, playerPos, enemyPositions, scrapPositions } = parseMap(rows);
 
   // Add scrap items to their tiles
   for (const sp of scrapPositions) {
     grid[sp.y][sp.x].items.push({ id: uuidv4(), kind: 'scrap', qty: 1 });
+  }
+
+  // Embed interactable metadata into matching tiles
+  for (const [key, def] of Object.entries(interactableDefs)) {
+    const [x, y] = key.split(',').map(Number);
+    const tile = grid[y]?.[x];
+    if (tile?.type === 'interactable') tile.interactable = { ...def };
   }
 
   const player = makePlayer(playerPos);
@@ -190,6 +216,7 @@ function buildRunState(rows: string[], config: RunConfig): RunState {
     events: [],
     status: 'active',
     config,
+    mechanisms: mechanisms.map(m => ({ ...m })),
   };
 }
 
@@ -201,6 +228,6 @@ export function parsePreset(name: PresetName, configOverride?: Partial<RunConfig
   switch (name) {
     case 'open':  return buildRunState(PRESET_OPEN, config);
     case 'maze':  return buildRunState(PRESET_MAZE, config);
-    default:      return buildRunState(PRESET_DEFAULT, config);
+    default:      return buildRunState(PRESET_DEFAULT, config, DEFAULT_INTERACTABLES, DEFAULT_MECHANISMS);
   }
 }

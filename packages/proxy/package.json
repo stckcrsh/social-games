@@ -1,0 +1,17 @@
+{
+  "name": "@org/proxy",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "targets": {
+      "serve": {
+        "continuous": true,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "caddy run --config packages/proxy/Caddyfile",
+          "cwd": "{workspaceRoot}"
+        }
+      }
+    }
+  }
+}

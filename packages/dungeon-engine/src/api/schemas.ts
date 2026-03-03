@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const DirectionSchema = z.enum(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']);
+const DirectionSchema = z.enum(['N', 'E', 'S', 'W']);
 
 export const PlayerActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('move'),     dir: DirectionSchema }),
@@ -8,6 +8,7 @@ export const PlayerActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('dash'),     dir: DirectionSchema }),
   z.object({ type: z.literal('useItem'),  itemId: z.string() }),
   z.object({ type: z.literal('interact') }),
+  z.object({ type: z.literal('wait') }),
 ]);
 
 export const RunConfigSchema = z.object({

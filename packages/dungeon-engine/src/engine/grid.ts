@@ -1,14 +1,10 @@
-import type { Direction, Entity, Grid, Pos, RunConfig, Tile } from '../models/types.js';
+import type { Direction, Entity, Grid, Pos, Tile } from '../models/types.js';
 
 export const DIR_TO_DELTA: Record<Direction, { dx: number; dy: number }> = {
-  N:  { dx:  0, dy: -1 },
-  NE: { dx:  1, dy: -1 },
-  E:  { dx:  1, dy:  0 },
-  SE: { dx:  1, dy:  1 },
-  S:  { dx:  0, dy:  1 },
-  SW: { dx: -1, dy:  1 },
-  W:  { dx: -1, dy:  0 },
-  NW: { dx: -1, dy: -1 },
+  N: { dx:  0, dy: -1 },
+  E: { dx:  1, dy:  0 },
+  S: { dx:  0, dy:  1 },
+  W: { dx: -1, dy:  0 },
 };
 
 export function inBounds(grid: Grid, x: number, y: number): boolean {
@@ -25,27 +21,23 @@ export function isWall(grid: Grid, x: number, y: number): boolean {
   return tile === null || tile.type === 'wall';
 }
 
-/** For a diagonal move (dx,dy), returns true if corner-cutting is blocked.
- *  Both orthogonal neighbors (from.x+dx, from.y) and (from.x, from.y+dy) must be non-wall. */
-export function isDiagonalCornered(grid: Grid, from: Pos, dx: number, dy: number): boolean {
-  return isWall(grid, from.x + dx, from.y) || isWall(grid, from.x, from.y + dy);
-}
+const CARDINAL_DELTAS = [
+  { dx:  0, dy: -1 }, // N
+  { dx:  1, dy:  0 }, // E
+  { dx:  0, dy:  1 }, // S
+  { dx: -1, dy:  0 }, // W
+];
 
-/** Returns all valid 8-dir non-wall neighbor positions from pos, respecting corner-cutting config. */
-export function getNeighbors(grid: Grid, pos: Pos, config: Pick<RunConfig, 'allowDiagonalCornerCutting'>): Pos[] {
+/** Returns all valid cardinal (4-dir) non-wall neighbor positions from pos. */
+export function getNeighbors(grid: Grid, pos: Pos): Pos[] {
   const neighbors: Pos[] = [];
 
-  for (const { dx, dy } of Object.values(DIR_TO_DELTA)) {
+  for (const { dx, dy } of CARDINAL_DELTAS) {
     const nx = pos.x + dx;
     const ny = pos.y + dy;
 
     if (!inBounds(grid, nx, ny)) continue;
     if (isWall(grid, nx, ny)) continue;
-
-    const isDiagonal = dx !== 0 && dy !== 0;
-    if (isDiagonal && !config.allowDiagonalCornerCutting) {
-      if (isDiagonalCornered(grid, pos, dx, dy)) continue;
-    }
 
     neighbors.push({ x: nx, y: ny });
   }

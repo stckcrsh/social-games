@@ -1,8 +1,9 @@
-import type { GameEvent, PlayerAction, RunState } from '../models/types.js';
-import { DIR_TO_DELTA, entityAt, inBounds, isWall } from './grid.js';
+import type { GameEvent, PlayerAction, RunState, Tile } from '../models/types.js';
+import { DIR_TO_DELTA, entityAt, getTile, inBounds, isWall } from './grid.js';
 import { applyAttack, findAdjacentTarget } from './combat.js';
 import { resolvePickup } from './pickup.js';
 import { aiRegistry } from '../ai/registry.js';
+import { evaluateMechanisms } from './mechanisms.js';
 
 export function processTurn(
   state: RunState,
@@ -176,8 +177,54 @@ function resolvePlayerAction(
     }
 
     case 'interact': {
-      // Stub: consume turn
-      turnEvents.push({ type: 'noop', reason: 'interact' });
+      const candidates = [
+        s.player.pos,
+        { x: s.player.pos.x,     y: s.player.pos.y - 1 },
+        { x: s.player.pos.x + 1, y: s.player.pos.y     },
+        { x: s.player.pos.x,     y: s.player.pos.y + 1 },
+        { x: s.player.pos.x - 1, y: s.player.pos.y     },
+      ];
+
+      let targetTile: Tile | null = null;
+      for (const pos of candidates) {
+        const tile = getTile(s.grid, pos.x, pos.y);
+        if (tile?.type === 'interactable' && tile.interactable) {
+          targetTile = tile;
+          break;
+        }
+      }
+
+      if (!targetTile) {
+        turnEvents.push({ type: 'noop', reason: 'no interactable nearby' });
+        return {};
+      }
+
+      const def = targetTile.interactable!;
+
+      if (def.kind === 'switch' && def.state > 0) {
+        turnEvents.push({ type: 'noop', reason: `${def.label} is already activated` });
+        return {};
+      }
+
+      def.state = (def.state + 1) % def.stateCount;
+
+      turnEvents.push({
+        type: 'interacted',
+        entityId: s.player.id,
+        interactableId: def.id,
+        kind: def.kind,
+        label: def.label,
+        newState: def.state,
+      });
+
+      evaluateMechanisms(s, turnEvents);
+
+      return {};
+    }
+
+    case 'wait': {
+      // No-op: consume turn, enemies still act
+      turnEvents.push({ type: 'noop', reason: 'wait' });
       return {};
     }
   }

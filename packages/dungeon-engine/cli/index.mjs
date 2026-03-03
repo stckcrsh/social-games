@@ -67,7 +67,8 @@ const CHAR_STYLES = {
   'E': (c) => chalk.bold.cyan(c),    // exit tile
   '$': (c) => chalk.yellow(c),       // item on floor
   'H': (c) => chalk.magenta(c),      // hazard
-  'X': (c) => chalk.blue(c),         // interactable
+  'I': (c) => chalk.blue(c),         // interactable, inactive
+  'i': (c) => chalk.bold.blue(c),    // interactable, active
 };
 
 // Applies chalk colors to every character in the raw ASCII render string.
@@ -118,6 +119,18 @@ function formatEvents(turnEvents) {
       case 'noop':
         lines.push(`  ·  (no effect: ${ev.reason})`);
         break;
+      case 'interacted':
+        lines.push(`  🔧 ${ev.label} (${ev.kind}) → state ${ev.newState}`);
+        break;
+      case 'tile_changed':
+        lines.push(`  🧱 tile (${ev.x},${ev.y}) changed: ${ev.from} → ${ev.to}`);
+        break;
+      case 'mechanism_solved':
+        lines.push(`  ✅ mechanism triggered: ${ev.mechanismId}`);
+        break;
+      case 'mechanism_reset':
+        lines.push(`  🔄 mechanism reset: ${ev.mechanismId}`);
+        break;
       case 'run_end':
         // Handled separately as a banner
         break;
@@ -142,133 +155,173 @@ function endBanner(reason) {
 // Shape: Map<runId, { id, preset, status, overclock }>
 const sessionRuns = new Map();
 
-// ─── Direction picker ────────────────────────────────────────────────────────
+// ─── Arcade mode (WebSocket real-time game loop) ─────────────────────────────
 
-const DIR_CHOICES = [
-  { name: '↑  N',  value: 'N' },
-  { name: '↗  NE', value: 'NE' },
-  { name: '→  E',  value: 'E' },
-  { name: '↘  SE', value: 'SE' },
-  { name: '↓  S',  value: 'S' },
-  { name: '↙  SW', value: 'SW' },
-  { name: '←  W',  value: 'W' },
-  { name: '↖  NW', value: 'NW' },
-];
+// Key → PlayerAction mapping for raw-mode arrow key input.
+// Arrow keys arrive as 3-byte escape sequences.
+const KEY_TO_ACTION = {
+  '\u001b[A': { type: 'move',   dir: 'N' },  // ↑
+  '\u001b[B': { type: 'move',   dir: 'S' },  // ↓
+  '\u001b[C': { type: 'move',   dir: 'E' },  // →
+  '\u001b[D': { type: 'move',   dir: 'W' },  // ←
+  'w':        { type: 'attack', dir: 'N' },  // W
+  's':        { type: 'attack', dir: 'S' },  // S
+  'd':        { type: 'attack', dir: 'E' },  // D
+  'a':        { type: 'attack', dir: 'W' },  // A
+  'e':        { type: 'interact' },           // E
+};
 
-async function pickDirection() {
-  return select({ message: 'Direction:', choices: DIR_CHOICES });
+function renderFrame(state, render, turnEvents, error) {
+  console.clear();
+  // Grid (strip trailing stat line — we print our own)
+  console.log(colorizeGrid(render.split('\n').slice(0, -2).join('\n')));
+  console.log();
+
+  const { player, overclock, status } = state;
+  const statusStr = status === 'active'
+    ? chalk.green(status)
+    : status === 'dead' ? chalk.red(status) : chalk.cyan(status);
+  console.log(
+    `Turn: ${chalk.bold(overclock)}  ` +
+    `Player HP: ${chalk.bold(player.hp)}/${player.maxHp}  ` +
+    `Status: ${statusStr}`
+  );
+  console.log(chalk.gray('  Arrow keys: move  |  WASD: attack  |  e: interact  |  q / ESC / Ctrl-C: quit'));
+
+  if (turnEvents && turnEvents.length > 0) {
+    console.log();
+    const evText = formatEvents(turnEvents);
+    if (evText) console.log(evText);
+  }
+
+  if (error) {
+    console.log(chalk.yellow(`  ! ${error}`));
+  }
 }
 
-// ─── Run view ────────────────────────────────────────────────────────────────
+async function arcadeMode(runId, initialData) {
+  const wsUrl = BASE_URL.replace(/^http/, 'ws') + `/runs/${runId}/ws`;
 
-// Main game loop for an individual run.
-// `initialData` is the response body from POST /runs or POST /runs/:id/action —
-// reused directly so we don't make an extra GET on the first render.
-// Each iteration: render → prompt → submit action → re-render with response.
-async function runView(runId, initialData) {
-  let data = initialData;
+  return new Promise((resolve) => {
+    let ws;
+    let latestState = initialData?.state ?? null;
+    let ended = false;
 
-  while (true) {
-    console.clear();
-
-    // If we entered via List view we only have { state } — fetch the full render
-    if (!data || !data.render) {
-      const resp = await api(`/runs/${runId}`);
-      if (resp.status === 404) {
-        console.log(chalk.red('Run not found (was the server restarted?).'));
-        sessionRuns.delete(runId);
-        return;
+    function cleanup() {
+      if (process.stdin.isTTY && process.stdin.setRawMode) {
+        try { process.stdin.setRawMode(false); } catch { /* ignore */ }
       }
-      data = resp.data;
+      process.stdin.pause();
+      try { ws?.close(); } catch { /* ignore */ }
     }
 
-    const { state, render, turnEvents, error } = data;
+    function handleEnd(status) {
+      if (ended) return;
+      ended = true;
+      cleanup();
 
-    // Strip the trailing stat line from the render string — we reprint it
-    // ourselves below with chalk formatting, so only show the raw grid rows.
-    console.log(colorizeGrid(render.split('\n').slice(0, -2).join('\n')));
-    console.log();
-
-    // Stats line
-    const { player, overclock, status } = state;
-    console.log(
-      `Turn: ${chalk.bold(overclock)}  ` +
-      `Player HP: ${chalk.bold(player.hp)}/${player.maxHp}  ` +
-      `Status: ${status === 'active' ? chalk.green(status) : status === 'dead' ? chalk.red(status) : chalk.cyan(status)}`
-    );
-
-    // Turn events
-    if (turnEvents && turnEvents.length > 0) {
       console.log();
-      const evText = formatEvents(turnEvents);
-      if (evText) console.log(evText);
+      console.log(endBanner(status));
 
-      // Check for run_end event
-      const endEv = turnEvents.find((e) => e.type === 'run_end');
-      if (endEv) console.log(endBanner(endEv.reason));
+      // Use async IIFE so we can await the select prompt
+      (async () => {
+        const choice = await select({
+          message: 'Run is over.',
+          choices: [
+            { name: 'Delete run & return to main menu', value: 'delete' },
+            { name: 'Keep & return to main menu',       value: 'back' },
+          ],
+        });
+        if (choice === 'delete') {
+          await api(`/runs/${runId}`, 'DELETE');
+          sessionRuns.delete(runId);
+        }
+        resolve();
+      })();
     }
 
-    // Show error if any
-    if (error) {
-      console.log(chalk.yellow(`  ! ${error}`));
-    }
-
-    // Update session record
-    sessionRuns.set(runId, {
-      id: runId,
-      preset: sessionRuns.get(runId)?.preset ?? 'unknown',
-      status,
-      overclock,
-    });
-
-    // Once status is no longer 'active' the server won't advance the run further.
-    // Show the end banner (if it wasn't already shown via a run_end event above),
-    // then prompt the user to clean up or return.
-    if (status !== 'active') {
-      console.log();
-      if (!turnEvents || !turnEvents.find((e) => e.type === 'run_end')) {
-        // Entering from List view: run was already ended, no turnEvents — show banner now
-        console.log(endBanner(status));
-      }
-      const choice = await select({
-        message: 'Run is over.',
-        choices: [
-          { name: 'Delete run & return to main menu', value: 'delete' },
-          { name: 'Keep & return to main menu',       value: 'back' },
-        ],
-      });
-      if (choice === 'delete') {
-        await api(`/runs/${runId}`, 'DELETE');
-        sessionRuns.delete(runId);
-      }
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (err) {
+      console.log(chalk.red(`Failed to connect WebSocket: ${err.message}`));
+      resolve();
       return;
     }
 
-    // Action prompt
-    const action = await select({
-      message: 'Action:',
-      choices: [
-        { name: 'Move',              value: 'move' },
-        { name: 'Attack',            value: 'attack' },
-        { name: 'Dash',              value: 'dash' },
-        { name: 'Interact  (stub)',  value: 'interact' },
-        { name: 'Back to main menu', value: 'back' },
-      ],
+    ws.addEventListener('open', () => {
+      // Enable raw mode for single-keypress capture
+      if (process.stdin.isTTY && process.stdin.setRawMode) {
+        process.stdin.setRawMode(true);
+      }
+      process.stdin.resume();
+      process.stdin.setEncoding('utf8');
+
+      process.stdin.on('data', (key) => {
+        if (ended) return;
+
+        // q, ESC, or Ctrl-C → quit
+        if (key === 'q' || key === '\u001b' || key === '\u0003') {
+          ended = true;
+          cleanup();
+          resolve();
+          return;
+        }
+
+        const action = KEY_TO_ACTION[key];
+        if (action && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(action));
+        }
+      });
     });
 
-    if (action === 'back') return;
+    ws.addEventListener('message', (event) => {
+      if (ended) return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.error && !data.state) {
+          // Server-level error (e.g. run not found)
+          console.log(chalk.red(`Server error: ${data.error}`));
+          cleanup();
+          resolve();
+          return;
+        }
+        const { state, render, turnEvents, error } = data;
+        latestState = state;
 
-    if (action === 'interact') {
-      const resp = await api(`/runs/${runId}/action`, 'POST', { type: 'interact' });
-      data = resp.data;
-      continue;
-    }
+        // Update session record
+        sessionRuns.set(runId, {
+          id: runId,
+          preset: sessionRuns.get(runId)?.preset ?? 'unknown',
+          status: state.status,
+          overclock: state.overclock,
+        });
 
-    // Needs direction
-    const dir = await pickDirection();
-    const resp = await api(`/runs/${runId}/action`, 'POST', { type: action, dir });
-    data = resp.data;
-  }
+        renderFrame(state, render, turnEvents, error);
+
+        if (state.status !== 'active') {
+          handleEnd(state.status);
+        }
+      } catch {
+        // ignore malformed frames
+      }
+    });
+
+    ws.addEventListener('close', () => {
+      if (!ended) {
+        ended = true;
+        cleanup();
+        resolve();
+      }
+    });
+
+    ws.addEventListener('error', (err) => {
+      if (!ended) {
+        console.log(chalk.red(`WebSocket error: ${err.message ?? 'unknown'}`));
+        cleanup();
+        resolve();
+      }
+    });
+  });
 }
 
 // ─── List session runs ───────────────────────────────────────────────────────
@@ -326,7 +379,7 @@ async function listRunsMenu() {
     sessionRuns.delete(choice);
     return;
   }
-  await runView(choice, resp.data);
+  await arcadeMode(choice, resp.data);
 }
 
 // ─── New run flow ─────────────────────────────────────────────────────────────
@@ -363,7 +416,7 @@ async function newRunFlow() {
     overclock: state.overclock,
   });
 
-  await runView(runId, { state, render, turnEvents: turnEvents ?? [] });
+  await arcadeMode(runId, { state, render, turnEvents: turnEvents ?? [] });
 }
 
 // ─── Main menu ────────────────────────────────────────────────────────────────

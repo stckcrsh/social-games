@@ -4,7 +4,7 @@ import type { AiBehavior, Intent } from './types.js';
 export const chaseAstar: AiBehavior = (ctx): Intent => {
   const { self, player, grid, config } = ctx;
 
-  const path = astar(grid, self.pos, player.pos, config);
+  const path = astar(grid, self.pos, player.pos);
 
   if (!path || path.length < 2) return { type: 'none' };
 
