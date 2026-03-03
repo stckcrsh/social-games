@@ -8,6 +8,9 @@
     },
     {
       "path": "./packages/meta-game-ui"
+    },
+    {
+      "path": "./packages/dungeon-engine"
     }
   ]
 }

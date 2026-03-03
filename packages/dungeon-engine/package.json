@@ -1,0 +1,53 @@
+{
+  "name": "@org/dungeon-engine",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "nx:run-commands",
+        "outputs": ["{workspaceRoot}/packages/dungeon-engine/dist"],
+        "options": {
+          "command": "node scripts/build.js",
+          "cwd": "packages/dungeon-engine"
+        }
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node scripts/build.js && node dist/main.js",
+          "cwd": "packages/dungeon-engine"
+        }
+      },
+      "cli": {
+        "continuous": true,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node cli/index.mjs",
+          "cwd": "packages/dungeon-engine"
+        }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "outputs": ["{workspaceRoot}/coverage/packages/dungeon-engine"],
+        "options": {
+          "command": "pnpm vitest run",
+          "cwd": "packages/dungeon-engine"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "fastify": "~5.2.1",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@inquirer/prompts": "^3.3.0",
+    "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "chalk": "^5.4.1",
+    "vitest": "^3.2.4"
+  }
+}
