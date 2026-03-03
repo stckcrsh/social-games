@@ -1,8 +1,8 @@
-import type { Grid, Pos, RunConfig } from '../models/types.js';
+import type { Grid, Pos } from '../models/types.js';
 import { getNeighbors } from './grid.js';
 
-function chebyshev(a: Pos, b: Pos): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+function manhattan(a: Pos, b: Pos): number {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
 function posKey(p: Pos): string {
@@ -21,9 +21,8 @@ export function astar(
   grid: Grid,
   from: Pos,
   to: Pos,
-  config: Pick<RunConfig, 'allowDiagonalCornerCutting'>
 ): Pos[] | null {
-  const startH = chebyshev(from, to);
+  const startH = manhattan(from, to);
   const startNode: Node = { pos: from, g: 0, h: startH, f: startH, parent: null };
 
   // Open set as sorted array: sorted by f asc, then h asc, then y asc, then x asc
@@ -51,7 +50,7 @@ export function astar(
       return path;
     }
 
-    const neighbors = getNeighbors(grid, current.pos, config);
+    const neighbors = getNeighbors(grid, current.pos);
 
     for (const neighborPos of neighbors) {
       const neighborKey = posKey(neighborPos);
@@ -64,7 +63,7 @@ export function astar(
 
       gScores.set(neighborKey, tentativeG);
 
-      const h = chebyshev(neighborPos, to);
+      const h = manhattan(neighborPos, to);
       const f = tentativeG + h;
       const node: Node = { pos: neighborPos, g: tentativeG, h, f, parent: current };
 

@@ -2,8 +2,41 @@ export interface Pos { x: number; y: number; }
 
 export type TileType = 'floor' | 'wall' | 'exit' | 'hazard' | 'interactable';
 export interface ItemDrop { id: string; kind: 'scrap' | 'item'; qty: number; }
-export interface Tile { type: TileType; items: ItemDrop[]; }
+
+export type InteractableKind = 'lever' | 'switch' | 'dial';
+
+export interface InteractableDef {
+  id:         string;
+  kind:       InteractableKind;
+  label:      string;
+  state:      number;
+  stateCount: number;
+}
+
+export interface Tile { type: TileType; items: ItemDrop[]; interactable?: InteractableDef; }
 export type Grid = Tile[][];  // grid[y][x], y=row, (0,0) top-left, y+ = south
+
+export interface MechanismCondition {
+  interactableId: string;
+  state:          number;
+}
+
+export interface TileChangeEffect {
+  type: 'tile_change';
+  x:    number;
+  y:    number;
+  to:   TileType;
+}
+
+export type MechanismEffect = TileChangeEffect;
+
+export interface MechanismDef {
+  id:           string;
+  conditions:   MechanismCondition[];
+  effects:      MechanismEffect[];
+  resetEffects: MechanismEffect[];
+  satisfied:    boolean;
+}
 
 export type AiType = 'chase_astar' | 'patrol_loop' | 'charger';
 export interface Entity {
@@ -17,7 +50,7 @@ export interface Entity {
   state: Record<string, unknown>;  // AI memory (patrol index, etc.)
 }
 
-export type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
+export type Direction = 'N' | 'E' | 'S' | 'W';
 
 export type GameEvent =
   | { type: 'player_action'; action: PlayerAction }
@@ -27,14 +60,19 @@ export type GameEvent =
   | { type: 'death'; entityId: string }
   | { type: 'pickup'; entityId: string; item: ItemDrop }
   | { type: 'run_end'; reason: 'dead' | 'extracted' }
-  | { type: 'noop'; reason: string };
+  | { type: 'noop'; reason: string }
+  | { type: 'interacted';       entityId: string; interactableId: string; kind: InteractableKind; label: string; newState: number }
+  | { type: 'tile_changed';     x: number; y: number; from: TileType; to: TileType }
+  | { type: 'mechanism_solved'; mechanismId: string }
+  | { type: 'mechanism_reset';  mechanismId: string };
 
 export type PlayerAction =
   | { type: 'move'; dir: Direction }
   | { type: 'attack'; dir: Direction }
   | { type: 'dash'; dir: Direction }
   | { type: 'useItem'; itemId: string }
-  | { type: 'interact' };
+  | { type: 'interact' }
+  | { type: 'wait' };
 
 export interface RunConfig {
   width: number;                        // default 20
@@ -53,4 +91,5 @@ export interface RunState {
   events: GameEvent[];  // append-only log across all turns
   status: 'active' | 'dead' | 'extracted';
   config: RunConfig;
+  mechanisms: MechanismDef[];
 }

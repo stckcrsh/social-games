@@ -107,6 +107,32 @@ Advances the simulation by one turn. The player acts first, then enemies act in 
 
 ---
 
+### `GET /runs/:id/ws` — WebSocket stream
+
+Upgrades to a WebSocket connection. The server owns the beat clock: it ticks every `TICK_MS` ms (default 1000 ms, override with `TICK_MS` env var), consumes the most-recently queued player action (or `wait` if none), and broadcasts the new state to all connected clients.
+
+**On connect:** the current state is sent immediately.
+
+**Client → server** (send a [Player Action](#player-actions) as JSON):
+```json
+{ "type": "move", "dir": "N" }
+```
+Last message before the next tick wins (rapid keypresses are coalesced).
+
+**Server → client** (on every tick):
+```json
+{
+  "state": { ... },
+  "render": "...",
+  "turnEvents": [ ... ],
+  "error": "optional — present only when the queued action was invalid"
+}
+```
+
+**Tick stops** when all clients disconnect or the run ends (`dead` / `extracted`).
+
+---
+
 ### `DELETE /runs/:id` — Discard a run
 
 Removes the run from memory.
@@ -121,10 +147,10 @@ All actions are submitted as JSON to `POST /runs/:id/action`.
 
 ### `move`
 
-Move one tile in a direction. Diagonal moves are supported.
+Move one tile in a cardinal direction.
 
 ```json
-{ "type": "move", "dir": "SE" }
+{ "type": "move", "dir": "E" }
 ```
 
 **Invalid** (turn not consumed, `error` returned) if:
@@ -180,30 +206,48 @@ Consume a held item by ID. Currently a no-op that consumes the turn.
 
 ---
 
-### `interact` *(stub)*
+### `interact`
 
-Interact with the tile the player is standing on. Currently a no-op that consumes the turn.
+Interact with the nearest interactable. Scans the player's current tile first, then the four cardinal neighbors (N, E, S, W) and targets the first `interactable` tile found.
 
 ```json
 { "type": "interact" }
+```
+
+**Valid** outcomes (turn always consumed):
+- If an interactable is found: advances its state and emits an `interacted` event; then the mechanism evaluator runs and may emit `tile_changed`, `mechanism_solved`, or `mechanism_reset` events
+- If no interactable is nearby: emits `noop`
+
+**Interactable kinds:**
+
+| Kind | Behavior |
+|---|---|
+| `lever` | Cycles through 2 states (0 → 1 → 0 → …) — binary toggle |
+| `switch` | One-way: transitions from state 0 to 1 once; further interactions are a `noop` |
+| `dial` | Cycles through N states (0 → 1 → … → N-1 → 0 → …) |
+
+---
+
+### `wait`
+
+Do nothing this turn. Overclock increments and enemies act normally. Used automatically by the WebSocket tick loop when no action has been queued.
+
+```json
+{ "type": "wait" }
 ```
 
 ---
 
 ## Directions
 
-Used by `move`, `attack`, and `dash`. The coordinate system has `(0,0)` at the top-left, with `x` increasing east and `y` increasing south.
+Used by `move`, `attack`, and `dash`. The coordinate system has `(0,0)` at the top-left, with `x` increasing east and `y` increasing south. Only the four cardinal directions are supported.
 
 | Value | Description | dx | dy |
 |---|---|---|---|
 | `N` | North (up) | 0 | -1 |
-| `NE` | Northeast | +1 | -1 |
 | `E` | East (right) | +1 | 0 |
-| `SE` | Southeast | +1 | +1 |
 | `S` | South (down) | 0 | +1 |
-| `SW` | Southwest | -1 | +1 |
 | `W` | West (left) | -1 | 0 |
-| `NW` | Northwest | -1 | -1 |
 
 ---
 
@@ -261,7 +305,11 @@ Once a run reaches `dead` or `extracted`, further actions return an error and th
 | `death` | `entityId` | An entity reached 0 HP and was removed |
 | `pickup` | `entityId`, `item` | Player collected an item |
 | `run_end` | `reason: "dead" \| "extracted"` | The run ended |
-| `noop` | `reason` | A valid action with no effect (empty attack, stub actions) |
+| `noop` | `reason` | A valid action with no effect (empty attack, no nearby interactable, etc.) |
+| `interacted` | `entityId`, `interactableId`, `kind`, `label`, `newState` | Player interacted with an interactable and advanced its state |
+| `tile_changed` | `x`, `y`, `from`, `to` | A tile's type changed (e.g. wall → floor) due to a mechanism effect |
+| `mechanism_solved` | `mechanismId` | All conditions of a mechanism became true; effects were applied |
+| `mechanism_reset` | `mechanismId` | A previously-satisfied mechanism's conditions became false; reset effects were applied |
 
 ---
 
@@ -288,7 +336,8 @@ Turn: 3  Player HP: 20/20  Status: active
 | `$` | Floor with items |
 | `E` | Exit tile |
 | `H` | Hazard tile |
-| `X` | Interactable tile |
+| `I` | Interactable tile (inactive, state 0) |
+| `i` | Interactable tile (active, state ≥ 1) |
 | `P` | Player |
 | `e` | Enemy |
 
@@ -300,7 +349,7 @@ Entities take priority over tiles in the render. Items are only shown (`$`) when
 
 | Preset | Description | Enemies |
 |---|---|---|
-| `default` | 20×20 with a walled room in the upper half and the exit in the lower right | 3 enemies: `chase_astar`, `patrol_loop`, `charger` |
+| `default` | 20×20 with a walled room in the upper half and the exit in the lower right; includes a lever at (5,7) that opens a passage at (5,6) into the walled room | 3 enemies: `chase_astar`, `patrol_loop`, `charger` |
 | `open` | 20×20 with minimal walls, open floor | 2 enemies: `chase_astar` |
 | `maze` | 20×20 with dense corridors | 2 enemies: `chase_astar` |
 
@@ -312,6 +361,6 @@ Entities take priority over tiles in the render. Items are only shown (`$`) when
 |---|---|
 | `chase_astar` | Pathfinds directly toward the player each turn using A* |
 | `patrol_loop` | Cycles through a fixed set of waypoints; falls back to A* if no path configured |
-| `charger` | Dashes up to `chargerDashDistance` tiles when aligned with the player (same row, column, or diagonal); otherwise pathfinds like `chase_astar` |
+| `charger` | Dashes up to `chargerDashDistance` tiles when aligned with the player (same row or column); otherwise pathfinds like `chase_astar` |
 
 All enemies have `hp: 10`, `maxHp: 10`, and `attackDamage: 3` by default.

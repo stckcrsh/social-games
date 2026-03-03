@@ -27,7 +27,7 @@ export function renderGrid(state: RunState): string {
         case 'wall':         row += '#'; break;
         case 'exit':         row += 'E'; break;
         case 'hazard':       row += 'H'; break;
-        case 'interactable': row += 'X'; break;
+        case 'interactable': row += tile.interactable?.state ? 'i' : 'I'; break;
         default:
           // Floor: show $ if items present, else dot
           row += tile.items.length > 0 ? '$' : '.';

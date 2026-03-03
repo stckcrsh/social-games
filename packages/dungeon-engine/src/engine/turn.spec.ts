@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { processTurn } from './turn.js';
-import type { Entity, Grid, RunConfig, RunState, Tile } from '../models/types.js';
+import type { Entity, Grid, InteractableDef, RunConfig, RunState, Tile } from '../models/types.js';
 
 function makeFloorGrid(width: number, height: number): Grid {
   return Array.from({ length: height }, (_, y) =>
@@ -39,6 +39,7 @@ function makeState(overrides: Partial<RunState> = {}): RunState {
     events: [],
     status: 'active',
     config: DEFAULT_CONFIG,
+    mechanisms: [],
     ...overrides,
   };
 }
@@ -110,6 +111,7 @@ describe('turn processing', () => {
       events: [],
       status: 'active',
       config: corridorConfig,
+      mechanisms: [],
     };
 
     const { turnEvents } = processTurn(state, { type: 'interact' }); // stub action — still advances turn
@@ -143,6 +145,69 @@ describe('turn processing', () => {
     expect(error).toBeDefined();
     expect(returned).toBe(state);  // same reference — original state returned
     expect(returned.overclock).toBe(0);
+  });
+
+  it('interact with lever toggles state and fires mechanism', () => {
+    const grid = makeFloorGrid(10, 10);
+    // Place lever at (3,1), wall at (3,2) controlled by mechanism
+    const leverDef: InteractableDef = { id: 'lever-a', kind: 'lever', label: 'Lever A', state: 0, stateCount: 2 };
+    grid[1][3] = { type: 'interactable', items: [], interactable: leverDef };
+    grid[2][3] = { type: 'wall', items: [] };
+
+    const state = makeState({
+      grid,
+      player: { ...makeState().player, pos: { x: 2, y: 1 } },  // adjacent (west) to lever
+      mechanisms: [
+        {
+          id: 'test-mechanism',
+          conditions: [{ interactableId: 'lever-a', state: 1 }],
+          effects:      [{ type: 'tile_change', x: 3, y: 2, to: 'floor' }],
+          resetEffects: [{ type: 'tile_change', x: 3, y: 2, to: 'wall'  }],
+          satisfied: false,
+        },
+      ],
+    });
+
+    // First interact: lever → state 1 → mechanism fires
+    const { state: next1, turnEvents: ev1 } = processTurn(state, { type: 'interact' });
+
+    const interacted1 = ev1.find(e => e.type === 'interacted');
+    expect(interacted1).toBeDefined();
+    if (interacted1 && interacted1.type === 'interacted') {
+      expect(interacted1.newState).toBe(1);
+      expect(interacted1.label).toBe('Lever A');
+    }
+
+    const tileChanged1 = ev1.find(e => e.type === 'tile_changed');
+    expect(tileChanged1).toBeDefined();
+    if (tileChanged1 && tileChanged1.type === 'tile_changed') {
+      expect(tileChanged1.x).toBe(3);
+      expect(tileChanged1.y).toBe(2);
+      expect(tileChanged1.from).toBe('wall');
+      expect(tileChanged1.to).toBe('floor');
+    }
+
+    expect(ev1.find(e => e.type === 'mechanism_solved')).toBeDefined();
+    expect(next1.grid[2][3].type).toBe('floor');
+
+    // Second interact: lever → state 0 → mechanism resets
+    const { state: next2, turnEvents: ev2 } = processTurn(next1, { type: 'interact' });
+
+    const interacted2 = ev2.find(e => e.type === 'interacted');
+    expect(interacted2).toBeDefined();
+    if (interacted2 && interacted2.type === 'interacted') {
+      expect(interacted2.newState).toBe(0);
+    }
+
+    const tileChanged2 = ev2.find(e => e.type === 'tile_changed');
+    expect(tileChanged2).toBeDefined();
+    if (tileChanged2 && tileChanged2.type === 'tile_changed') {
+      expect(tileChanged2.from).toBe('floor');
+      expect(tileChanged2.to).toBe('wall');
+    }
+
+    expect(ev2.find(e => e.type === 'mechanism_reset')).toBeDefined();
+    expect(next2.grid[2][3].type).toBe('wall');
   });
 
   it('player on exit tile after move → status extracted', () => {

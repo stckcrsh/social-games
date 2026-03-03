@@ -11,6 +11,12 @@
     },
     {
       "path": "./packages/dungeon-engine"
+    },
+    {
+      "path": "./packages/dungeon-ui-e2e"
+    },
+    {
+      "path": "./packages/dungeon-ui"
     }
   ]
 }

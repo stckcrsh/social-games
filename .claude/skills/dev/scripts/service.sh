@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+# social-games dev service manager (bash 3.2 compatible)
+# Usage: service.sh <start|stop|restart|status|logs> [service|all]
+
+set -eo pipefail
+
+WORKSPACE=/Users/tawneypauling/Documents/git/social-games
+PID_DIR=/tmp/social-games
+LOG_DIR=/tmp/social-games
+mkdir -p "$PID_DIR"
+
+SERVICE_ORDER=(meta-game-service dungeon-engine meta-game-ui dungeon-ui proxy)
+
+# ── Service definitions ───────────────────────────────────────────────────────
+# Returns "nx-project:nx-target:port:env-prefix" for a given service name
+
+get_def() {
+  case "$1" in
+    meta-game-service) echo "meta-game-service:serve:3000:JWT_SECRET=my-dev-secret-1234" ;;
+    dungeon-engine)    echo "dungeon-engine:serve:3001:" ;;
+    meta-game-ui)      echo "meta-game-ui:dev:4200:" ;;
+    dungeon-ui)        echo "dungeon-ui:dev:4201:" ;;
+    proxy)             echo "proxy:serve:443:" ;;
+    *)                 echo "" ;;
+  esac
+}
+
+is_valid_service() {
+  case "$1" in
+    meta-game-service|dungeon-engine|meta-game-ui|dungeon-ui|proxy) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Expand short aliases to full names
+expand_name() {
+  case "$1" in
+    mgs)  echo "meta-game-service" ;;
+    de)   echo "dungeon-engine" ;;
+    mgu)  echo "meta-game-ui" ;;
+    du)   echo "dungeon-ui" ;;
+    *)    echo "$1" ;;
+  esac
+}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+pid_file() { echo "$PID_DIR/$1.pid"; }
+log_file()  { echo "$LOG_DIR/$1.log"; }
+
+is_running() {
+  local pf; pf=$(pid_file "$1")
+  [ -f "$pf" ] && kill -0 "$(cat "$pf")" 2>/dev/null
+}
+
+# ── Operations ────────────────────────────────────────────────────────────────
+
+do_start() {
+  local svc=$1
+  local def project target port env_prefix
+  def=$(get_def "$svc")
+  IFS=: read -r project target port env_prefix <<< "$def"
+
+  if is_running "$svc"; then
+    echo "  ↳ $svc already running (PID $(cat "$(pid_file "$svc")"))"
+    return
+  fi
+
+  local log; log=$(log_file "$svc")
+  printf "  starting %-22s → " "$svc"
+
+  local cmd="pnpm nx $target $project"
+  [ -n "$env_prefix" ] && cmd="$env_prefix $cmd"
+
+  # Launch in background; disown so the process outlives this shell invocation
+  (cd "$WORKSPACE" && eval "$cmd" >> "$log" 2>&1) &
+  local bgpid=$!
+  disown "$bgpid"
+  echo "$bgpid" > "$(pid_file "$svc")"
+
+  sleep 2
+  if kill -0 "$bgpid" 2>/dev/null; then
+    echo "✓ PID $bgpid  (log: $log)"
+  else
+    echo "✗ crashed — last 20 lines:"
+    rm -f "$(pid_file "$svc")"
+    tail -20 "$log" | sed 's/^/    /'
+  fi
+}
+
+do_stop() {
+  local svc=$1
+  local pf; pf=$(pid_file "$svc")
+  printf "  stopping %-22s → " "$svc"
+
+  if ! is_running "$svc"; then
+    echo "not running"
+    return
+  fi
+
+  local pid; pid=$(cat "$pf")
+  kill -TERM "$pid" 2>/dev/null || true
+
+  local i=0
+  while kill -0 "$pid" 2>/dev/null && [ $i -lt 10 ]; do
+    sleep 0.5; i=$(( i + 1 ))
+  done
+  kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null || true
+
+  rm -f "$pf"
+  echo "✓ stopped (was PID $pid)"
+}
+
+do_restart() {
+  do_stop "$1"
+  sleep 1
+  do_start "$1"
+}
+
+do_status() {
+  printf "\n%-24s %-6s %-10s %s\n" "SERVICE" "PORT" "STATUS" "PID"
+  printf "%-24s %-6s %-10s %s\n" "-------" "----" "------" "---"
+
+  local svc def port
+  for svc in "${SERVICE_ORDER[@]}"; do
+    def=$(get_def "$svc")
+    IFS=: read -r _ _ port _ <<< "$def"
+
+    if is_running "$svc"; then
+      local pid; pid=$(cat "$(pid_file "$svc")")
+      printf "%-24s %-6s %-10s %s\n" "$svc" "$port" "✓ running" "$pid"
+    else
+      printf "%-24s %-6s %-10s\n" "$svc" "$port" "✗ stopped"
+    fi
+  done
+  echo ""
+}
+
+do_logs() {
+  local svc=$1
+  local log; log=$(log_file "$svc")
+  if [ -f "$log" ]; then
+    echo "=== last 50 lines: $log ==="
+    tail -50 "$log"
+  else
+    echo "No log found at $log"
+  fi
+}
+
+# ── Dispatch ──────────────────────────────────────────────────────────────────
+
+OP="${1:-status}"
+SVC=$(expand_name "${2:-}")
+
+if [ "$SVC" = "all" ] || [ -z "$SVC" ]; then
+  TARGETS=("${SERVICE_ORDER[@]}")
+else
+  if ! is_valid_service "$SVC"; then
+    echo "Unknown service: $SVC"
+    echo "Valid: ${SERVICE_ORDER[*]}"
+    echo "Aliases: mgs, de, mgu, du, proxy"
+    exit 1
+  fi
+  TARGETS=("$SVC")
+fi
+
+case "$OP" in
+  start)
+    echo "Starting: ${TARGETS[*]}"
+    for svc in "${TARGETS[@]}"; do do_start "$svc"; done ;;
+  stop)
+    echo "Stopping: ${TARGETS[*]}"
+    for svc in "${TARGETS[@]}"; do do_stop "$svc"; done ;;
+  restart)
+    echo "Restarting: ${TARGETS[*]}"
+    for svc in "${TARGETS[@]}"; do do_restart "$svc"; done ;;
+  status)
+    do_status ;;
+  logs)
+    [ "${#TARGETS[@]}" -ne 1 ] && { echo "logs requires a specific service name"; exit 1; }
+    do_logs "${TARGETS[0]}" ;;
+  *)
+    echo "Unknown operation: $OP"
+    echo "Usage: service.sh <start|stop|restart|status|logs> [service|all]"
+    exit 1 ;;
+esac
