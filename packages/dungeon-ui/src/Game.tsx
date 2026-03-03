@@ -1,40 +1,7 @@
-import React, { useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { RunState, GameEvent } from './types';
-
-// ── Color map ────────────────────────────────────────────────────────────────
-
-type CharStyle = { color: string; fontWeight?: string };
-
-const CHAR_STYLES: Record<string, CharStyle> = {
-  '#': { color: '#555' },
-  '.': { color: '#888' },
-  'P': { color: '#00ff00', fontWeight: 'bold' },
-  'e': { color: '#ff4444', fontWeight: 'bold' },
-  'E': { color: '#00ffff' },
-  '$': { color: '#ffff00' },
-  'H': { color: '#ff00ff' },
-  'I': { color: '#6699ff' },
-  'i': { color: '#aabbff', fontWeight: 'bold' },
-};
-
-function colorizeRender(raw: string): ReactNode[] {
-  // Strip last 2 lines (stat line from server — we render our own HUD)
-  const lines = raw.split('\n');
-  const grid = lines.slice(0, -2).join('\n');
-
-  const nodes: ReactNode[] = [];
-  let i = 0;
-  for (const ch of grid) {
-    const style = CHAR_STYLES[ch];
-    if (style) {
-      nodes.push(<span key={i} style={style}>{ch}</span>);
-    } else {
-      nodes.push(ch);
-    }
-    i++;
-  }
-  return nodes;
-}
+import { IsoRenderer } from './IsoRenderer';
+import { getTileset } from './tileset';
 
 // ── Key → action map ─────────────────────────────────────────────────────────
 
@@ -115,7 +82,6 @@ function formatEvent(ev: GameEvent): string | null {
 
 interface GameFrame {
   state: RunState;
-  render: string;
   turnEvents: GameEvent[];
   error?: string;
 }
@@ -123,14 +89,13 @@ interface GameFrame {
 interface GameProps {
   runId: string;
   initialState: RunState;
-  initialRender: string;
+  preset: string;
   onEnd: (reason: string) => void;
 }
 
-export function Game({ runId, initialState, initialRender, onEnd }: GameProps) {
+export function Game({ runId, initialState, preset, onEnd }: GameProps) {
   const [frame, setFrame] = useState<GameFrame>({
     state: initialState,
-    render: initialRender,
     turnEvents: [],
   });
   const [disconnected, setDisconnected] = useState(false);
@@ -138,6 +103,8 @@ export function Game({ runId, initialState, initialRender, onEnd }: GameProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const endedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const tileset = getTileset(preset);
 
   // Signal end once per run
   useEffect(() => {
@@ -162,7 +129,6 @@ export function Game({ runId, initialState, initialRender, onEnd }: GameProps) {
         if (data.state) {
           setFrame({
             state: data.state,
-            render: data.render ?? '',
             turnEvents: data.turnEvents ?? [],
             error: data.error,
           });
@@ -195,7 +161,7 @@ export function Game({ runId, initialState, initialRender, onEnd }: GameProps) {
     }
   }
 
-  const { state, render, turnEvents, error } = frame;
+  const { state, turnEvents, error } = frame;
   const { player, overclock, status } = state;
 
   const eventLines = turnEvents
@@ -217,10 +183,13 @@ export function Game({ runId, initialState, initialRender, onEnd }: GameProps) {
         minHeight: '100vh',
       }}
     >
-      {/* Grid */}
-      <pre style={{ margin: 0, lineHeight: 1.2, userSelect: 'none' }}>
-        {colorizeRender(render)}
-      </pre>
+      {/* Isometric grid */}
+      <IsoRenderer
+        grid={state.grid}
+        player={state.player}
+        enemies={state.enemies}
+        tileset={tileset}
+      />
 
       {/* HUD */}
       <div style={{ marginTop: '0.75rem', color: '#aaa' }}>

@@ -9,13 +9,13 @@ export function App() {
   const [screen, setScreen] = useState<Screen>('lobby');
   const [runId, setRunId] = useState<string | null>(null);
   const [initialState, setInitialState] = useState<RunState | null>(null);
-  const [initialRender, setInitialRender] = useState<string>('');
+  const [preset, setPreset] = useState<string>('default');
   const [endReason, setEndReason] = useState<string | null>(null);
 
-  function handleStart(id: string, state: RunState, render: string) {
+  function handleStart(id: string, state: RunState, _render: string, selectedPreset: string) {
     setRunId(id);
     setInitialState(state);
-    setInitialRender(render);
+    setPreset(selectedPreset);
     setScreen('playing');
   }
 
@@ -27,7 +27,6 @@ export function App() {
   function handleNewGame() {
     setRunId(null);
     setInitialState(null);
-    setInitialRender('');
     setEndReason(null);
     setScreen('lobby');
   }
@@ -37,7 +36,7 @@ export function App() {
       <Game
         runId={runId}
         initialState={initialState}
-        initialRender={initialRender}
+        preset={preset}
         onEnd={handleEnd}
       />
     );

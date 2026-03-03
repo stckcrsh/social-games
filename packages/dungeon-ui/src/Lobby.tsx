@@ -9,7 +9,7 @@ const PRESETS = [
 ];
 
 interface LobbyProps {
-  onStart: (runId: string, state: RunState, render: string) => void;
+  onStart: (runId: string, state: RunState, render: string, preset: string) => void;
 }
 
 export function Lobby({ onStart }: LobbyProps) {
@@ -22,7 +22,7 @@ export function Lobby({ onStart }: LobbyProps) {
     setError(null);
     try {
       const { runId, state, render } = await createRun(preset);
-      onStart(runId, state, render);
+      onStart(runId, state, render, preset);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {

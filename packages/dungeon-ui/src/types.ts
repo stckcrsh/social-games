@@ -1,6 +1,49 @@
+export type TileType = 'floor' | 'wall' | 'exit' | 'hazard' | 'interactable';
+
+export interface ItemDrop {
+  id: string;
+  kind: 'scrap' | 'item';
+  qty: number;
+}
+
+export interface InteractableDef {
+  id: string;
+  kind: 'lever' | 'switch' | 'dial';
+  label: string;
+  state: number;
+  stateCount: number;
+}
+
+export interface Tile {
+  type: TileType;
+  items: ItemDrop[];
+  interactable?: InteractableDef;
+}
+
+export interface Pos {
+  x: number;
+  y: number;
+}
+
+export interface PlayerState {
+  hp: number;
+  maxHp: number;
+  pos: Pos;
+}
+
+export interface EnemyState {
+  id: string;
+  pos: Pos;
+  aiType?: string;
+  hp: number;
+  maxHp: number;
+}
+
 export interface RunState {
   id: string;
-  player: { hp: number; maxHp: number };
+  grid: Tile[][];
+  player: PlayerState;
+  enemies: EnemyState[];
   overclock: number;
   status: 'active' | 'dead' | 'extracted';
 }
