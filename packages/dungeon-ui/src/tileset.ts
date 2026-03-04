@@ -18,6 +18,7 @@ export interface Tileset {
   colors: {
     floor: TileColors;
     wall: TileColors;
+    weakWall: TileColors;
     exit: TileColors;
     hazard: TileColors;
     interactableOff: TileColors;
@@ -28,6 +29,9 @@ export interface Tileset {
     enemyChase: TileColors;
     enemyPatrol: TileColors;
     enemyCharger: TileColors;
+    effectFire: TileColors;
+    /** Semi-transparent overlay color for oil */
+    effectOil: string;
   };
 }
 
@@ -42,6 +46,7 @@ const TILESETS: Record<string, Tileset> = {
     colors: {
       floor:           { top: '#3a3d4a', left: '#272a35', right: '#30333e' },
       wall:            { top: '#52525e', left: '#1c1c28', right: '#2e2e3a' },
+      weakWall:        { top: '#6a5a3a', left: '#3a3020', right: '#504028' },
       exit:            { top: '#1a504a', left: '#0e3430', right: '#143e3a' },
       hazard:          { top: '#5a1a2a', left: '#3c0e1a', right: '#4a1420' },
       interactableOff: { top: '#4a4a1a', left: '#2e2e10', right: '#3a3a14' },
@@ -51,6 +56,8 @@ const TILESETS: Record<string, Tileset> = {
       enemyChase:      { top: '#cc2222', left: '#881616', right: '#aa1c1c' },
       enemyPatrol:     { top: '#cc6622', left: '#884416', right: '#aa521c' },
       enemyCharger:    { top: '#cccc22', left: '#888816', right: '#aaaa1c' },
+      effectFire:      { top: '#cc5500', left: '#882200', right: '#aa3300' },
+      effectOil:       'rgba(20, 20, 60, 0.55)',
     },
   },
 
@@ -64,6 +71,7 @@ const TILESETS: Record<string, Tileset> = {
     colors: {
       floor:           { top: '#4a3828', left: '#332618', right: '#3e2e20' },
       wall:            { top: '#5e4c3c', left: '#2a201a', right: '#3a2c24' },
+      weakWall:        { top: '#6a5a3a', left: '#3a3020', right: '#504028' },
       exit:            { top: '#1a4a3a', left: '#0e3026', right: '#142e30' },
       hazard:          { top: '#5a2a1a', left: '#3c1c0e', right: '#4a2214' },
       interactableOff: { top: '#4a3a1a', left: '#2e2510', right: '#3c2e14' },
@@ -73,6 +81,8 @@ const TILESETS: Record<string, Tileset> = {
       enemyChase:      { top: '#cc3322', left: '#882216', right: '#aa2a1c' },
       enemyPatrol:     { top: '#cc7722', left: '#884e16', right: '#aa621c' },
       enemyCharger:    { top: '#ddcc22', left: '#909016', right: '#b0b01c' },
+      effectFire:      { top: '#cc5500', left: '#882200', right: '#aa3300' },
+      effectOil:       'rgba(20, 20, 60, 0.55)',
     },
   },
 
@@ -86,6 +96,7 @@ const TILESETS: Record<string, Tileset> = {
     colors: {
       floor:           { top: '#2a2838', left: '#1c1a26', right: '#22202e' },
       wall:            { top: '#3e3c52', left: '#1a1828', right: '#28263c' },
+      weakWall:        { top: '#6a5a3a', left: '#3a3020', right: '#504028' },
       exit:            { top: '#1a3a4a', left: '#0e2430', right: '#142e3a' },
       hazard:          { top: '#4a1a3a', left: '#300e26', right: '#3c1430' },
       interactableOff: { top: '#3a3a2a', left: '#26261a', right: '#2e2e20' },
@@ -95,6 +106,8 @@ const TILESETS: Record<string, Tileset> = {
       enemyChase:      { top: '#cc2244', left: '#881630', right: '#aa1c38' },
       enemyPatrol:     { top: '#8844cc', left: '#5a2e88', right: '#6e38aa' },
       enemyCharger:    { top: '#ccaaff', left: '#887799', right: '#aa88bb' },
+      effectFire:      { top: '#cc5500', left: '#882200', right: '#aa3300' },
+      effectOil:       'rgba(20, 20, 60, 0.55)',
     },
   },
 };

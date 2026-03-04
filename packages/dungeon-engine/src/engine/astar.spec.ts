@@ -7,6 +7,7 @@ function makeGrid(rows: string[]): Grid {
     row.split('').map(ch => ({
       type: ch === '#' ? 'wall' : 'floor',
       items: [],
+      effects: [],
     } as Tile))
   );
 }

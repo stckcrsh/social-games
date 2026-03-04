@@ -6,7 +6,7 @@ function makeFloorGrid(width: number, height: number): Grid {
   return Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => {
       const isEdge = x === 0 || y === 0 || x === width - 1 || y === height - 1;
-      return { type: isEdge ? 'wall' : 'floor', items: [] } as Tile;
+      return { type: isEdge ? 'wall' : 'floor', items: [], effects: [] } as Tile;
     })
   );
 }
@@ -40,6 +40,7 @@ function makeState(overrides: Partial<RunState> = {}): RunState {
     status: 'active',
     config: DEFAULT_CONFIG,
     mechanisms: [],
+    pendingExplosions: [],
     ...overrides,
   };
 }
@@ -94,6 +95,7 @@ describe('turn processing', () => {
       Array.from({ length: W }, (_, x) => ({
         type: (y === 0 || y === 2 || x === 0 || x === W - 1) ? 'wall' : 'floor',
         items: [],
+        effects: [],
       } as Tile))
     );
 
@@ -112,6 +114,7 @@ describe('turn processing', () => {
       status: 'active',
       config: corridorConfig,
       mechanisms: [],
+      pendingExplosions: [],
     };
 
     const { turnEvents } = processTurn(state, { type: 'interact' }); // stub action — still advances turn
@@ -151,8 +154,8 @@ describe('turn processing', () => {
     const grid = makeFloorGrid(10, 10);
     // Place lever at (3,1), wall at (3,2) controlled by mechanism
     const leverDef: InteractableDef = { id: 'lever-a', kind: 'lever', label: 'Lever A', state: 0, stateCount: 2 };
-    grid[1][3] = { type: 'interactable', items: [], interactable: leverDef };
-    grid[2][3] = { type: 'wall', items: [] };
+    grid[1][3] = { type: 'interactable', items: [], effects: [], interactable: leverDef };
+    grid[2][3] = { type: 'wall', items: [], effects: [] };
 
     const state = makeState({
       grid,
@@ -213,7 +216,7 @@ describe('turn processing', () => {
   it('player on exit tile after move → status extracted', () => {
     const grid = makeFloorGrid(10, 10);
     // Place exit at (3,1)
-    grid[1][3] = { type: 'exit', items: [] };
+    grid[1][3] = { type: 'exit', items: [], effects: [] };
 
     const state = makeState({
       grid,

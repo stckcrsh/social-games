@@ -1,7 +1,14 @@
 export interface Pos { x: number; y: number; }
 
-export type TileType = 'floor' | 'wall' | 'exit' | 'hazard' | 'interactable';
+export type TileType = 'floor' | 'wall' | 'weakWall' | 'door' | 'exit' | 'hazard' | 'interactable';
 export interface ItemDrop { id: string; kind: 'scrap' | 'item'; qty: number; }
+
+export interface Effect {
+  tag: string;
+  power?: number;
+  duration?: number;    // undefined = permanent
+  sourceId?: string;
+}
 
 export type InteractableKind = 'lever' | 'switch' | 'dial';
 
@@ -13,7 +20,7 @@ export interface InteractableDef {
   stateCount: number;
 }
 
-export interface Tile { type: TileType; items: ItemDrop[]; interactable?: InteractableDef; }
+export interface Tile { type: TileType; items: ItemDrop[]; interactable?: InteractableDef; effects: Effect[]; }
 export type Grid = Tile[][];  // grid[y][x], y=row, (0,0) top-left, y+ = south
 
 export interface MechanismCondition {
@@ -64,7 +71,13 @@ export type GameEvent =
   | { type: 'interacted';       entityId: string; interactableId: string; kind: InteractableKind; label: string; newState: number }
   | { type: 'tile_changed';     x: number; y: number; from: TileType; to: TileType }
   | { type: 'mechanism_solved'; mechanismId: string }
-  | { type: 'mechanism_reset';  mechanismId: string };
+  | { type: 'mechanism_reset';  mechanismId: string }
+  | { type: 'fire_damage';              entityId: string; x: number; y: number; amount: number }
+  | { type: 'fire_spread';              fromX: number; fromY: number; toX: number; toY: number }
+  | { type: 'explosion';                x: number; y: number; radius: number }
+  | { type: 'explosion_wall_destroyed'; x: number; y: number }
+  | { type: 'explosion_entity_damage';  entityId: string; x: number; y: number; amount: number }
+  | { type: 'oil_ignited';              x: number; y: number };
 
 export type PlayerAction =
   | { type: 'move'; dir: Direction }
@@ -92,4 +105,5 @@ export interface RunState {
   status: 'active' | 'dead' | 'extracted';
   config: RunConfig;
   mechanisms: MechanismDef[];
+  pendingExplosions: Array<{ x: number; y: number; radius: number }>;
 }

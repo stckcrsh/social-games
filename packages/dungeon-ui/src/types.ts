@@ -1,4 +1,11 @@
-export type TileType = 'floor' | 'wall' | 'exit' | 'hazard' | 'interactable';
+export type TileType = 'floor' | 'wall' | 'weakWall' | 'door' | 'exit' | 'hazard' | 'interactable';
+
+export interface Effect {
+  tag: string;
+  power?: number;
+  duration?: number;
+  sourceId?: string;
+}
 
 export interface ItemDrop {
   id: string;
@@ -18,6 +25,7 @@ export interface Tile {
   type: TileType;
   items: ItemDrop[];
   interactable?: InteractableDef;
+  effects: Effect[];
 }
 
 export interface Pos {
@@ -61,4 +69,10 @@ export type GameEvent =
   | { type: 'mechanism_reset'; mechanismId: string }
   | { type: 'run_end'; reason: string }
   | { type: 'player_action' }
+  | { type: 'fire_damage'; entityId: string; x: number; y: number; amount: number }
+  | { type: 'fire_spread'; fromX: number; fromY: number; toX: number; toY: number }
+  | { type: 'explosion'; x: number; y: number; radius: number }
+  | { type: 'explosion_wall_destroyed'; x: number; y: number }
+  | { type: 'explosion_entity_damage'; entityId: string; x: number; y: number; amount: number }
+  | { type: 'oil_ignited'; x: number; y: number }
   | { type: string };

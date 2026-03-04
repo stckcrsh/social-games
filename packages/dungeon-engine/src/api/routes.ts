@@ -1,9 +1,13 @@
 import type { FastifyInstance } from 'fastify';
+import type { GameEvent } from '../models/types.js';
 import { parsePreset } from '../models/presets.js';
 import { renderGrid } from '../renderer/ascii.js';
 import { store } from '../store.js';
 import { processTurn } from '../engine/turn.js';
-import { CreateRunSchema, PlayerActionSchema } from './schemas.js';
+import { runEnvironmentalPhase } from '../engine/environment.js';
+import { getTile } from '../engine/grid.js';
+import { applyEffect } from '../engine/effects.js';
+import { CreateRunSchema, PlayerActionSchema, DebugOilSchema, DebugExplodeSchema } from './schemas.js';
 
 export async function runsPlugin(fastify: FastifyInstance): Promise<void> {
   // POST /runs — create a new run
@@ -60,6 +64,31 @@ export async function runsPlugin(fastify: FastifyInstance): Promise<void> {
       turnEvents,
       ...(error ? { error } : {}),
     });
+  });
+
+  // POST /runs/:id/debug/oil — place oil at (x, y)
+  fastify.post<{ Params: { id: string } }>('/runs/:id/debug/oil', async (req, reply) => {
+    const state = store.get(req.params.id);
+    if (!state) return reply.status(404).send({ error: 'Run not found' });
+    const pr = DebugOilSchema.safeParse(req.body);
+    if (!pr.success) return reply.status(400).send({ error: pr.error.flatten() });
+    const tile = getTile(state.grid, pr.data.x, pr.data.y);
+    if (!tile) return reply.status(400).send({ error: 'Out of bounds' });
+    applyEffect(tile, { tag: 'oil' });
+    return reply.send({ state, render: renderGrid(state) });
+  });
+
+  // POST /runs/:id/debug/explode — trigger explosion at (x, y)
+  fastify.post<{ Params: { id: string } }>('/runs/:id/debug/explode', async (req, reply) => {
+    const state = store.get(req.params.id);
+    if (!state) return reply.status(404).send({ error: 'Run not found' });
+    const pr = DebugExplodeSchema.safeParse(req.body);
+    if (!pr.success) return reply.status(400).send({ error: pr.error.flatten() });
+    const { x, y, radius = 1 } = pr.data;
+    state.pendingExplosions.push({ x, y, radius });
+    const turnEvents: GameEvent[] = [];
+    runEnvironmentalPhase(state, turnEvents);
+    return reply.send({ state, render: renderGrid(state), turnEvents });
   });
 
   // DELETE /runs/:id — discard run

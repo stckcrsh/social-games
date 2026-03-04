@@ -164,6 +164,11 @@ function drawTile(
     return;
   }
 
+  if (tile.type === 'weakWall') {
+    drawBlock(ctx, cx, cy, tileW, tileH, wallH * 0.6, colors.weakWall);
+    return;
+  }
+
   const floorColors: TileColors =
     tile.type === 'exit'         ? colors.exit
     : tile.type === 'hazard'     ? colors.hazard
@@ -174,6 +179,20 @@ function drawTile(
     : colors.floor;
 
   drawFloorDiamond(ctx, cx, cy, tileW, tileH, floorColors);
+
+  // Effect overlays (after floor, before item dot)
+  const fireEff = tile.effects?.find(e => e.tag === 'fire');
+  if (fireEff) {
+    ctx.globalAlpha = fireEff.duration === 1 ? 0.45 : 0.75;
+    ctx.fillStyle = colors.effectFire.top;
+    diamond(ctx, cx, cy, tileW, tileH);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+  } else if (tile.effects?.some(e => e.tag === 'oil')) {
+    ctx.fillStyle = colors.effectOil;
+    diamond(ctx, cx, cy, tileW, tileH);
+    ctx.fill();
+  }
 
   // Item indicator dot
   if (tile.items.length > 0) {

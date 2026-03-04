@@ -96,6 +96,7 @@ const DEFAULT_MECHANISMS: MechanismDef[] = [
 function parseTileChar(ch: string): TileType {
   switch (ch) {
     case '#': return 'wall';
+    case 'W': return 'weakWall';
     case 'X': return 'exit';
     case 'H': return 'hazard';
     case 'I': return 'interactable';
@@ -126,7 +127,7 @@ function parseMap(rows: string[]): ParseResult {
         enemyPositions.push({ x, y, slot: parseInt(ch, 10) });
       }
       const tile: TileType = parseTileChar(ch);
-      return { type: tile, items: [] };
+      return { type: tile, items: [], effects: [] };
     })
   );
 
@@ -217,6 +218,7 @@ function buildRunState(
     status: 'active',
     config,
     mechanisms: mechanisms.map(m => ({ ...m })),
+    pendingExplosions: [],
   };
 }
 

@@ -18,7 +18,7 @@ export function getTile(grid: Grid, x: number, y: number): Tile | null {
 
 export function isWall(grid: Grid, x: number, y: number): boolean {
   const tile = getTile(grid, x, y);
-  return tile === null || tile.type === 'wall';
+  return tile === null || tile.type === 'wall' || tile.type === 'weakWall';
 }
 
 const CARDINAL_DELTAS = [
@@ -47,4 +47,22 @@ export function getNeighbors(grid: Grid, pos: Pos): Pos[] {
 
 export function entityAt(entities: Entity[], x: number, y: number): Entity | undefined {
   return entities.find(e => e.pos.x === x && e.pos.y === y);
+}
+
+const DIAGONAL_8_DELTAS = [
+  { dx:  0, dy: -1 }, // N
+  { dx:  1, dy: -1 }, // NE
+  { dx:  1, dy:  0 }, // E
+  { dx:  1, dy:  1 }, // SE
+  { dx:  0, dy:  1 }, // S
+  { dx: -1, dy:  1 }, // SW
+  { dx: -1, dy:  0 }, // W
+  { dx: -1, dy: -1 }, // NW
+];
+
+/** Returns all 8-directional neighbors within bounds (does NOT filter walls). */
+export function neighbors8(grid: Grid, x: number, y: number): Pos[] {
+  return DIAGONAL_8_DELTAS
+    .map(({ dx, dy }) => ({ x: x + dx, y: y + dy }))
+    .filter(p => inBounds(grid, p.x, p.y));
 }

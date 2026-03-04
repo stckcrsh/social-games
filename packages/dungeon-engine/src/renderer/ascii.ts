@@ -23,15 +23,17 @@ export function renderGrid(state: RunState): string {
       }
 
       // Tile type
-      switch (tile.type) {
-        case 'wall':         row += '#'; break;
-        case 'exit':         row += 'E'; break;
-        case 'hazard':       row += 'H'; break;
-        case 'interactable': row += tile.interactable?.state ? 'i' : 'I'; break;
-        default:
-          // Floor: show $ if items present, else dot
-          row += tile.items.length > 0 ? '$' : '.';
-      }
+      if (tile.type === 'weakWall')     { row += 'W'; continue; }
+      if (tile.type === 'wall')         { row += '#'; continue; }
+      if (tile.type === 'exit')         { row += 'E'; continue; }
+      if (tile.type === 'hazard')       { row += 'H'; continue; }
+      if (tile.type === 'interactable') { row += tile.interactable?.state ? 'i' : 'I'; continue; }
+      // Effects on floor
+      const fireEff = tile.effects.find(e => e.tag === 'fire');
+      if (fireEff) { row += fireEff.duration === 1 ? 'f' : 'F'; continue; }
+      if (tile.effects.some(e => e.tag === 'oil')) { row += 'o'; continue; }
+      // Floor
+      row += tile.items.length > 0 ? '$' : '.';
     }
     lines.push(row);
   }

@@ -55,6 +55,15 @@ is_running() {
 
 # ── Operations ────────────────────────────────────────────────────────────────
 
+# Recursively send SIGTERM to a process and all its descendants (children first)
+kill_tree() {
+  local pid=$1 child
+  for child in $(pgrep -P "$pid" 2>/dev/null); do
+    kill_tree "$child"
+  done
+  kill -TERM "$pid" 2>/dev/null || true
+}
+
 do_start() {
   local svc=$1
   local def project target port env_prefix
@@ -93,22 +102,37 @@ do_stop() {
   local pf; pf=$(pid_file "$svc")
   printf "  stopping %-22s → " "$svc"
 
-  if ! is_running "$svc"; then
-    echo "not running"
-    return
+  local pid=""
+  if is_running "$svc"; then
+    pid=$(cat "$pf")
+    # Kill the wrapper PID and its entire child tree (catches node spawned by nx/pnpm)
+    kill_tree "$pid"
+
+    local i=0
+    while kill -0 "$pid" 2>/dev/null && [ $i -lt 10 ]; do
+      sleep 0.5; i=$(( i + 1 ))
+    done
+    kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null || true
+    rm -f "$pf"
   fi
 
-  local pid; pid=$(cat "$pf")
-  kill -TERM "$pid" 2>/dev/null || true
+  # Fallback: kill any process still holding the service port (catches orphans)
+  local def port
+  def=$(get_def "$svc")
+  IFS=: read -r _ _ port _ <<< "$def"
+  if [ -n "$port" ]; then
+    local port_pid
+    port_pid=$(lsof -ti ":$port" -sTCP:LISTEN 2>/dev/null || true)
+    if [ -n "$port_pid" ]; then
+      kill -KILL $port_pid 2>/dev/null || true
+    fi
+  fi
 
-  local i=0
-  while kill -0 "$pid" 2>/dev/null && [ $i -lt 10 ]; do
-    sleep 0.5; i=$(( i + 1 ))
-  done
-  kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null || true
-
-  rm -f "$pf"
-  echo "✓ stopped (was PID $pid)"
+  if [ -n "$pid" ]; then
+    echo "✓ stopped (was PID $pid)"
+  else
+    echo "not running"
+  fi
 }
 
 do_restart() {

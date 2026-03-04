@@ -23,3 +23,10 @@ export const CreateRunSchema = z.object({
   preset: z.enum(['default', 'open', 'maze']).optional(),
   config: RunConfigSchema.optional(),
 });
+
+export const DebugOilSchema = z.object({ x: z.number().int(), y: z.number().int() });
+export const DebugExplodeSchema = z.object({
+  x: z.number().int(),
+  y: z.number().int(),
+  radius: z.number().int().min(1).max(10).optional(),
+});

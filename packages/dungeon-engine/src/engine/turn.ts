@@ -4,6 +4,7 @@ import { applyAttack, findAdjacentTarget } from './combat.js';
 import { resolvePickup } from './pickup.js';
 import { aiRegistry } from '../ai/registry.js';
 import { evaluateMechanisms } from './mechanisms.js';
+import { runEnvironmentalPhase } from './environment.js';
 
 export function processTurn(
   state: RunState,
@@ -66,8 +67,8 @@ export function processTurn(
     }
   }
 
-  // ─── Step 5: Hazard stub ──────────────────────────────────────────────────
-  // (no-op hook point)
+  // ─── Step 5: Environmental phase ─────────────────────────────────────────
+  runEnvironmentalPhase(s, turnEvents);
 
   // ─── Step 6: End state check ─────────────────────────────────────────────
   if (s.player.hp <= 0) {
