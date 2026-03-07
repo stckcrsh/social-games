@@ -141,6 +141,7 @@ export interface RunConfig {
   allowDiagonalCornerCutting: boolean;  // default false
   dashDistance: number;                 // default 2
   chargerDashDistance: number;          // default 2
+  nameIndex?: Record<string, { x: number; y: number }>;
 }
 
 export type RunResult = 'extracted' | 'dead' | 'abandoned';

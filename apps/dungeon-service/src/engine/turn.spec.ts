@@ -381,6 +381,38 @@ describe('turn processing', () => {
     expect(s2.rooms['room-b'].mechanisms[0].satisfied).toBe(true);
   });
 
+  it('mechanism effect with targetName resolves via config.nameIndex', () => {
+    const grid = makeFloorGrid(5, 5);
+    grid[3][3].type = 'wall'; // target tile
+    grid[2][2].type = 'interactable';
+    grid[2][2].interactable = {
+      id: 'switch-1', kind: 'switch', label: 'Switch', state: 1, stateCount: 2,
+    };
+
+    const state = makeState({
+      grid,
+      mechanisms: [{
+        id: 'mech-named',
+        conditions: [{ interactableId: 'switch-1', state: 1 }],
+        effects: [{ type: 'tile_change', targetName: 'my-target', to: 'floor' }],
+        resetEffects: [],
+        satisfied: false,
+      }],
+    });
+
+    // Set nameIndex in config
+    state.config = {
+      ...state.config,
+      nameIndex: { 'my-target': { x: 3, y: 3 } },
+    };
+
+    // Process one turn (wait action) — mechanism should evaluate
+    const { state: s2 } = processTurn(state, { type: 'wait' });
+
+    expect(s2.grid[3][3].type).toBe('floor');
+    expect(s2.events.some(e => e.type === 'mechanism_solved')).toBe(true);
+  });
+
   it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
     const grid = makeFloorGrid(10, 10);
     // Place a terminal at (4,4) — grid[y][x] so grid[4][4]

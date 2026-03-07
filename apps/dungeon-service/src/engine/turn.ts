@@ -37,7 +37,7 @@ export function processTurn(
   checkPortalTransition(s, turnEvents);
 
   // ─── Step 1b: Mechanism evaluation ──────────────────────────────────────────
-  evaluateMechanisms(s, turnEvents);
+  evaluateMechanisms(s, turnEvents, s.config.nameIndex ?? {});
 
   // ─── Step 2: Cross-room mechanism evaluation ─────────────────────────────────
   evaluateCrossRoomMechanisms(s, turnEvents);

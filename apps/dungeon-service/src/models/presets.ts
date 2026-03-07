@@ -448,6 +448,9 @@ export function parsePreset(
         state.grid[tmx.extract.y][tmx.extract.x].type = 'exit';
       }
 
+      // Wire nameIndex into config for mechanism targetName resolution
+      state.config = { ...state.config, nameIndex: tmx.nameIndex };
+
       return state;
     }
     case 'maze':  return buildRunState(PRESET_MAZE, config, {}, [], profile, name, metaMode, playerId, escrowId);
