@@ -4,19 +4,28 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/meta-game-service"
+      "path": "./libs/shared"
     },
     {
-      "path": "./packages/meta-game-ui"
+      "path": "./libs/items"
     },
     {
-      "path": "./packages/dungeon-engine"
+      "path": "./apps/dungeon-service"
+    },
+    {
+      "path": "./apps/dungeon-ui"
+    },
+    {
+      "path": "./apps/meta-service"
+    },
+    {
+      "path": "./apps/meta-ui"
     },
     {
       "path": "./packages/dungeon-ui-e2e"
     },
     {
-      "path": "./packages/dungeon-ui"
+      "path": "./apps/game"
     }
   ]
 }

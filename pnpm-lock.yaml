@@ -35,6 +35,9 @@ importers:
       react-dom:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: 6.30.3
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@nx/devkit':
         specifier: 22.5.1
@@ -156,6 +159,8 @@ importers:
         version: 3.2.4(@types/node@20.19.9)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@22.1.0)(terser@5.46.0)(yaml@2.8.2)
 
   apps/dungeon-ui: {}
+
+  apps/game: {}
 
   apps/meta-service:
     dependencies:
