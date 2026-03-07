@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { processTurn } from './turn.js';
 import { evaluateMechanisms } from './mechanisms.js';
-import type { Entity, GameEvent, Grid, InteractableDef, RunConfig, RunState, Tile } from '@org/shared';
+import type { Entity, GameEvent, Grid, InteractableDef, RunConfig, RunState, RoomState, Tile } from '@org/shared';
 
 function makeFloorGrid(width: number, height: number): Grid {
   return Array.from({ length: height }, (_, y) =>
@@ -288,6 +288,52 @@ describe('turn processing', () => {
     expect(next.status).toBe('extracted');
     expect(next.reconcilePatch).toBeDefined();
     expect(next.reconcilePatch?.result).toBe('extracted');
+  });
+
+  it('transitions to another room when player steps on a map_exit tile', () => {
+    const grid = makeFloorGrid(5, 5);
+    // Place a map_exit tile at (3,2) — player will move east to it
+    const exitTile = grid[2][3];
+    exitTile.type = 'exit';
+    (exitTile as Record<string, unknown>)['portal'] = {
+      name: 'exit-east',
+      targetMapId: 'room-b',
+      targetEnterId: 'enter-from-a',
+    };
+
+    // room-b: a 5x5 floor grid with a map_enter marker at (1,1)
+    const roomBGrid = makeFloorGrid(5, 5);
+    // Mark the enter point so findEnterPoint can locate it
+    const enterTile = roomBGrid[1][1];
+    (enterTile as Record<string, unknown>)['portal'] = { name: 'enter-from-a', type: 'map_enter' };
+
+    const roomBEnemy = makeEnemy('enemy-b1', 3, 3);
+
+    const state = makeState({
+      currentRoomId: 'room-a',
+      rooms: {
+        'room-b': {
+          mapId: 'room-b',
+          grid: roomBGrid,
+          enemies: [roomBEnemy],
+          mechanisms: [],
+          pendingExplosions: [],
+        } as RoomState,
+      },
+      grid,
+    });
+    // Position player at (2,2) — will move east to (3,2) which is the exit
+    state.player.pos = { x: 2, y: 2 };
+
+    const { state: s2 } = processTurn(state, { type: 'move', dir: 'E' });
+
+    expect(s2.currentRoomId).toBe('room-b');
+    expect(s2.player.pos).toEqual({ x: 1, y: 1 }); // map_enter in room-b
+    // room-b's enemies are loaded (enemy may have moved during the turn)
+    expect(s2.enemies.some(e => e.id === 'enemy-b1')).toBe(true);
+    expect(s2.rooms['room-a']).toBeDefined();          // room-a was frozen
+    expect(s2.rooms['room-b']).toBeUndefined();        // room-b is now active (removed from frozen)
+    expect(s2.events.some(e => e.type === 'room_transition')).toBe(true);
   });
 
   it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
