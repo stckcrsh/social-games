@@ -1,6 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Grid, TileType, Entity, RunState, RunConfig, InteractableDef, MechanismDef, PlayerProfile, StartReceipt } from '@org/shared';
 import { applyEffect } from '../engine/effects.js';
+import { loadTmxFile } from '../engine/tmx-loader.js';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+// Resolve TMX path: dungeon-ui/public/tiles is a sibling app
+// From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into dungeon-ui
+function resolveTmxPath(filename: string): string {
+  return resolve(__dirname, '../../../../dungeon-ui/public/tiles', filename);
+}
 
 const DEFAULT_CONFIG: RunConfig = {
   width: 20,
@@ -378,7 +389,7 @@ function buildRunState(
 
   return {
     id,
-    currentRoomId: 'room-default',
+    currentRoomId: preset ?? 'default',
     rooms: {},
     grid,
     player,
@@ -408,7 +419,37 @@ export function parsePreset(
   const config: RunConfig = { ...DEFAULT_CONFIG, ...configOverride };
 
   switch (name) {
-    case 'open':  return buildRunState(PRESET_OPEN, config, {}, [], profile, name, metaMode, playerId, escrowId);
+    case 'open': {
+      // Load TMX object layers for this preset
+      const tmx = loadTmxFile(resolveTmxPath('open-preset.tmx'));
+
+      // Build base state from string grid (walls/floors layout unchanged)
+      const state = buildRunState(PRESET_OPEN, config, {}, [], profile, name, metaMode, playerId, escrowId);
+
+      // Override enemies from TMX (replace hardcoded enemy list)
+      state.enemies = tmx.enemies.map((e, i) => ({
+        id: `enemy-${i + 1}`,
+        kind: 'enemy' as const,
+        pos: e.pos,
+        hp: e.hp,
+        maxHp: e.maxHp,
+        attackDamage: e.attackDamage,
+        aiType: e.aiType,
+        state: e.patrolWaypoints ? { path: e.patrolWaypoints, index: 0 } : {},
+      }));
+
+      // Player spawn from TMX (replace hardcoded start position)
+      const defaultSpawn = tmx.spawns.find(s => s.name === 'default');
+      const playerPos = defaultSpawn?.pos ?? { x: 2, y: 2 };
+      state.player = { ...state.player, pos: playerPos };
+
+      // Place extract tile from TMX
+      if (tmx.extract) {
+        state.grid[tmx.extract.y][tmx.extract.x].type = 'exit';
+      }
+
+      return state;
+    }
     case 'maze':  return buildRunState(PRESET_MAZE, config, {}, [], profile, name, metaMode, playerId, escrowId);
     case 'oil_trap': {
       const defaultProfile: PlayerProfile = {
