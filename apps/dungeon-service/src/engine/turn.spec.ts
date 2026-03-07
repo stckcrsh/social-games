@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { processTurn } from './turn.js';
-import type { Entity, Grid, InteractableDef, RunConfig, RunState, Tile } from '@org/shared';
+import { evaluateMechanisms } from './mechanisms.js';
+import type { Entity, GameEvent, Grid, InteractableDef, RunConfig, RunState, Tile } from '@org/shared';
 
 function makeFloorGrid(width: number, height: number): Grid {
   return Array.from({ length: height }, (_, y) =>
@@ -287,5 +288,45 @@ describe('turn processing', () => {
     expect(next.status).toBe('extracted');
     expect(next.reconcilePatch).toBeDefined();
     expect(next.reconcilePatch?.result).toBe('extracted');
+  });
+
+  it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
+    const grid = makeFloorGrid(10, 10);
+    // Place a terminal at (4,4) — grid[y][x] so grid[4][4]
+    grid[4][4].type = 'interactable';
+    grid[4][4].interactable = {
+      id: 'terminal-1', kind: 'terminal', label: 'Terminal', state: 0, stateCount: 2,
+    };
+    // Place a wall at (4,5) — grid[y][x] so grid[5][4]
+    grid[5][4].type = 'wall';
+
+    const state = makeState({
+      grid,
+      mechanisms: [{
+        id: 'mech-terminal',
+        triggers: [{ kind: 'item_hit', triggerPointId: 'terminal-1' }],
+        conditions: [],
+        effects: [{ type: 'tile_change', x: 4, y: 5, to: 'floor' }],
+        resetEffects: [],
+        satisfied: false,
+      }],
+    });
+
+    // First: call with NO matching event — mechanism must NOT fire (trigger guard is required)
+    const noMatchEvents: GameEvent[] = [
+      { type: 'item_hit', entityId: 'some-other-entity', amount: 1, x: 9, y: 9 },
+    ];
+    evaluateMechanisms(state, noMatchEvents);
+    expect(state.grid[5][4].type).toBe('wall');
+    expect(noMatchEvents.some(e => e.type === 'mechanism_solved')).toBe(false);
+
+    // Second: call with a matching item_hit event at the terminal's position (x=4, y=4)
+    const events: GameEvent[] = [
+      { type: 'item_hit', entityId: 'terminal-1', amount: 1, x: 4, y: 4 },
+    ];
+    evaluateMechanisms(state, events);
+
+    expect(state.grid[5][4].type).toBe('floor');
+    expect(events.some(e => e.type === 'mechanism_solved')).toBe(true);
   });
 });
