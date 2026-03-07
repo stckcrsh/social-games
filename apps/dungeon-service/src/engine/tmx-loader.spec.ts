@@ -99,6 +99,7 @@ describe('parseTmxObjects', () => {
       pos: { x: 5, y: 5 },
       aiType: 'chase_astar',
       hp: 15,
+      maxHp: 15,
       attackDamage: 4,
       aggroRange: 8,
     });
