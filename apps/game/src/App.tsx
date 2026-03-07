@@ -14,6 +14,7 @@ import { ItemDefDetailPage } from './pages/ItemDefDetailPage';
 import { GamePage } from './game/Game';
 import { LoadoutPage } from './pages/LoadoutPage';
 import { ResultsPage } from './pages/ResultsPage';
+import { DebugPage } from './pages/DebugPage';
 
 export function App() {
   return (
@@ -34,7 +35,7 @@ export function App() {
           <Route path="/game/:runId" element={<RequireAuth><GamePage /></RequireAuth>} />
           <Route path="/loadout" element={<RequireAuth><LoadoutPage /></RequireAuth>} />
           <Route path="/results/:runId" element={<ResultsPage />} />
-          {/* /debug added in Task 8 */}
+          <Route path="/debug" element={<DebugPage />} />
         </Routes>
       </main>
     </>
