@@ -193,6 +193,7 @@ export function GamePage() {
   const [autoTick, setAutoTick] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
+  const navigatedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-tick for debug runs
@@ -217,7 +218,10 @@ export function GamePage() {
         if (data.state) {
           // Navigate away on terminal states
           if (data.state.status === 'dead' || data.state.status === 'extracted') {
-            navigate(`/results/${runId}`);
+            if (!navigatedRef.current) {
+              navigatedRef.current = true;
+              navigate(`/results/${runId}`);
+            }
             return;
           }
           setFrame({
@@ -237,6 +241,7 @@ export function GamePage() {
 
     return () => {
       wsRef.current = null;
+      navigatedRef.current = false;
       ws.close();
     };
   }, [runId, navigate]);
