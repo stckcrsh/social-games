@@ -13,6 +13,7 @@ import { ItemDefsPage } from './pages/ItemDefsPage';
 import { ItemDefDetailPage } from './pages/ItemDefDetailPage';
 import { GamePage } from './game/Game';
 import { LoadoutPage } from './pages/LoadoutPage';
+import { ResultsPage } from './pages/ResultsPage';
 
 export function App() {
   return (
@@ -32,7 +33,8 @@ export function App() {
           <Route path="/content/items/:defId" element={<ItemDefDetailPage />} />
           <Route path="/game/:runId" element={<RequireAuth><GamePage /></RequireAuth>} />
           <Route path="/loadout" element={<RequireAuth><LoadoutPage /></RequireAuth>} />
-          {/* /results/:runId, /debug added in Tasks 7-8 */}
+          <Route path="/results/:runId" element={<ResultsPage />} />
+          {/* /debug added in Task 8 */}
         </Routes>
       </main>
     </>
