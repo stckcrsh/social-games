@@ -11,6 +11,7 @@ import { AccountPage } from './pages/AccountPage';
 import { AdminPage } from './pages/AdminPage';
 import { ItemDefsPage } from './pages/ItemDefsPage';
 import { ItemDefDetailPage } from './pages/ItemDefDetailPage';
+import { GamePage } from './game/Game';
 
 export function App() {
   return (
@@ -28,7 +29,8 @@ export function App() {
           <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
           <Route path="/content/items" element={<ItemDefsPage />} />
           <Route path="/content/items/:defId" element={<ItemDefDetailPage />} />
-          {/* /loadout, /game/:runId, /results/:runId, /debug added in Tasks 5-8 */}
+          <Route path="/game/:runId" element={<RequireAuth><GamePage /></RequireAuth>} />
+          {/* /loadout, /results/:runId, /debug added in Tasks 6-8 */}
         </Routes>
       </main>
     </>
