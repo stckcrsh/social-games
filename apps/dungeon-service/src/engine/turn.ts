@@ -39,7 +39,10 @@ export function processTurn(
   // ─── Step 1b: Mechanism evaluation ──────────────────────────────────────────
   evaluateMechanisms(s, turnEvents);
 
-  // ─── Step 2: Increment overclock ────────────────────────────────────────────
+  // ─── Step 2: Cross-room mechanism evaluation ─────────────────────────────────
+  evaluateCrossRoomMechanisms(s, turnEvents);
+
+  // ─── Step 3: Increment overclock ────────────────────────────────────────────
   s.overclock += 1;
 
   // ─── Step 3: Player pickup ──────────────────────────────────────────────────
@@ -123,6 +126,42 @@ export function processTurn(
   s.events.push(...turnEvents);
 
   return { state: s, turnEvents };
+}
+
+function evaluateCrossRoomMechanisms(state: RunState, events: GameEvent[]): void {
+  for (const [_roomId, room] of Object.entries(state.rooms)) {
+    for (const mechanism of room.mechanisms) {
+      if (!mechanism.triggers || mechanism.triggers.length === 0) continue;
+      if (mechanism.satisfied) continue;
+
+      const triggered = mechanism.triggers.some(m => {
+        if (m.kind !== 'cross_room') return false;
+        if (m.sourceMapId !== state.currentRoomId) return false;
+        // Check if active room's events contain the triggering interactable event
+        return events.some(e =>
+          e.type === 'interacted' && e.interactableId === m.triggerPointId
+        );
+      });
+
+      if (!triggered) continue;
+
+      mechanism.satisfied = true;
+
+      for (const effect of mechanism.effects) {
+        if (effect.type === 'tile_change' && effect.x != null && effect.y != null) {
+          const tile = getTile(room.grid, effect.x, effect.y);
+          if (!tile) continue;
+          const from = tile.type;
+          tile.type = effect.to;
+          if (from !== effect.to) {
+            events.push({ type: 'tile_changed', x: effect.x, y: effect.y, from, to: effect.to });
+          }
+        }
+      }
+
+      events.push({ type: 'mechanism_solved', mechanismId: mechanism.id });
+    }
+  }
 }
 
 function resolvePlayerAction(

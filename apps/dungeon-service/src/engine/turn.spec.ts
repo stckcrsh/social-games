@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { processTurn } from './turn.js';
 import { evaluateMechanisms } from './mechanisms.js';
-import type { Entity, GameEvent, Grid, InteractableDef, RunConfig, RunState, RoomState, Tile } from '@org/shared';
+import type { Entity, GameEvent, Grid, InteractableDef, MechanismDef, RunConfig, RunState, RoomState, Tile } from '@org/shared';
 
 function makeFloorGrid(width: number, height: number): Grid {
   return Array.from({ length: height }, (_, y) =>
@@ -334,6 +334,51 @@ describe('turn processing', () => {
     expect(s2.rooms['room-a']).toBeDefined();          // room-a was frozen
     expect(s2.rooms['room-b']).toBeUndefined();        // room-b is now active (removed from frozen)
     expect(s2.events.some(e => e.type === 'room_transition')).toBe(true);
+  });
+
+  it('cross-room trigger fires mechanism in a frozen room', () => {
+    // Active room A: player + a lever at (2,2)
+    const gridA = makeFloorGrid(5, 5);
+    gridA[2][2].type = 'interactable';
+    gridA[2][2].interactable = {
+      id: 'lever-a', kind: 'lever', label: 'Lever A', state: 0, stateCount: 2,
+    };
+
+    // Frozen room B: a wall at (3,3) that a mechanism will open
+    const gridB = makeFloorGrid(5, 5);
+    gridB[3][3].type = 'wall';
+    const mechB: MechanismDef = {
+      id: 'mech-b',
+      triggers: [{ kind: 'cross_room', sourceMapId: 'room-a', triggerPointId: 'lever-a' }],
+      conditions: [],
+      effects: [{ type: 'tile_change', x: 3, y: 3, to: 'floor' }],
+      resetEffects: [],
+      satisfied: false,
+    };
+
+    const state = makeState({
+      currentRoomId: 'room-a',
+      rooms: {
+        'room-b': {
+          mapId: 'room-b',
+          grid: gridB,
+          enemies: [],
+          mechanisms: [mechB],
+          pendingExplosions: [],
+        } as RoomState,
+      },
+      grid: gridA,
+    });
+
+    // Position player adjacent to lever so they can interact
+    state.player.pos = { x: 1, y: 2 };
+
+    // Player interacts → generates 'interacted' event for lever-a
+    const { state: s2 } = processTurn(state, { type: 'interact' });
+
+    // Mechanism in frozen room-b should have fired
+    expect(s2.rooms['room-b'].grid[3][3].type).toBe('floor');
+    expect(s2.rooms['room-b'].mechanisms[0].satisfied).toBe(true);
   });
 
   it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
