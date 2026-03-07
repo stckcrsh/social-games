@@ -1,11 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { Grid, TileType, Entity, RunState, RunConfig, InteractableDef, MechanismDef, PlayerProfile, StartReceipt } from '@org/shared';
 import { applyEffect } from '../engine/effects.js';
 import { loadTmxFile } from '../engine/tmx-loader.js';
-
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // Resolve TMX path: game/public/tiles is a sibling app
 // From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into game
