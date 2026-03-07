@@ -331,7 +331,7 @@ export function GamePage() {
     );
   }
 
-  const tileset = getTileset(state.preset ?? 'default');
+  const tileset = getTileset(state.startReceipt.preset ?? 'default');
 
   const eventLines = turnEvents
     .map(formatEvent)

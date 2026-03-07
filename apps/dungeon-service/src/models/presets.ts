@@ -5,9 +5,10 @@ import { applyEffect } from '../engine/effects.js';
 import { loadTmxFile } from '../engine/tmx-loader.js';
 
 // Resolve TMX path: game/public/tiles is a sibling app
-// From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into game
+// At runtime __dirname = apps/dungeon-service/dist/ (CJS bundle output)
+// 3 levels up: dist/ → dungeon-service/ → apps/ → repo root, then into apps/game
 export function resolveTmxPath(filename: string): string {
-  return resolve(__dirname, '../../../../game/public/tiles', filename);
+  return resolve(__dirname, '../../../game/public/tiles', filename);
 }
 
 const DEFAULT_CONFIG: RunConfig = {
