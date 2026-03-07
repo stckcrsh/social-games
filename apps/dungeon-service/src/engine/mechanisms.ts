@@ -1,6 +1,7 @@
 import type { GameEvent, Grid, InteractableDef, RunState } from '@org/shared';
 import { getTile } from '@org/shared';
 
+// TODO(Task 8): pass nameIndex to resolve targetName
 export function evaluateMechanisms(s: RunState, turnEvents: GameEvent[]): void {
   for (const mechanism of s.mechanisms) {
     const conditionsMet = mechanism.conditions.every(cond => {
@@ -23,6 +24,9 @@ export function evaluateMechanisms(s: RunState, turnEvents: GameEvent[]): void {
           if (from !== effect.to) {
             turnEvents.push({ type: 'tile_changed', x: effect.x, y: effect.y, from, to: effect.to });
           }
+        } else if (effect.targetName) {
+          // targetName resolution requires nameIndex (Task 8) — not yet wired here
+          console.warn(`[mechanisms] unresolved targetName '${effect.targetName}' — nameIndex not passed`);
         }
       }
     }
