@@ -1,4 +1,4 @@
-import type { GameEvent, Grid, PlayerAction, RoomState, RunState, Slot, Tile } from '@org/shared';
+import type { Entity, GameEvent, Grid, PlayerAction, RoomState, RunState, Slot, Tile } from '@org/shared';
 import { DIR_TO_DELTA, entityAt, getTile, inBounds, isWall } from '@org/shared';
 import { applyAttack, findAdjacentTarget } from './combat.js';
 import { resolvePickup } from './pickup.js';
@@ -9,6 +9,8 @@ import { resolveItemActivation } from '@org/items';
 import { computeReconcilePatch } from './reconcile.js';
 import { writeOutboxRecord } from '../storage/outbox-store.js';
 import { DATA_DIR } from '../config.js';
+import { loadTmxFile, buildRoomGrid } from './tmx-loader.js';
+import { resolveTmxPath } from '../models/presets.js';
 
 export function processTurn(
   state: RunState,
@@ -387,14 +389,18 @@ function checkPortalTransition(state: RunState, events: GameEvent[]): void {
   };
   state.rooms = { ...state.rooms, [state.currentRoomId]: frozen };
 
-  // Load target room
-  const targetRoom = state.rooms[portal.targetMapId];
+  // Load target room (from pre-loaded rooms or lazy-load from TMX)
+  let targetRoom = state.rooms[portal.targetMapId];
   if (!targetRoom) {
-    console.warn(`[room transition] target room '${portal.targetMapId}' not in state.rooms — staying`);
-    // Undo the freeze (restore current room)
-    const { [state.currentRoomId]: _removed, ...rest } = state.rooms;
-    state.rooms = rest;
-    return;
+    const loaded = lazyLoadRoom(portal.targetMapId, state);
+    if (!loaded) {
+      // Could not load — undo freeze and stay
+      const { [state.currentRoomId]: _removed, ...rest } = state.rooms;
+      state.rooms = rest;
+      return;
+    }
+    state.rooms[portal.targetMapId] = loaded;
+    targetRoom = loaded;
   }
 
   // Activate target room
@@ -429,4 +435,66 @@ function findEnterPoint(grid: Grid, enterId: string): { x: number; y: number } |
     }
   }
   return null;
+}
+
+function lazyLoadRoom(mapId: string, state: RunState): RoomState | null {
+  try {
+    const tmxPath = resolveTmxPath(`room-${mapId}.tmx`);
+    const tmx = loadTmxFile(tmxPath);
+    const width = state.config.width;
+    const height = state.config.height;
+    const grid = buildRoomGrid(tmxPath, width, height);
+
+    // Place extract tile
+    if (tmx.extract) {
+      const extractTile = grid[tmx.extract.y]?.[tmx.extract.x];
+      if (extractTile) extractTile.type = 'exit';
+    }
+
+    // Place portal exit tiles
+    for (const exit of tmx.exits) {
+      const tile = grid[exit.pos.y]?.[exit.pos.x];
+      if (tile) {
+        (tile as Tile & Record<string, unknown>)['portal'] = {
+          name: exit.name,
+          targetMapId: exit.targetMapId,
+          targetEnterId: exit.targetEnterId,
+        };
+      }
+    }
+
+    // Place portal enter tiles
+    for (const enter of tmx.enters) {
+      const tile = grid[enter.pos.y]?.[enter.pos.x];
+      if (tile) {
+        (tile as Tile & Record<string, unknown>)['portal'] = {
+          name: enter.name,
+          type: 'map_enter',
+        };
+      }
+    }
+
+    // Build enemies from TMX
+    const enemies: Entity[] = tmx.enemies.map((e) => ({
+      id: e.name,
+      kind: 'enemy' as const,
+      pos: e.pos,
+      hp: e.hp,
+      maxHp: e.maxHp,
+      attackDamage: e.attackDamage,
+      aiType: e.aiType,
+      state: e.patrolWaypoints ? { waypoints: e.patrolWaypoints, index: 0 } : {},
+    }));
+
+    return {
+      mapId,
+      grid,
+      enemies,
+      mechanisms: [],
+      pendingExplosions: [],
+    };
+  } catch (err) {
+    console.warn(`[lazy room load] failed to load room '${mapId}':`, err);
+    return null;
+  }
 }

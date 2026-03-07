@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
-import { readFileSync } from 'node:fs';
-import type { AiType, InteractableKind, Pos } from '@org/shared';
+import { existsSync, readFileSync } from 'node:fs';
+import type { AiType, Grid, InteractableKind, Pos, Tile } from '@org/shared';
 
 export interface TmxTriggerPoint {
   name: string;
@@ -154,4 +154,27 @@ export function parseTmxObjects(tmxContent: string): TmxMapData {
 export function loadTmxFile(filePath: string): TmxMapData {
   const content = readFileSync(filePath, 'utf-8');
   return parseTmxObjects(content);
+}
+
+export function buildRoomGrid(tmxPath: string, width: number, height: number): Grid {
+  // Try JSON sidecar file for wall layout: room-<id>.room.json
+  const sidecarPath = tmxPath.replace(/\.tmx$/, '.room.json');
+  if (existsSync(sidecarPath)) {
+    const sidecar = JSON.parse(readFileSync(sidecarPath, 'utf-8')) as { layout: string[] };
+    return sidecar.layout.map((row) =>
+      row.split('').map((ch): Tile => ({
+        type: ch === '#' ? 'wall' : 'floor',
+        items: [],
+        effects: [],
+      }))
+    );
+  }
+  // Fallback: blank floor with walls on perimeter
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x): Tile => ({
+      type: (x === 0 || x === width - 1 || y === 0 || y === height - 1) ? 'wall' : 'floor',
+      items: [],
+      effects: [],
+    }))
+  );
 }

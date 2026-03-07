@@ -422,6 +422,25 @@ describe('turn processing', () => {
     expect(s2.status).toBe('pending');
   });
 
+  it('stays in current room when lazy load fails (room TMX file not found)', () => {
+    const s = makeState();
+    const portalTile = s.grid[1][1] as Tile & Record<string, unknown>;
+    portalTile['portal'] = {
+      name: 'exit-to-nonexistent',
+      targetMapId: 'nonexistent-room-xyz',
+      targetEnterId: 'enter-a',
+    };
+    s.player.pos = { x: 1, y: 1 };
+    // state.rooms is empty (nonexistent-room-xyz not pre-loaded, TMX file does not exist)
+
+    const { state: s2, turnEvents } = processTurn(s, { type: 'wait' });
+
+    // Player should stay — no room transition event
+    const transition = turnEvents.find(e => e.type === 'room_transition');
+    expect(transition).toBeUndefined();
+    expect(s2.currentRoomId).toBe(s.currentRoomId);
+  });
+
   it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
     const grid = makeFloorGrid(10, 10);
     // Place a terminal at (4,4) — grid[y][x] so grid[4][4]

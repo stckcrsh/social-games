@@ -9,7 +9,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // Resolve TMX path: dungeon-ui/public/tiles is a sibling app
 // From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into dungeon-ui
-function resolveTmxPath(filename: string): string {
+export function resolveTmxPath(filename: string): string {
   return resolve(__dirname, '../../../../dungeon-ui/public/tiles', filename);
 }
 
