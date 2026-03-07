@@ -1,5 +1,8 @@
 {
   "name": "@org/game",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "react-router-dom": "^6.30.3"
+  }
 }
