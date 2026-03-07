@@ -11,6 +11,7 @@ export function ResultsPage() {
 
   useEffect(() => {
     if (!runId) return;
+    attemptsRef.current = 0;
     let cancelled = false;
 
     async function tryFetch() {
