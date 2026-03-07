@@ -3,7 +3,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4301';
 
 /**
  * Read environment variables from file.
@@ -23,26 +23,31 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm exec nx run @org/dungeon-ui:preview',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
-    cwd: workspaceRoot,
-  },
+  webServer: [
+    {
+      command: 'pnpm exec nx run game:preview',
+      url: 'http://localhost:4301',
+      reuseExistingServer: true,
+      cwd: workspaceRoot,
+    },
+    {
+      command: 'pnpm exec nx run dungeon-service:serve',
+      url: 'http://localhost:3001/health',
+      reuseExistingServer: true,
+      cwd: workspaceRoot,
+    },
+  ],
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/example.spec.ts',
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'api',
+      use: { baseURL: 'http://localhost:3001' },
+      testMatch: ['**/dungeon-api.spec.ts', '**/dungeon-presets.spec.ts', '**/dungeon-reconcile.spec.ts', '**/meta-dungeon-vertical.spec.ts'],
     },
 
     // Uncomment for mobile browsers support

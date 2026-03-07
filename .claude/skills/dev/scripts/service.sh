@@ -9,25 +9,24 @@ PID_DIR=/tmp/social-games
 LOG_DIR=/tmp/social-games
 mkdir -p "$PID_DIR"
 
-SERVICE_ORDER=(meta-game-service dungeon-engine meta-game-ui dungeon-ui proxy)
+SERVICE_ORDER=(meta-service dungeon-service game proxy)
 
 # ── Service definitions ───────────────────────────────────────────────────────
 # Returns "nx-project:nx-target:port:env-prefix" for a given service name
 
 get_def() {
   case "$1" in
-    meta-game-service) echo "meta-game-service:serve:3000:JWT_SECRET=my-dev-secret-1234" ;;
-    dungeon-engine)    echo "dungeon-engine:serve:3001:" ;;
-    meta-game-ui)      echo "meta-game-ui:dev:4200:" ;;
-    dungeon-ui)        echo "dungeon-ui:dev:4201:" ;;
-    proxy)             echo "proxy:serve:443:" ;;
+    meta-service)    echo "meta-service:serve:3000:JWT_SECRET=my-dev-secret-1234" ;;
+    dungeon-service) echo "dungeon-service:serve:3001:" ;;
+    game)            echo "game:serve:4200:" ;;
+    proxy)             echo "proxy:serve:8080:" ;;
     *)                 echo "" ;;
   esac
 }
 
 is_valid_service() {
   case "$1" in
-    meta-game-service|dungeon-engine|meta-game-ui|dungeon-ui|proxy) return 0 ;;
+    meta-service|dungeon-service|game|proxy) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -35,11 +34,10 @@ is_valid_service() {
 # Expand short aliases to full names
 expand_name() {
   case "$1" in
-    mgs)  echo "meta-game-service" ;;
-    de)   echo "dungeon-engine" ;;
-    mgu)  echo "meta-game-ui" ;;
-    du)   echo "dungeon-ui" ;;
-    *)    echo "$1" ;;
+    ms)  echo "meta-service" ;;
+    ds)  echo "dungeon-service" ;;
+    g)   echo "game" ;;
+    *)   echo "$1" ;;
   esac
 }
 
@@ -182,7 +180,7 @@ else
   if ! is_valid_service "$SVC"; then
     echo "Unknown service: $SVC"
     echo "Valid: ${SERVICE_ORDER[*]}"
-    echo "Aliases: mgs, de, mgu, du, proxy"
+    echo "Aliases: ms, ds, g, proxy"
     exit 1
   fi
   TARGETS=("$SVC")

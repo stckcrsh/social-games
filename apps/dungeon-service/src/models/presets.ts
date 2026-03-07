@@ -7,10 +7,10 @@ import { loadTmxFile } from '../engine/tmx-loader.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-// Resolve TMX path: dungeon-ui/public/tiles is a sibling app
-// From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into dungeon-ui
+// Resolve TMX path: game/public/tiles is a sibling app
+// From apps/dungeon-service/src/models/ we go up 4 dirs to repo root, then into game
 export function resolveTmxPath(filename: string): string {
-  return resolve(__dirname, '../../../../dungeon-ui/public/tiles', filename);
+  return resolve(__dirname, '../../../../game/public/tiles', filename);
 }
 
 const DEFAULT_CONFIG: RunConfig = {

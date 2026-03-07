@@ -11,17 +11,8 @@
         reverse_proxy localhost:3000
     }
 
-    # Meta Game UI — served under /meta-ui/ (handle_path auto-strips prefix)
-    handle_path /meta-ui/* {
-        root * dist/packages/meta-game-ui
-        try_files {path} /index.html
-        file_server
-    }
-
-    # Dungeon UI — served at root /
+    # Game UI — proxied to Vite dev server
     handle {
-        root * packages/dungeon-ui/dist
-        try_files {path} /index.html
-        file_server
+        reverse_proxy localhost:4200
     }
 }
