@@ -54,6 +54,8 @@ const parser = new XMLParser({
   isArray: (name) => ['objectgroup', 'object', 'property'].includes(name),
 });
 
+// getProps converts TMX property values to their declared types.
+// After this conversion, `as number` casts in callers are safe for int-typed properties.
 function getProps(obj: Record<string, unknown>): Record<string, unknown> {
   const propsWrapper = obj['properties'] as { property?: unknown[] } | undefined;
   const propList = propsWrapper?.property ?? [];
@@ -94,6 +96,11 @@ export function parseTmxObjects(tmxContent: string): TmxMapData {
       const props = getProps(obj);
       const pos: Pos = { x: props['gridX'] as number, y: props['gridY'] as number };
 
+      if (pos.x == null || pos.y == null) {
+        console.warn(`[tmx-loader] object "${name}" in layer "${layerName}" is missing gridX/gridY — skipping`);
+        continue;
+      }
+
       result.nameIndex[name] = pos;
 
       switch (layerName) {
@@ -117,8 +124,8 @@ export function parseTmxObjects(tmxContent: string): TmxMapData {
             name,
             pos,
             aiType: props['aiType'] as AiType,
-            hp: (props['hp'] as number) ?? 10,
-            maxHp: (props['hp'] as number) ?? 10,
+            hp:    (props['hp'] as number) ?? 10,
+            maxHp: (props['hp'] as number) ?? 10, // enemies always spawn at full HP
             attackDamage: (props['attackDamage'] as number) ?? 5,
             aggroRange: (props['aggroRange'] as number) ?? 8,
             patrolWaypoints: props['patrolWaypoints']
