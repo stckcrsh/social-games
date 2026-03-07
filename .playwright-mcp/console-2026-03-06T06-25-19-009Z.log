@@ -1,0 +1,3 @@
+[34726382ms] TypeError: Cannot read properties of undefined (reading 'S')
+    at module2.exports (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/@pixi_react.js?v=1ed9cb85:11526:61)
+    at http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/@pixi_react.js?v=1ed9cb85:13128:18

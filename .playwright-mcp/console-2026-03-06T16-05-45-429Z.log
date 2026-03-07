@@ -1,0 +1,58 @@
+[     486ms] TypeError: this._cancelResize is not a function
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6156:10)
+    at http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6393:22
+    at Array.forEach (<anonymous>)
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6392:13)
+    at http://localhost:4201/src/things.tsx?t=1772813142268:74:11
+    at safelyCallDestroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16796:13)
+    at commitHookEffectListUnmount (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16923:19)
+    at invokePassiveEffectUnmountInDEV (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18413:19)
+    at invokeEffectsInDev (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:19754:19)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:19735:15)
+[     408ms] [ERROR] The above error occurred in the <PixiTmxMap> component:
+
+    at PixiTmxMap (http://localhost:4201/src/things.tsx?t=1772813142268:31:3)
+    at PixiApp
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:14079
+[     487ms] TypeError: this._cancelResize is not a function
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6156:10)
+    at http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6393:22
+    at Array.forEach (<anonymous>)
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6392:13)
+    at http://localhost:4201/src/things.tsx?t=1772813142268:74:11
+    at safelyCallDestroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16796:13)
+    at commitHookEffectListUnmount (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16923:19)
+    at invokePassiveEffectUnmountInDEV (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18413:19)
+    at invokeEffectsInDev (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:19754:19)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:19735:15)
+[     512ms] TypeError: this._cancelResize is not a function
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6156:10)
+    at http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6393:22
+    at Array.forEach (<anonymous>)
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6392:13)
+    at http://localhost:4201/src/things.tsx?t=1772813142268:74:11
+    at safelyCallDestroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16796:13)
+    at commitHookEffectListUnmount (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16923:19)
+    at commitPassiveUnmountInsideDeletedTreeOnFiber (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18333:17)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18295:13)
+    at commitPassiveUnmountEffects_begin (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18231:19)
+[     414ms] [ERROR] The above error occurred in the <PixiTmxMap> component:
+
+    at PixiTmxMap (http://localhost:4201/src/things.tsx?t=1772813142268:31:3)
+    at PixiApp
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:14079
+[     515ms] TypeError: this._cancelResize is not a function
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6156:10)
+    at http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6393:22
+    at Array.forEach (<anonymous>)
+    at _Application2.destroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-ARUCWRC3.js?v=1ed9cb85:6392:13)
+    at http://localhost:4201/src/things.tsx?t=1772813142268:74:11
+    at safelyCallDestroy (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16796:13)
+    at commitHookEffectListUnmount (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:16923:19)
+    at commitPassiveUnmountInsideDeletedTreeOnFiber (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18333:17)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18295:13)
+    at commitPassiveUnmountEffects_begin (http://localhost:4201/@fs/Users/tawneypauling/Documents/git/social-games/node_modules/.vite/apps/dungeon-ui/deps/chunk-D6D2LTJI.js?v=1ed9cb85:18231:19)

@@ -1,0 +1,1 @@
+[    8780ms] [WARNING] WebSocket connection to 'ws://localhost:8080/api/dungeon/runs/3db01470-5e00-47ef-bd80-b327ff316139/ws' failed: WebSocket is closed before the connection is established. @ http://localhost:4201/src/Game.tsx?t=1772836894612:201

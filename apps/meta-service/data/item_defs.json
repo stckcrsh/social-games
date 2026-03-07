@@ -1,0 +1,102 @@
+{
+  "access_seal": {
+    "defId": "access_seal",
+    "name": "Access Seal",
+    "category": "currency",
+    "rarity": "common",
+    "stackable": true,
+    "maxStack": 9999,
+    "description": "Premium currency.",
+    "effects": {},
+    "tradeable": false
+  },
+  "scrap": {
+    "defId": "scrap",
+    "name": "Scrap",
+    "category": "material",
+    "rarity": "common",
+    "stackable": true,
+    "maxStack": 9999,
+    "description": "Salvaged scrap metal.",
+    "effects": {},
+    "tradeable": true
+  },
+  "repair_potion": {
+    "defId": "repair_potion",
+    "name": "Repair Potion",
+    "category": "consumable",
+    "rarity": "uncommon",
+    "stackable": true,
+    "maxStack": 99,
+    "description": "Restores durability.",
+    "effects": {
+      "restoreDurability": 50
+    },
+    "tradeable": true
+  },
+  "brass_dagger": {
+    "defId": "brass_dagger",
+    "name": "Brass Dagger",
+    "category": "gear",
+    "rarity": "common",
+    "stackable": false,
+    "maxStack": 1,
+    "description": "A starter weapon.",
+    "effects": {
+      "damage": 8,
+      "speed": 1.4
+    },
+    "tradeable": true
+  },
+  "hammer": {
+    "defId": "hammer",
+    "name": "Hammer",
+    "category": "gear",
+    "rarity": "common",
+    "stackable": false,
+    "maxStack": 1,
+    "description": "A heavy wrench repurposed as a melee weapon.",
+    "effects": {
+      "damage": 1
+    },
+    "tradeable": true
+  },
+  "rivet_gun": {
+    "defId": "rivet_gun",
+    "name": "Rivet Gun",
+    "category": "gear",
+    "rarity": "uncommon",
+    "stackable": false,
+    "maxStack": 1,
+    "description": "Fires hardened rivets in a straight line.",
+    "effects": {
+      "damage": 3,
+      "range": 4
+    },
+    "tradeable": true
+  },
+  "ammo_rivet": {
+    "defId": "ammo_rivet",
+    "name": "Rivet Ammo",
+    "category": "material",
+    "rarity": "common",
+    "stackable": true,
+    "maxStack": 99,
+    "description": "Hardened rivets for the rivet gun.",
+    "effects": {},
+    "tradeable": true
+  },
+  "remote_mine": {
+    "defId": "remote_mine",
+    "name": "Remote Mine",
+    "category": "gear",
+    "rarity": "uncommon",
+    "stackable": false,
+    "maxStack": 1,
+    "description": "Place it, then activate again to detonate.",
+    "effects": {
+      "explosionRadius": 1
+    },
+    "tradeable": true
+  }
+}

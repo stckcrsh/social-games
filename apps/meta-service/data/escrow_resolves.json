@@ -1,0 +1,389 @@
+{
+  "records": {
+    "test-123": {
+      "escrowId": "test-123",
+      "resolvedAt": 1772770460097,
+      "runId": "setup-test",
+      "result": "extracted",
+      "patchHash": "98082c60a7c7405e"
+    },
+    "setup-ccd72cd7-b438-4db6-b117-fef9dfee4b3f": {
+      "escrowId": "setup-ccd72cd7-b438-4db6-b117-fef9dfee4b3f",
+      "resolvedAt": 1772770471581,
+      "runId": "setup-setup-ccd72cd7-b438-4db6-b117-fef9dfee4b3f",
+      "result": "extracted",
+      "patchHash": "3bd8fa2e7b6c38f4"
+    },
+    "setup-b54196d8-c377-4201-971f-d9dc368641cf": {
+      "escrowId": "setup-b54196d8-c377-4201-971f-d9dc368641cf",
+      "resolvedAt": 1772770474265,
+      "runId": "setup-setup-b54196d8-c377-4201-971f-d9dc368641cf",
+      "result": "extracted",
+      "patchHash": "fbeaa146bdcd5ff8"
+    },
+    "setup-6cd1c07e-bb8b-42cc-9a72-0ce3f4e9958a": {
+      "escrowId": "setup-6cd1c07e-bb8b-42cc-9a72-0ce3f4e9958a",
+      "resolvedAt": 1772770516652,
+      "runId": "setup-setup-6cd1c07e-bb8b-42cc-9a72-0ce3f4e9958a",
+      "result": "extracted",
+      "patchHash": "ab210b728bc1342a"
+    },
+    "873e4237-d431-4fb3-a053-e09bb35ac047": {
+      "escrowId": "873e4237-d431-4fb3-a053-e09bb35ac047",
+      "resolvedAt": 1772770517085,
+      "runId": "558eb9c0-be93-4a5c-ac0e-90648bbd1570",
+      "result": "dead",
+      "patchHash": "9884b36219e855e5"
+    },
+    "setup-e99373e1-1f9e-43c2-abe4-35762b3820d6": {
+      "escrowId": "setup-e99373e1-1f9e-43c2-abe4-35762b3820d6",
+      "resolvedAt": 1772770517699,
+      "runId": "setup-setup-e99373e1-1f9e-43c2-abe4-35762b3820d6",
+      "result": "extracted",
+      "patchHash": "9b4c0ff9d1cf3f84"
+    },
+    "4a7348f9-aef5-4316-bb56-89192164d3cd": {
+      "escrowId": "4a7348f9-aef5-4316-bb56-89192164d3cd",
+      "resolvedAt": 1772770517748,
+      "runId": "7ffab0c6-7f37-44f9-8ba7-e661e811e2f5",
+      "result": "extracted",
+      "patchHash": "728ec17953775109"
+    },
+    "setup-0009d1a1-7d6c-467a-b247-ca918350c9b6": {
+      "escrowId": "setup-0009d1a1-7d6c-467a-b247-ca918350c9b6",
+      "resolvedAt": 1772770611142,
+      "runId": "setup-setup-0009d1a1-7d6c-467a-b247-ca918350c9b6",
+      "result": "extracted",
+      "patchHash": "7a55b6367b161ce7"
+    },
+    "50de2feb-b022-4efd-88df-c99c96264f45": {
+      "escrowId": "50de2feb-b022-4efd-88df-c99c96264f45",
+      "resolvedAt": 1772770611499,
+      "runId": "b39cdf94-e0ef-4ab6-84d4-1143dfacea54",
+      "result": "dead",
+      "patchHash": "132868c10070ee02"
+    },
+    "setup-d939edc3-87b3-4b37-a0ab-329ff34a195f": {
+      "escrowId": "setup-d939edc3-87b3-4b37-a0ab-329ff34a195f",
+      "resolvedAt": 1772770612188,
+      "runId": "setup-setup-d939edc3-87b3-4b37-a0ab-329ff34a195f",
+      "result": "extracted",
+      "patchHash": "1afc7503a7672faf"
+    },
+    "7f94f266-f653-4133-a390-66272d4a8914": {
+      "escrowId": "7f94f266-f653-4133-a390-66272d4a8914",
+      "resolvedAt": 1772770612238,
+      "runId": "4bf2a4ce-1537-4f39-b437-f0f451ccfdb9",
+      "result": "extracted",
+      "patchHash": "154dbb95ca693308"
+    },
+    "setup-9bda3f0a-69e6-44ce-8730-457b8fc2ed21": {
+      "escrowId": "setup-9bda3f0a-69e6-44ce-8730-457b8fc2ed21",
+      "resolvedAt": 1772770657714,
+      "runId": "setup-setup-9bda3f0a-69e6-44ce-8730-457b8fc2ed21",
+      "result": "extracted",
+      "patchHash": "3be3198b997712b2"
+    },
+    "473d2aa1-74fe-4d16-b8ab-a20ba68d42f4": {
+      "escrowId": "473d2aa1-74fe-4d16-b8ab-a20ba68d42f4",
+      "resolvedAt": 1772770658061,
+      "runId": "d50efec7-8cfb-4929-b946-c0dfe679676e",
+      "result": "dead",
+      "patchHash": "618dc224d56e8325"
+    },
+    "setup-1cb64508-6ba7-475c-9891-a535156db7aa": {
+      "escrowId": "setup-1cb64508-6ba7-475c-9891-a535156db7aa",
+      "resolvedAt": 1772770658658,
+      "runId": "setup-setup-1cb64508-6ba7-475c-9891-a535156db7aa",
+      "result": "extracted",
+      "patchHash": "11292769b8eae3b8"
+    },
+    "5e6b2ba3-79cb-48e0-b6ca-cd26d44dc766": {
+      "escrowId": "5e6b2ba3-79cb-48e0-b6ca-cd26d44dc766",
+      "resolvedAt": 1772770658683,
+      "runId": "70b56203-af81-4897-87b3-692a41b27564",
+      "result": "extracted",
+      "patchHash": "ed6b5fbaa1b66e6c"
+    },
+    "setup-e514a25c-75be-4895-b0b3-0d01bf3695e1": {
+      "escrowId": "setup-e514a25c-75be-4895-b0b3-0d01bf3695e1",
+      "resolvedAt": 1772771780947,
+      "runId": "setup-setup-e514a25c-75be-4895-b0b3-0d01bf3695e1",
+      "result": "extracted",
+      "patchHash": "2892c485d58eaf46"
+    },
+    "setup-ae7742e1-5fc6-4f4b-bad9-e162fc4f1ec1": {
+      "escrowId": "setup-ae7742e1-5fc6-4f4b-bad9-e162fc4f1ec1",
+      "resolvedAt": 1772771780950,
+      "runId": "setup-setup-ae7742e1-5fc6-4f4b-bad9-e162fc4f1ec1",
+      "result": "extracted",
+      "patchHash": "67c487f02709b4b2"
+    },
+    "bf29f8ab-c0d8-4214-9b5d-f659bf9bd6ad": {
+      "escrowId": "bf29f8ab-c0d8-4214-9b5d-f659bf9bd6ad",
+      "resolvedAt": 1772771781341,
+      "runId": "7c32fa75-4f7e-43d5-ba05-2d8138827c97",
+      "result": "extracted",
+      "patchHash": "222f9d2e7b20abcb"
+    },
+    "c4dcdf36-5ce6-45e0-ac25-56dc88676916": {
+      "escrowId": "c4dcdf36-5ce6-45e0-ac25-56dc88676916",
+      "resolvedAt": 1772771781351,
+      "runId": "9314587e-a272-44ee-9f1e-0aa5f34eeda4",
+      "result": "dead",
+      "patchHash": "b76ccc56988f0c09"
+    },
+    "setup-734c8fe3-332a-4e74-b109-1fc51b0caef3": {
+      "escrowId": "setup-734c8fe3-332a-4e74-b109-1fc51b0caef3",
+      "resolvedAt": 1772771783975,
+      "runId": "setup-setup-734c8fe3-332a-4e74-b109-1fc51b0caef3",
+      "result": "extracted",
+      "patchHash": "fdea819872aad7ca"
+    },
+    "setup-d43f2ef9-e6de-4bff-8ccc-08f5c0925f93": {
+      "escrowId": "setup-d43f2ef9-e6de-4bff-8ccc-08f5c0925f93",
+      "resolvedAt": 1772771783980,
+      "runId": "setup-setup-d43f2ef9-e6de-4bff-8ccc-08f5c0925f93",
+      "result": "extracted",
+      "patchHash": "e16b066c946615b0"
+    },
+    "dfd98203-3200-48be-b51d-4cde0cebfc1f": {
+      "escrowId": "dfd98203-3200-48be-b51d-4cde0cebfc1f",
+      "resolvedAt": 1772771784314,
+      "runId": "4e674d8f-40f8-4c59-b696-b82090c9ee82",
+      "result": "extracted",
+      "patchHash": "a3530ddf2a9814b8"
+    },
+    "50eb0f23-c692-479b-b89f-0d5e8e3618ed": {
+      "escrowId": "50eb0f23-c692-479b-b89f-0d5e8e3618ed",
+      "resolvedAt": 1772771784323,
+      "runId": "3702e981-2720-4e3d-a0fc-479a75b3bd0a",
+      "result": "dead",
+      "patchHash": "403b0b78bbcf5bb8"
+    },
+    "setup-3d67ddf9-19d0-44a3-ab60-76b85f50c948": {
+      "escrowId": "setup-3d67ddf9-19d0-44a3-ab60-76b85f50c948",
+      "resolvedAt": 1772771900627,
+      "runId": "setup-setup-3d67ddf9-19d0-44a3-ab60-76b85f50c948",
+      "result": "extracted",
+      "patchHash": "b3cd9160ebefed81"
+    },
+    "7d787a90-9d9e-4b4a-be45-22795a851f6e": {
+      "escrowId": "7d787a90-9d9e-4b4a-be45-22795a851f6e",
+      "resolvedAt": 1772771901288,
+      "runId": "e7b7512f-730c-4380-a965-1a3b253e4af8",
+      "result": "dead",
+      "patchHash": "37bf15b01d8da2aa"
+    },
+    "setup-8bb82ee5-7810-4043-bbd8-1780ca58eb0d": {
+      "escrowId": "setup-8bb82ee5-7810-4043-bbd8-1780ca58eb0d",
+      "resolvedAt": 1772771903385,
+      "runId": "setup-setup-8bb82ee5-7810-4043-bbd8-1780ca58eb0d",
+      "result": "extracted",
+      "patchHash": "b98b6f9c9899ef0f"
+    },
+    "f94614a2-9bd4-4e27-823e-56805d70422a": {
+      "escrowId": "f94614a2-9bd4-4e27-823e-56805d70422a",
+      "resolvedAt": 1772771903443,
+      "runId": "7a3f9ad3-8ef4-4525-8596-8496f112efb1",
+      "result": "extracted",
+      "patchHash": "f95870e155419120"
+    },
+    "setup-c47d33a1-2355-4f2e-ac66-99b0dcfe1a24": {
+      "escrowId": "setup-c47d33a1-2355-4f2e-ac66-99b0dcfe1a24",
+      "resolvedAt": 1772771911901,
+      "runId": "setup-setup-c47d33a1-2355-4f2e-ac66-99b0dcfe1a24",
+      "result": "extracted",
+      "patchHash": "04f3116d85bc5420"
+    },
+    "1d9df2b8-2a37-416f-a4a2-a7706bc8f515": {
+      "escrowId": "1d9df2b8-2a37-416f-a4a2-a7706bc8f515",
+      "resolvedAt": 1772771911942,
+      "runId": "007f4795-d7f4-4ccd-8811-5226703122a2",
+      "result": "dead",
+      "patchHash": "b63a61f0f6c89fbc"
+    },
+    "setup-956f5c7e-5a5a-4708-a7b8-869c812077a1": {
+      "escrowId": "setup-956f5c7e-5a5a-4708-a7b8-869c812077a1",
+      "resolvedAt": 1772771913119,
+      "runId": "setup-setup-956f5c7e-5a5a-4708-a7b8-869c812077a1",
+      "result": "extracted",
+      "patchHash": "94fac4319dbe4545"
+    },
+    "e8022d5d-1a05-4a22-8f22-3e706de806d0": {
+      "escrowId": "e8022d5d-1a05-4a22-8f22-3e706de806d0",
+      "resolvedAt": 1772771913145,
+      "runId": "7e591e7b-5f24-4630-9a41-00635790874a",
+      "result": "extracted",
+      "patchHash": "f64858876711768e"
+    },
+    "setup-5dda2ae0-69a9-4a26-896a-999a91ac37d4": {
+      "escrowId": "setup-5dda2ae0-69a9-4a26-896a-999a91ac37d4",
+      "resolvedAt": 1772771947104,
+      "runId": "setup-setup-5dda2ae0-69a9-4a26-896a-999a91ac37d4",
+      "result": "extracted",
+      "patchHash": "560ed85f76bf075c"
+    },
+    "b45f93d3-58c8-4524-bdf3-260abf44fb8e": {
+      "escrowId": "b45f93d3-58c8-4524-bdf3-260abf44fb8e",
+      "resolvedAt": 1772771947549,
+      "runId": "c7ab92a2-9ceb-4d05-a140-88f36d7567bd",
+      "result": "dead",
+      "patchHash": "adbdb5f08589eec6"
+    },
+    "setup-879a83e1-d52f-4d35-a8d4-f8f21c8af270": {
+      "escrowId": "setup-879a83e1-d52f-4d35-a8d4-f8f21c8af270",
+      "resolvedAt": 1772771947736,
+      "runId": "setup-setup-879a83e1-d52f-4d35-a8d4-f8f21c8af270",
+      "result": "extracted",
+      "patchHash": "910c1beaebadd157"
+    },
+    "614e8ed5-6c1c-4ba9-9278-5a723a8a914f": {
+      "escrowId": "614e8ed5-6c1c-4ba9-9278-5a723a8a914f",
+      "resolvedAt": 1772771948067,
+      "runId": "6a84f48f-936a-459a-aa98-e78784fcdd8e",
+      "result": "extracted",
+      "patchHash": "3b17194fc6cc886e"
+    },
+    "setup-350b9b8c-4924-4beb-8c6b-3e41006612d3": {
+      "escrowId": "setup-350b9b8c-4924-4beb-8c6b-3e41006612d3",
+      "resolvedAt": 1772771953685,
+      "runId": "setup-setup-350b9b8c-4924-4beb-8c6b-3e41006612d3",
+      "result": "extracted",
+      "patchHash": "22bc0e0b8ec9c059"
+    },
+    "b27b14f6-5200-4103-8186-e9155a097390": {
+      "escrowId": "b27b14f6-5200-4103-8186-e9155a097390",
+      "resolvedAt": 1772771953723,
+      "runId": "885b9112-5876-419d-a500-0986bb10cd19",
+      "result": "dead",
+      "patchHash": "ef297e31ee22b5b9"
+    },
+    "setup-a46917d0-bdc3-49da-bc48-944bca08c632": {
+      "escrowId": "setup-a46917d0-bdc3-49da-bc48-944bca08c632",
+      "resolvedAt": 1772771954337,
+      "runId": "setup-setup-a46917d0-bdc3-49da-bc48-944bca08c632",
+      "result": "extracted",
+      "patchHash": "30673d774bcb32a0"
+    },
+    "2f2df052-10e1-4cf6-b7c8-41faf64ab67c": {
+      "escrowId": "2f2df052-10e1-4cf6-b7c8-41faf64ab67c",
+      "resolvedAt": 1772771954370,
+      "runId": "bc947407-269c-4c57-87ee-fdd2c818c79d",
+      "result": "extracted",
+      "patchHash": "e6fbfa969613f79e"
+    },
+    "setup-2211cd15-43b1-49e1-9907-815f333474c4": {
+      "escrowId": "setup-2211cd15-43b1-49e1-9907-815f333474c4",
+      "resolvedAt": 1772772035957,
+      "runId": "setup-setup-2211cd15-43b1-49e1-9907-815f333474c4",
+      "result": "extracted",
+      "patchHash": "5f465f7273eca2c5"
+    },
+    "setup-b9796fd2-f9a1-4ae1-bdfb-6fa1d4921587": {
+      "escrowId": "setup-b9796fd2-f9a1-4ae1-bdfb-6fa1d4921587",
+      "resolvedAt": 1772772035972,
+      "runId": "setup-setup-b9796fd2-f9a1-4ae1-bdfb-6fa1d4921587",
+      "result": "extracted",
+      "patchHash": "c3673460e059a66b"
+    },
+    "1858ae61-b4c9-44c0-a314-7303c847de0e": {
+      "escrowId": "1858ae61-b4c9-44c0-a314-7303c847de0e",
+      "resolvedAt": 1772772035997,
+      "runId": "8fe81cc6-7a2f-43ae-9236-4b3b94d23c9a",
+      "result": "dead",
+      "patchHash": "835609dce11a3649"
+    },
+    "34ff324e-f3f1-4825-b56d-938085c6b1f7": {
+      "escrowId": "34ff324e-f3f1-4825-b56d-938085c6b1f7",
+      "resolvedAt": 1772772036005,
+      "runId": "802641a8-6ec3-4ffd-9b3e-241fa2630d5a",
+      "result": "extracted",
+      "patchHash": "b0ef390dd8e31fcd"
+    },
+    "setup-100fe22d-838a-4aeb-9f30-b73c506300a8": {
+      "escrowId": "setup-100fe22d-838a-4aeb-9f30-b73c506300a8",
+      "resolvedAt": 1772772096396,
+      "runId": "setup-setup-100fe22d-838a-4aeb-9f30-b73c506300a8",
+      "result": "extracted",
+      "patchHash": "196107bcd1f043dd"
+    },
+    "db08982c-1e07-497d-9efa-10de1681f52f": {
+      "escrowId": "db08982c-1e07-497d-9efa-10de1681f52f",
+      "resolvedAt": 1772772096449,
+      "runId": "95452eb4-2db5-4add-b6be-0d2fce15f17d",
+      "result": "dead",
+      "patchHash": "5274c9acc07208cb"
+    },
+    "setup-20690ee7-0548-444d-be50-1393ff8f4c85": {
+      "escrowId": "setup-20690ee7-0548-444d-be50-1393ff8f4c85",
+      "resolvedAt": 1772772097048,
+      "runId": "setup-setup-20690ee7-0548-444d-be50-1393ff8f4c85",
+      "result": "extracted",
+      "patchHash": "fa0736ec30891823"
+    },
+    "2f89dcbc-e684-4df2-9257-1cae02d7623e": {
+      "escrowId": "2f89dcbc-e684-4df2-9257-1cae02d7623e",
+      "resolvedAt": 1772772097151,
+      "runId": "e9865c54-8151-4243-a483-ca61a62922a4",
+      "result": "extracted",
+      "patchHash": "816e86229ba141ae"
+    },
+    "setup-e4581528-0b95-42d2-9f0a-627bccc8a623": {
+      "escrowId": "setup-e4581528-0b95-42d2-9f0a-627bccc8a623",
+      "resolvedAt": 1772772147692,
+      "runId": "setup-setup-e4581528-0b95-42d2-9f0a-627bccc8a623",
+      "result": "extracted",
+      "patchHash": "e2c3f1f97511df6d"
+    },
+    "882c3e8f-2f8e-47e8-bc90-debfddb998a1": {
+      "escrowId": "882c3e8f-2f8e-47e8-bc90-debfddb998a1",
+      "resolvedAt": 1772772147733,
+      "runId": "730c32ca-be3b-42bb-adbe-91242d46fe53",
+      "result": "dead",
+      "patchHash": "43dd17b5bbb33649"
+    },
+    "setup-9e0d7f51-7115-45fa-94b4-3b48634e539d": {
+      "escrowId": "setup-9e0d7f51-7115-45fa-94b4-3b48634e539d",
+      "resolvedAt": 1772772148425,
+      "runId": "setup-setup-9e0d7f51-7115-45fa-94b4-3b48634e539d",
+      "result": "extracted",
+      "patchHash": "a4abbef28c813fb0"
+    },
+    "13924773-f0e6-4ffd-a155-e3d0425fe27d": {
+      "escrowId": "13924773-f0e6-4ffd-a155-e3d0425fe27d",
+      "resolvedAt": 1772772148453,
+      "runId": "05799d4c-5b9e-44d8-afc1-7671eca651a0",
+      "result": "extracted",
+      "patchHash": "3175692b0b2d5bdf"
+    },
+    "setup-54261413-c8fb-4181-b2e2-746b214a8a29": {
+      "escrowId": "setup-54261413-c8fb-4181-b2e2-746b214a8a29",
+      "resolvedAt": 1772772277310,
+      "runId": "setup-setup-54261413-c8fb-4181-b2e2-746b214a8a29",
+      "result": "extracted",
+      "patchHash": "59ea37eae435f1af"
+    },
+    "f87a4860-fc83-41a7-9378-152d2d4ae6e4": {
+      "escrowId": "f87a4860-fc83-41a7-9378-152d2d4ae6e4",
+      "resolvedAt": 1772772277364,
+      "runId": "9090380e-c73b-4069-bbf6-2fcd67547d7b",
+      "result": "dead",
+      "patchHash": "903343e71c6a6fba"
+    },
+    "setup-17b44fc1-d955-464f-ae26-ba6e2bf1f283": {
+      "escrowId": "setup-17b44fc1-d955-464f-ae26-ba6e2bf1f283",
+      "resolvedAt": 1772772277946,
+      "runId": "setup-setup-17b44fc1-d955-464f-ae26-ba6e2bf1f283",
+      "result": "extracted",
+      "patchHash": "539a220b39040947"
+    },
+    "5e3f7273-0941-4743-b602-4b2a925dca84": {
+      "escrowId": "5e3f7273-0941-4743-b602-4b2a925dca84",
+      "resolvedAt": 1772772277976,
+      "runId": "68d90e7f-5f1d-4423-a41b-3086bcf1dcc0",
+      "result": "extracted",
+      "patchHash": "18e793d6f92b9227"
+    }
+  }
+}

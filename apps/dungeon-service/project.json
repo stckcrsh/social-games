@@ -1,0 +1,41 @@
+{
+  "name": "dungeon-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/dungeon-service/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/dungeon-service/dist"],
+      "options": {
+        "command": "node scripts/build.js",
+        "cwd": "apps/dungeon-service"
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.js && node dist/main.js",
+        "cwd": "apps/dungeon-service"
+      }
+    },
+    "cli": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node cli/index.mjs",
+        "cwd": "apps/dungeon-service"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/apps/dungeon-service"],
+      "options": {
+        "command": "pnpm vitest run",
+        "cwd": "apps/dungeon-service"
+      }
+    }
+  },
+  "tags": []
+}
