@@ -124,7 +124,8 @@ export type GameEvent =
   | { type: 'mine_detonated'; x: number; y: number }
   | { type: 'slot_switched';      slot: Slot }
   | { type: 'item_interact_tile'; itemId: string; interactableId: string; x: number; y: number }
-  | { type: 'room_transition'; fromMapId: string; toMapId: string; enterId: string };
+  | { type: 'room_transition'; fromMapId: string; toMapId: string; enterId: string }
+  | { type: 'run_start' };
 
 export type PlayerAction =
   | { type: 'move'; dir: Direction }
@@ -190,7 +191,7 @@ export interface RunState {
   enemies: Entity[];    // canonical list; sorted by id at turn-end for next cycle
   overclock: number;
   events: GameEvent[];  // append-only log across all turns
-  status: 'active' | 'dead' | 'extracted';
+  status: 'pending' | 'active' | 'dead' | 'extracted';
   config: RunConfig;
   mechanisms: MechanismDef[];
   pendingExplosions: Array<{ x: number; y: number; radius: number }>;

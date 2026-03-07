@@ -413,6 +413,15 @@ describe('turn processing', () => {
     expect(s2.events.some(e => e.type === 'mechanism_solved')).toBe(true);
   });
 
+  it('processTurn accepts call with pending status (guard is in route layer)', () => {
+    const s = makeState();
+    (s as RunState & { status: string }).status = 'pending';
+    const { state: s2 } = processTurn(s, { type: 'wait' });
+    expect(s2).toBeDefined();
+    // processTurn doesn't change status from pending — it only sets dead/extracted
+    expect(s2.status).toBe('pending');
+  });
+
   it('evaluateMechanisms fires mechanism on item_hit trigger', () => {
     const grid = makeFloorGrid(10, 10);
     // Place a terminal at (4,4) — grid[y][x] so grid[4][4]
