@@ -6,9 +6,9 @@ import { loadTmxFile } from '../engine/tmx-loader.js';
 
 // Resolve TMX path: game/public/tiles is a sibling app
 // At runtime __dirname = apps/dungeon-service/dist/ (CJS bundle output)
-// 3 levels up: dist/ → dungeon-service/ → apps/ → repo root, then into apps/game
+// 2 levels up: dist/ → dungeon-service/ → apps/, then into game/public/tiles
 export function resolveTmxPath(filename: string): string {
-  return resolve(__dirname, '../../../game/public/tiles', filename);
+  return resolve(__dirname, '../../game/public/tiles', filename);
 }
 
 const DEFAULT_CONFIG: RunConfig = {
