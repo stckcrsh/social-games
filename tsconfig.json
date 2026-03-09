@@ -3,29 +3,11 @@
   "compileOnSave": false,
   "files": [],
   "references": [
-    {
-      "path": "./libs/shared"
-    },
-    {
-      "path": "./libs/items"
-    },
-    {
-      "path": "./apps/dungeon-service"
-    },
-    {
-      "path": "./apps/dungeon-ui"
-    },
-    {
-      "path": "./apps/meta-service"
-    },
-    {
-      "path": "./apps/meta-ui"
-    },
-    {
-      "path": "./packages/dungeon-ui-e2e"
-    },
-    {
-      "path": "./apps/game"
-    }
+    { "path": "./libs/dungeon/shared" },
+    { "path": "./libs/dungeon/items" },
+    { "path": "./apps/dungeon/dungeon-service" },
+    { "path": "./apps/dungeon/meta-service" },
+    { "path": "./apps/dungeon/dungeon-ui-e2e" },
+    { "path": "./apps/dungeon/game" }
   ]
 }
