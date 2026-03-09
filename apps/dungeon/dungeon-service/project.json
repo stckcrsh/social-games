@@ -1,15 +1,15 @@
 {
   "name": "dungeon-service",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/dungeon-service/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/dungeon/dungeon-service/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/apps/dungeon-service/dist"],
+      "outputs": ["{workspaceRoot}/dist/apps/dungeon/dungeon-service"],
       "options": {
         "command": "node scripts/build.js",
-        "cwd": "apps/dungeon-service"
+        "cwd": "apps/dungeon/dungeon-service"
       }
     },
     "serve": {
@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node scripts/build.js && node dist/main.js",
-        "cwd": "apps/dungeon-service"
+        "cwd": "apps/dungeon/dungeon-service"
       }
     },
     "cli": {
@@ -25,15 +25,15 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node cli/index.mjs",
-        "cwd": "apps/dungeon-service"
+        "cwd": "apps/dungeon/dungeon-service"
       }
     },
     "test": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/coverage/apps/dungeon-service"],
+      "outputs": ["{workspaceRoot}/coverage/apps/dungeon/dungeon-service"],
       "options": {
         "command": "pnpm vitest run",
-        "cwd": "apps/dungeon-service"
+        "cwd": "apps/dungeon/dungeon-service"
       }
     }
   },
