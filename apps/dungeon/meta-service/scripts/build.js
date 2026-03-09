@@ -15,8 +15,8 @@ esbuild.buildSync({
   sourcemap: true,
   absWorkingDir: root,
   alias: {
-    '@org/shared': path.resolve(root, '../../libs/shared/src/index.ts'),
-    '@org/items':  path.resolve(root, '../../libs/items/src/index.ts'),
+    '@org/shared': path.resolve(root, '../../../libs/dungeon/shared/src/index.ts'),
+    '@org/items':  path.resolve(root, '../../../libs/dungeon/items/src/index.ts'),
   },
 });
 

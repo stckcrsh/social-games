@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/libs/shared",
+    "outDir": "../../../dist/libs/dungeon/shared",
     "rootDir": "src",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/libs/shared/tsconfig.lib.tsbuildinfo"
+    "tsBuildInfoFile": "../../../dist/libs/dungeon/shared/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"]
 }

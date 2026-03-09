@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
@@ -30,10 +30,10 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../../libs/items/tsconfig.lib.json"
+      "path": "../../../libs/dungeon/items/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/shared/tsconfig.lib.json"
+      "path": "../../../libs/dungeon/shared/tsconfig.lib.json"
     }
   ]
 }

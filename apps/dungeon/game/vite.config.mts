@@ -4,7 +4,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/game',
+  cacheDir: '../../../node_modules/.vite/apps/dungeon/game',
   server: {
     port: 4200,
     host: '0.0.0.0',
@@ -15,7 +15,7 @@ export default defineConfig({
   },
   plugins: [react(), nxViteTsPaths()],
   build: {
-    outDir: '../../dist/apps/game',
+    outDir: '../../../dist/apps/dungeon/game',
     reportCompressedSize: true,
     commonjsOptions: { transformMixedEsModules: true },
   },

@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/apps/meta-service",
+    "outDir": "../../../dist/apps/dungeon/meta-service",
     "types": ["node"],
     "rootDir": "src",
-    "tsBuildInfoFile": "../../dist/apps/meta-service/tsconfig.app.tsbuildinfo",
+    "tsBuildInfoFile": "../../../dist/apps/dungeon/meta-service/tsconfig.app.tsbuildinfo",
     "emitDeclarationOnly": false,
     "composite": false,
     "declaration": false,
@@ -14,10 +14,10 @@
   "exclude": [],
   "references": [
     {
-      "path": "../../libs/items/tsconfig.lib.json"
+      "path": "../../../libs/dungeon/items/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/shared/tsconfig.lib.json"
+      "path": "../../../libs/dungeon/shared/tsconfig.lib.json"
     }
   ]
 }

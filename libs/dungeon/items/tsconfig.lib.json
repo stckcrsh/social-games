@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/libs/items",
+    "outDir": "../../../dist/libs/dungeon/items",
     "rootDir": "src",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/libs/items/tsconfig.lib.tsbuildinfo"
+    "tsBuildInfoFile": "../../../dist/libs/dungeon/items/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "references": [
