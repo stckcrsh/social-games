@@ -21,3 +21,42 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+## Test-Driven Development
+
+**Iron law: no production code without a failing test first.**
+
+### The cycle
+1. Write one failing test describing the desired behavior
+2. Run it — confirm it **fails** for the right reason (missing feature, not a typo)
+3. Write the minimal code to make it pass — nothing more
+4. Run it — confirm it **passes** and no other tests broke
+5. Refactor if needed, keeping tests green
+6. Commit, repeat
+
+### Rules
+- If you didn't watch the test fail, you don't know if it tests the right thing
+- Write minimal code — no extra features, no premature abstractions
+- Tests use real code; mocks only when crossing a process/network/filesystem boundary
+- Every bug fix starts with a failing test that reproduces the bug
+
+### Test commands for this workspace
+```bash
+pnpm nx test wrastlin-service     # Fastify unit + integration tests (vitest)
+pnpm nx test dungeon-service      # dungeon service tests
+pnpm nx run-many -t test          # all projects
+```
+
+### What to test per layer
+| Layer | Tool | Pattern |
+|-------|------|---------|
+| Pure logic (resolvers, engines) | vitest | Unit tests, real inputs/outputs |
+| Fastify routes | vitest + `app.inject()` | Register route plugin, mock gameState, assert status + body |
+| React components | vitest + React Testing Library | Render, interact, assert DOM |
+| CLI scripts | vitest | Mock fs/gameState, assert console output + side effects |
+
+### Red flags — stop and start over
+- Writing code before the test
+- Test passes immediately (you're testing existing behavior — fix the test)
+- "I'll add tests after" — tests after prove nothing; you never saw them fail
+- "Too simple to test" — simple code breaks too
