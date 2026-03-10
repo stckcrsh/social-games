@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/libs/wrastlin/shared",
+    "rootDir": "src",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../../dist/libs/wrastlin/shared/tsconfig.lib.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"]
+}
