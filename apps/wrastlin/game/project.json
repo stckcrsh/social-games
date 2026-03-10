@@ -1,0 +1,30 @@
+{
+  "name": "wrastlin-game",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/wrastlin/game/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{workspaceRoot}/dist/apps/wrastlin/game"],
+      "options": {
+        "configFile": "apps/wrastlin/game/vite.config.mts"
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "continuous": true,
+      "options": {
+        "configFile": "apps/wrastlin/game/vite.config.mts"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "continuous": true,
+      "options": {
+        "configFile": "apps/wrastlin/game/vite.config.mts"
+      }
+    }
+  },
+  "tags": []
+}

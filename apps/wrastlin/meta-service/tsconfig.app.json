@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/apps/wrastlin/meta-service",
+    "types": ["node"],
+    "rootDir": "src",
+    "tsBuildInfoFile": "../../../dist/apps/wrastlin/meta-service/tsconfig.app.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [],
+  "references": [
+    { "path": "../../../libs/wrastlin/shared/tsconfig.lib.json" }
+  ]
+}
