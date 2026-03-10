@@ -11,6 +11,7 @@
     { "path": "./apps/dungeon/game" },
     { "path": "./libs/wrastlin/shared" },
     { "path": "./apps/wrastlin/meta-service" },
-    { "path": "./apps/wrastlin/game" }
+    { "path": "./apps/wrastlin/game" },
+    { "path": "./libs/shared/betting" }
   ]
 }

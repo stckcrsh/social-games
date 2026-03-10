@@ -1,4 +1,7 @@
 packages:
   - 'apps/*'
   - 'apps/dungeon/*'
+  - 'apps/wrastlin/*'
   - 'libs/dungeon/*'
+  - 'libs/wrastlin/*'
+  - 'libs/shared/*'
