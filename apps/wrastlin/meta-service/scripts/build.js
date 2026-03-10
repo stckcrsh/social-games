@@ -15,6 +15,7 @@ esbuild.buildSync({
   absWorkingDir: root,
   alias: {
     '@org/wrastlin-shared': path.resolve(root, '../../../libs/wrastlin/shared/src/index.ts'),
+    '@org/betting': path.resolve(root, '../../../libs/shared/betting/src/index.ts'),
   },
 });
 
@@ -29,6 +30,7 @@ esbuild.buildSync({
   absWorkingDir: root,
   alias: {
     '@org/wrastlin-shared': path.resolve(root, '../../../libs/wrastlin/shared/src/index.ts'),
+    '@org/betting': path.resolve(root, '../../../libs/shared/betting/src/index.ts'),
   },
 });
 
