@@ -1,24 +1,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const DATA_DIR = path.resolve(__dirname, '../../data');
+const STATIC_DIR = process.env.STATIC_DATA_DIR
+  ?? path.resolve(__dirname, '../data/static');
+const DYNAMIC_DIR = process.env.DYNAMIC_DATA_DIR
+  ?? path.resolve(__dirname, '../data/runtime');
 
-export function readJson<T>(filename: string): T {
-  const filepath = path.join(DATA_DIR, filename);
-  const raw = fs.readFileSync(filepath, 'utf-8');
-  return JSON.parse(raw) as T;
+export function readStaticJson<T>(filename: string): T {
+  const filepath = path.join(STATIC_DIR, filename);
+  return JSON.parse(fs.readFileSync(filepath, 'utf-8')) as T;
 }
 
-export function writeJson<T>(filename: string, data: T): void {
-  const filepath = path.join(DATA_DIR, filename);
-  const dir = path.dirname(filepath);
-  fs.mkdirSync(dir, { recursive: true });
+export function readDynamicJson<T>(filename: string): T {
+  const filepath = path.join(DYNAMIC_DIR, filename);
+  return JSON.parse(fs.readFileSync(filepath, 'utf-8')) as T;
+}
+
+export function writeDynamicJson<T>(filename: string, data: T): void {
+  const filepath = path.join(DYNAMIC_DIR, filename);
+  fs.mkdirSync(path.dirname(filepath), { recursive: true });
   fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export function readJsonOrDefault<T>(filename: string, defaultValue: T): T {
+export function readJsonOrDefault<T>(
+  filename: string,
+  defaultValue: T,
+  dir: 'static' | 'dynamic' = 'dynamic'
+): T {
   try {
-    return readJson<T>(filename);
+    return dir === 'static' ? readStaticJson<T>(filename) : readDynamicJson<T>(filename);
   } catch {
     return defaultValue;
   }
