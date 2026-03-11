@@ -178,6 +178,19 @@ describe('AnimationScheduler', () => {
     expect(animState.entityPositions.some(p => p.kind === 'lunge')).toBe(false);
   });
 
+  it('item_activate + item_whiff (no item_hit) → produces lunge, not projectile (melee miss)', () => {
+    const animState = emptyAnimationState();
+    scheduler.run(
+      [
+        ev('item_activate', { slot: 'A', itemId: 'hammer', dir: 'N' }),
+        ev('item_whiff', { slot: 'A', itemId: 'hammer', reason: 'blocked' }),
+      ],
+      animState, mockState(), vi.fn(), vi.fn(),
+    );
+    expect(animState.entityPositions.some(p => p.kind === 'lunge')).toBe(true);
+    expect(animState.projectiles).toHaveLength(0);
+  });
+
   it('item_activate alone → produces player lunge (melee)', () => {
     const animState = emptyAnimationState();
     scheduler.run(

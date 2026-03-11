@@ -117,7 +117,7 @@ export class AnimationScheduler {
     duration: number,
   ): void {
     const player = runState.player;
-    const isRangedActivate = allEvents.some(e => e.type === 'item_hit' || e.type === 'item_whiff');
+    const isRangedActivate = allEvents.some(e => e.type === 'item_hit');
 
     for (const event of events) {
       switch (event.type) {
