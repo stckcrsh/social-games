@@ -37,6 +37,10 @@ The new `RunState` from the server is held until `onComplete` fires. During play
 
 Input is never locked. If a new turn result arrives while a previous turn's animations are still running, the scheduler performs **cut-and-replace**: immediately cancel all in-flight animations, commit the previous turn's final state, and start the new turn's animations fresh. This prevents lag buildup at fast tick rates.
 
+### Future Skip / Fast-Forward
+
+The scheduler accepts an optional options argument: `run(events, onComplete, { instant?: boolean })`. When `instant: true`, all progress values are driven to 1 immediately and `onComplete` is called synchronously. This hook is not implemented in Phase 1 but the scheduler signature must accommodate it from the start.
+
 ---
 
 ## Phase Model
@@ -138,15 +142,69 @@ Pure functions that take `progress: number` (0→1) and return drawable instruct
 | Primitive | Signature | Used for |
 |-----------|-----------|----------|
 | `slide` | `(from: Pos, to: Pos, progress: number) => Pos` | `move` — interpolate entity between tiles |
-| `lunge` | `(origin: Pos, toward: Pos, progress: number) => Pos` | `attack`, `collision_attack` — nudge attacker 30% toward target then snap back |
-| `flash` | `(color: string, progress: number) => string` | `item_hit`, `explosion_entity_damage`, `fire_damage` — alpha-blended color overlay on entity |
-| `projectile` | `(from: Pos, to: Pos, progress: number) => Pos` | `item_activate` ranged — small shape traveling along tile-space line |
-| `burst` | `(center: Pos, radius: number, progress: number) => BurstFrame` | `explosion`, `mine_detonated` — expanding circle with fade |
-| `tileFlash` | `(color: string, progress: number) => string` | `tile_changed`, `oil_ignited`, `fire_spread`, `mine_placed` — color overlay on tile |
-| `collapse` | `(progress: number) => { scale: number; alpha: number }` | `death` — entity shrinks and fades |
-| `appear` | `(progress: number) => { scale: number }` | `mine_placed` — tile object scales up from 0 |
+| `lunge` | `(origin: Pos, toward: Pos, progress: number) => Pos` | `attack`, `collision_attack` — nudge **attacker** 30% toward target then snap back |
+| `flash` | `(color: string, progress: number) => string` | Hit reaction on the **target** entity — used for `attack`/`collision_attack` (red), `item_hit` (orange), `explosion_entity_damage` (orange), `fire_damage` (orange-red) |
+| `projectile` | `(from: Pos, to: Pos, progress: number) => Pos` | Ranged `item_activate` — small shape traveling along a tile-space line |
+| `missIndicator` | `(at: Pos, progress: number) => { alpha: number }` | `item_whiff` — brief canvas X mark or fade-out stub at the targeted tile, distinct from a hit |
+| `burst` | `(center: Pos, radius: number, progress: number) => BurstFrame` | `explosion`, `mine_detonated` — expanding circle with fade, radius from event payload |
+| `tileFlash` | `(color: string, progress: number) => string` | Color overlay on a specific tile — see per-event colors below |
+| `collapse` | `(progress: number) => { scale: number; alpha: number }` | `death` — entity shrinks and fades to zero |
+| `appear` | `(progress: number) => { scale: number }` | New board objects scaling up from 0 — used for `mine_placed` today; extend to entity spawns if a spawn event is added later |
 
 `progress` is computed by the scheduler's rAF loop and passed down — primitives are pure functions of progress only.
+
+### Per-event animation dispatch
+
+**`attack` / `collision_attack`:**
+- `lunge` on the **attacker** entity toward the target tile
+- `flash` (red) on the **target** entity (`targetId` field)
+
+**`item_activate`:**
+- The scheduler peeks at the same turn's event list. If a matching `item_hit` or `item_whiff` follows, treat as ranged: show `projectile` from attacker toward `dir`. If neither follows, treat as melee: show `lunge` on the player entity toward `dir`.
+
+**`item_hit`:**
+- `flash` (orange) on the entity identified by `entityId`. If `entityId` is absent and only `x,y` is present, apply `tileFlash` (orange) at the target tile instead.
+
+**`item_whiff`:**
+- `missIndicator` at the tile the attack was aimed at (derived from attacker position + `dir`)
+- HUD `itemWhiff` signal (yellow slot flash) fires in parallel
+
+**`mine_placed`:**
+- `appear` on the tile object at `(x, y)`
+- `tileFlash` (yellow) at `(x, y)` to draw attention
+
+**`explosion`:**
+- `burst` centered at `(x, y)` with `radius` from event
+
+**`explosion_wall_destroyed`:**
+- `tileFlash` (bright white) at `(x, y)`
+
+**`explosion_entity_damage`:**
+- `flash` (orange) on the entity identified by `entityId`
+
+**`fire_damage`:**
+- `flash` (orange-red) on the entity identified by `entityId`
+
+**`fire_spread`:**
+- `tileFlash` (red-orange) at the destination tile `(toX, toY)`
+
+**`oil_ignited`:**
+- `tileFlash` (bright orange, higher peak alpha than fire_spread) at `(x, y)` — visually distinct from ordinary fire spread
+
+**`tile_changed`:**
+- `tileFlash` (white) at `(x, y)` — brief neutral flash to draw the eye to any tile that changed type (wall→floor, door→open, etc.)
+
+**`mechanism_solved`:**
+- `tileFlash` (cyan) on each tile whose `interactable.id` matches `mechanismId`, looked up from `RunState.grid`
+
+**`mechanism_reset`:**
+- `tileFlash` (gray) on each tile whose `interactable.id` matches `mechanismId`
+
+**`interacted`:**
+- `tileFlash` (blue) at the interactable tile, looked up from `RunState.grid` by `interactableId`
+
+**`death`:**
+- `collapse` on the entity identified by `entityId`
 
 ### HUD signals (React)
 
@@ -154,7 +212,7 @@ Pure functions that take `progress: number` (0→1) and return drawable instruct
 |--------|---------|--------|
 | `slotFlash` | `slot_switched` | Brief highlight on active slot indicator in SlotHUD |
 | `itemFail` | `item_fail` | Red flash + reason text on active slot (no-ammo / cooldown) |
-| `itemWhiff` | `item_whiff` | Yellow flash on active slot |
+| `itemWhiff` | `item_whiff` | Yellow flash on active slot (fires in parallel with canvas `missIndicator`) |
 
 ---
 
@@ -173,6 +231,7 @@ interface AnimationState {
   tileOverlays:    Map<string, string>;   // tileFlash colors
   bursts:          BurstFrame[];          // active explosion bursts
   projectiles:     ProjectileFrame[];     // active projectiles in flight
+  missIndicators:  MissFrame[];           // item_whiff miss marks
 
   // Phase metadata
   activePhase: Phase | null;
@@ -201,9 +260,9 @@ The loop is dormant between turns. No rAF calls happen when nothing is animating
 |------|--------|----------|
 | `apps/dungeon/game/src/game/animation/animationConfig.ts` | Create | `ANIMATION_CONFIG` timing constants |
 | `apps/dungeon/game/src/game/animation/eventToPhase.ts` | Create | `EVENT_PHASE` lookup table, `Phase` type |
-| `apps/dungeon/game/src/game/animation/animationPrimitives.ts` | Create | Pure tween functions: slide, lunge, flash, projectile, burst, tileFlash, collapse, appear |
+| `apps/dungeon/game/src/game/animation/animationPrimitives.ts` | Create | Pure tween functions: slide, lunge, flash, projectile, missIndicator, burst, tileFlash, collapse, appear |
 | `apps/dungeon/game/src/game/animation/AnimationState.ts` | Create | `AnimationState` interface + `emptyAnimationState()` factory |
-| `apps/dungeon/game/src/game/animation/AnimationScheduler.ts` | Create | Phase sequencer: bucket events, fire phases with lead-time overlap, cut-and-replace, drive AnimationState mutations, emit HUD signals |
+| `apps/dungeon/game/src/game/animation/AnimationScheduler.ts` | Create | Phase sequencer: bucket events, peek-ahead for ranged detection, fire phases with lead-time overlap, cut-and-replace, drive AnimationState mutations, emit HUD signals; accepts optional `{ instant?: boolean }` for future skip support |
 | `apps/dungeon/game/src/game/animation/AnimationScheduler.spec.ts` | Create | Vitest tests with fake timers |
 | `apps/dungeon/game/src/game/animation/animationPrimitives.spec.ts` | Create | Vitest unit tests for all primitives |
 | `apps/dungeon/game/src/game/animation/eventToPhase.spec.ts` | Create | Assert every GameEvent type has a mapping |
@@ -220,8 +279,10 @@ All unit tests use vitest. No canvas or DOM required for the core logic.
 **`animationPrimitives.spec.ts`**
 - `slide(from, to, 0)` returns `from`; `slide(from, to, 1)` returns `to`; midpoint is interpolated correctly
 - `lunge` at progress=0.5 is closer to target; at progress=1 returns origin (snap back)
+- `flash` at progress=0 returns full-alpha color; at progress=1 returns fully transparent
 - `collapse` at progress=1 returns `{ scale: 0, alpha: 0 }`
 - `burst` radius grows with progress, alpha decreases
+- `missIndicator` alpha peaks early then fades
 
 **`eventToPhase.spec.ts`**
 - Every key in `GameEvent['type']` union is present in `EVENT_PHASE`
@@ -232,7 +293,10 @@ All unit tests use vitest. No canvas or DOM required for the core logic.
 - Multi-phase turn: impact phase fires `leadTime` ms after action phase start (not after action end)
 - Cut-and-replace: calling `run()` again mid-animation cancels previous phases, onComplete from previous never fires, new onComplete fires correctly
 - Empty turn (all events map to `skip`): onComplete fires immediately
-- HUD signals emitted for correct events
+- HUD signals emitted for correct events (`slot_switched` → slotFlash, `item_fail` → itemFail, `item_whiff` → itemWhiff)
+- Ranged peek-ahead: `item_activate` followed by `item_hit` in same turn produces a projectile animation; without `item_hit`/`item_whiff` produces a lunge
+- `item_hit` with `entityId` flashes entity; without `entityId` (x,y only) applies tileFlash
+- `{ instant: true }` option: onComplete called synchronously, no timeouts set
 
 **`IsoRenderer` / `SlotHUD` / `Game.tsx`**: integration-level, verified via existing e2e suite and manual playtesting. Canvas drawing is not unit-tested.
 
@@ -244,4 +308,4 @@ All unit tests use vitest. No canvas or DOM required for the core logic.
 - No polished art dependency — all primitives work with shapes, colors, and alpha
 - No engine changes — server-side turn resolution is untouched
 - No cutscene framework
-- No fast-forward / skip mode in this phase (design supports it via `progress` abstraction; implementation deferred)
+- Fast-forward / skip mode is deferred; the `{ instant?: boolean }` option shape is reserved in the scheduler API
