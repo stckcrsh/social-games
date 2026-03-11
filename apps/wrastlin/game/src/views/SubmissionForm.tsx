@@ -13,6 +13,7 @@ export function SubmissionForm() {
   const [storyType, setStoryType] = useState<StoryRequestType>('feud');
   const [storyTarget, setStoryTarget] = useState('');
   const [bribe, setBribe] = useState(0);
+  const [wrestlerMessage, setWrestlerMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -27,7 +28,8 @@ export function SubmissionForm() {
         },
         storyTarget
           ? [{ type: storyType, target: storyTarget, bribeAmount: bribe }]
-          : []
+          : [],
+        wrestlerMessage || undefined
       );
       setStatus('done');
       setMessage('Submission recorded! Good luck this week.');
@@ -74,6 +76,17 @@ export function SubmissionForm() {
           Bribe amount: $
           <input type="number" value={bribe} min={0} onChange={e => setBribe(Number(e.target.value))} />
         </label>
+      </section>
+
+      <section style={{ marginTop: '1rem' }}>
+        <h3>Message to Your Wrestler (optional)</h3>
+        <textarea
+          value={wrestlerMessage}
+          onChange={e => setWrestlerMessage(e.target.value)}
+          placeholder="Write a message or pep talk to your wrestler for this week..."
+          rows={4}
+          style={{ width: '100%' }}
+        />
       </section>
 
       <button

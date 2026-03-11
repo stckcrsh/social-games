@@ -18,5 +18,6 @@ export interface WeeklySubmission {
   week: number;
   advice: ManagerAdvice;
   storyRequests: StoryRequest[];
+  wrestlerMessage?: string; // optional message/letter to the wrestler
   submittedAt: string; // ISO timestamp
 }

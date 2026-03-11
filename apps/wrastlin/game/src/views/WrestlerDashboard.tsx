@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { WrestlerCard } from '../components/WrestlerCard.js';
-import { ChatPanel } from '../components/ChatPanel.js';
 import type { Wrestler, Manager } from '@org/wrastlin-shared';
 
 const MANAGER_ID = 'm-001'; // hardcoded for solo MVP
@@ -25,9 +24,8 @@ export function WrestlerDashboard() {
   if (!wrestler || !manager) return <p>Loading...</p>;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1rem' }}>
+    <div style={{ padding: '1rem' }}>
       <WrestlerCard wrestler={wrestler} />
-      <ChatPanel managerId={manager.managerId} wrestlerName={wrestler.name} />
     </div>
   );
 }

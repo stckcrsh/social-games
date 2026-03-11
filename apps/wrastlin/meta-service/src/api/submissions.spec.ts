@@ -43,6 +43,25 @@ describe('submission routes', () => {
       await app.close();
     });
 
+    it('includes wrestlerMessage in the submission when provided', async () => {
+      vi.spyOn(gameState, 'loadState').mockReturnValue(mockState);
+      vi.spyOn(gameState, 'loadSubmissions').mockReturnValue([]);
+      vi.spyOn(gameState, 'saveSubmissions').mockImplementation(() => {});
+      const app = Fastify();
+      await app.register(submissionRoutes);
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/submissions',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...submitBody, wrestlerMessage: 'Go get em champ!' }),
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(JSON.parse(res.body).wrestlerMessage).toBe('Go get em champ!');
+      await app.close();
+    });
+
     it('returns 400 when phase is submissions_closed', async () => {
       vi.spyOn(gameState, 'loadState').mockReturnValue({
         ...mockState,

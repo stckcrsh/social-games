@@ -7,6 +7,7 @@ interface SubmitBody {
   managerId: string;
   advice: ManagerAdvice;
   storyRequests: StoryRequest[];
+  wrestlerMessage?: string;
 }
 
 export async function submissionRoutes(app: FastifyInstance) {
@@ -16,7 +17,7 @@ export async function submissionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'Submissions are closed for this week' });
     }
 
-    const { managerId, advice, storyRequests } = req.body;
+    const { managerId, advice, storyRequests, wrestlerMessage } = req.body;
     const existing = loadSubmissions(state.currentWeek);
 
     if (existing.some(s => s.managerId === managerId)) {
@@ -29,6 +30,7 @@ export async function submissionRoutes(app: FastifyInstance) {
       week: state.currentWeek,
       advice,
       storyRequests,
+      ...(wrestlerMessage ? { wrestlerMessage } : {}),
       submittedAt: new Date().toISOString(),
     };
 

@@ -29,10 +29,8 @@ export const api = {
   getWrestlers: () => get<Wrestler[]>('/wrestlers'),
   getWrestler: (id: string) => get<Wrestler>(`/wrestlers/${id}`),
   getManager: (id: string) => get<Manager>(`/managers/${id}`),
-  chat: (managerId: string, message: string) =>
-    post<{ wrestlerName: string; message: string }>(`/managers/${managerId}/chat`, { message }),
   getState: () => get<WeeklyState>('/state'),
-  submitWeek: (managerId: string, advice: ManagerAdvice, storyRequests: StoryRequest[]) =>
-    post<WeeklySubmission>('/submissions', { managerId, advice, storyRequests }),
+  submitWeek: (managerId: string, advice: ManagerAdvice, storyRequests: StoryRequest[], wrestlerMessage?: string) =>
+    post<WeeklySubmission>('/submissions', { managerId, advice, storyRequests, wrestlerMessage }),
   getSubmissions: (week: number) => get<WeeklySubmission[]>(`/submissions/week/${week}`),
 };
