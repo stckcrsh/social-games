@@ -5,6 +5,10 @@ import { IsoRenderer } from './IsoRenderer';
 import { SlotHUD } from './SlotHUD';
 import { getTileset } from './tileset';
 import { getWsUrl, stepTick } from '../api/dungeon';
+import { AnimationScheduler } from './animation/AnimationScheduler.js';
+import { emptyAnimationState } from './animation/AnimationState.js';
+import type { IsoRendererHandle } from './IsoRenderer.js';
+import type { HudSignal } from './animation/AnimationScheduler.js';
 
 // ── Key → action map ─────────────────────────────────────────────────────────
 
@@ -192,9 +196,20 @@ export function GamePage() {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [autoTick, setAutoTick] = useState(false);
 
+  const rendererRef = useRef<IsoRendererHandle>(null);
+  const schedulerRef = useRef(new AnimationScheduler());
+  const pendingFrameRef = useRef<GameFrame | null>(null);
+  const [hudSignal, setHudSignal] = useState<HudSignal | null>(null);
+
   const wsRef = useRef<WebSocket | null>(null);
   const navigatedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hudSignal) return;
+    const t = setTimeout(() => setHudSignal(null), 800);
+    return () => clearTimeout(t);
+  }, [hudSignal]);
 
   // Auto-tick for debug runs
   useEffect(() => {
@@ -224,12 +239,34 @@ export function GamePage() {
             }
             return;
           }
-          setFrame({
+          const newFrame: GameFrame = {
             state: data.state,
             turnEvents: data.turnEvents ?? [],
             slots: data.slots,
             error: data.error,
-          });
+          };
+
+          // Cut-and-replace: cancel previous animation and commit previous frame
+          schedulerRef.current.cancel();
+          rendererRef.current?.cancelAnimation();
+          if (pendingFrameRef.current) {
+            setFrame(pendingFrameRef.current);
+          }
+          pendingFrameRef.current = newFrame;
+
+          const animState = emptyAnimationState();
+          schedulerRef.current.run(
+            newFrame.turnEvents,
+            animState,
+            newFrame.state,
+            () => {
+              // All phases done — commit final state
+              setFrame(pendingFrameRef.current!);
+              pendingFrameRef.current = null;
+            },
+            (signal) => setHudSignal(signal),
+          );
+          rendererRef.current?.startAnimating(animState, () => {});
         }
       } catch {
         // ignore malformed frames
@@ -356,6 +393,7 @@ export function GamePage() {
     >
       {/* Isometric canvas (fills viewport) */}
       <IsoRenderer
+        ref={rendererRef}
         grid={state.grid}
         player={state.player}
         enemies={state.enemies}
@@ -421,6 +459,7 @@ export function GamePage() {
             slotA={frame.slots.A}
             slotB={frame.slots.B}
             activeSlot={frame.slots.activeSlot}
+            hudSignal={hudSignal}
           />
         )}
 
