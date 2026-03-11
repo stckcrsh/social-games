@@ -6,12 +6,6 @@ const DYNAMIC_DIR = '/tmp/wrastlin-e2e/runtime';
 
 const FIXTURE_STATIC = path.resolve(__dirname, '../../meta-service/data/static');
 
-const CLEAN_STATE = {
-  currentWeek: 1,
-  phase: 'week_open',
-  updatedAt: new Date().toISOString(),
-};
-
 export default async function globalSetup() {
   // Clean up any leftover from a previous run
   if (fs.existsSync('/tmp/wrastlin-e2e')) {
@@ -33,9 +27,14 @@ export default async function globalSetup() {
   );
 
   // Write clean runtime state
+  const cleanState = {
+    currentWeek: 1,
+    phase: 'week_open',
+    updatedAt: new Date().toISOString(),
+  };
   fs.writeFileSync(
     path.join(DYNAMIC_DIR, 'state.json'),
-    JSON.stringify(CLEAN_STATE, null, 2)
+    JSON.stringify(cleanState, null, 2)
   );
   fs.writeFileSync(
     path.join(DYNAMIC_DIR, 'bets', 'propositions.json'),

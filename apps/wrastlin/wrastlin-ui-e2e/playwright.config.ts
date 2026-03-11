@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import path from 'node:path';
+import { workspaceRoot } from '@nx/devkit';
 
 export default defineConfig({
   testDir: './src',
@@ -11,7 +11,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'node scripts/build.js && node dist/main.js',
-    cwd: path.resolve(__dirname, '../../meta-service'),
+    cwd: `${workspaceRoot}/apps/wrastlin/meta-service`,
     url: 'http://localhost:3002/health',
     reuseExistingServer: false,
     env: {

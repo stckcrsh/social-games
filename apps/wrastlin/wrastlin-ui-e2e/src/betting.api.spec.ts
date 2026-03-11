@@ -4,16 +4,15 @@ import path from 'node:path';
 
 const DYNAMIC_DIR = '/tmp/wrastlin-e2e/runtime';
 
-const CLEAN_STATE = {
-  currentWeek: 1,
-  phase: 'week_open',
-  updatedAt: new Date().toISOString(),
-};
-
 function resetRuntime() {
+  const cleanState = {
+    currentWeek: 1,
+    phase: 'week_open',
+    updatedAt: new Date().toISOString(),
+  };
   fs.writeFileSync(
     path.join(DYNAMIC_DIR, 'state.json'),
-    JSON.stringify(CLEAN_STATE, null, 2)
+    JSON.stringify(cleanState, null, 2)
   );
   fs.writeFileSync(
     path.join(DYNAMIC_DIR, 'bets', 'propositions.json'),
@@ -23,9 +22,11 @@ function resetRuntime() {
     path.join(DYNAMIC_DIR, 'bets', 'entries.json'),
     JSON.stringify([], null, 2)
   );
-  // Remove dynamic managers.json so it reloads from static seed
-  const dynManagers = path.join(DYNAMIC_DIR, 'managers.json');
-  if (fs.existsSync(dynManagers)) fs.unlinkSync(dynManagers);
+  // Remove dynamic copies so the service reloads from static seed
+  for (const file of ['managers.json', 'wrestlers.json']) {
+    const dynPath = path.join(DYNAMIC_DIR, file);
+    if (fs.existsSync(dynPath)) fs.unlinkSync(dynPath);
+  }
 }
 
 const VALID_PROPOSITION = {
