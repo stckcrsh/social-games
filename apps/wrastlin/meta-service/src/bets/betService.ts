@@ -1,29 +1,29 @@
-import { readJson, writeJson } from '../data/persistence.js';
+import { readDynamicJson, writeDynamicJson } from '../data/persistence.js';
 import { loadManagers, saveManagers } from '../core/gameState.js';
 import type { BetProposition, BetEntry } from '@org/betting';
 
 export function loadPropositions(): BetProposition[] {
   try {
-    return readJson<BetProposition[]>('bets/propositions.json');
+    return readDynamicJson<BetProposition[]>('bets/propositions.json');
   } catch {
     return [];
   }
 }
 
 export function savePropositions(propositions: BetProposition[]): void {
-  writeJson('bets/propositions.json', propositions);
+  writeDynamicJson('bets/propositions.json', propositions);
 }
 
 export function loadEntries(): BetEntry[] {
   try {
-    return readJson<BetEntry[]>('bets/entries.json');
+    return readDynamicJson<BetEntry[]>('bets/entries.json');
   } catch {
     return [];
   }
 }
 
 export function saveEntries(entries: BetEntry[]): void {
-  writeJson('bets/entries.json', entries);
+  writeDynamicJson('bets/entries.json', entries);
 }
 
 /**
