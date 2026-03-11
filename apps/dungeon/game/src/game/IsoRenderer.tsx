@@ -1,7 +1,7 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import type { Tile } from '@org/shared';
 import type { Tileset, TileColors } from './tileset';
-import type { AnimationState } from './animation/AnimationState.js';
+import type { AnimationState, TileFlashAnim } from './animation/AnimationState.js';
 import { slide, lunge, flash, burst, tileFlash, collapse, missIndicator, projectile } from './animation/animationPrimitives.js';
 
 interface IsoRendererProps {
@@ -58,6 +58,8 @@ export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
 
     useImperativeHandle(ref, () => ({
       startAnimating(animState, onDone) {
+        // Cut-and-replace: if a previous animation is running, cancel it.
+        // The previous onDone is intentionally discarded — the new turn takes over.
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
         animStateRef.current = animState;
         onDoneRef.current = onDone;
@@ -80,8 +82,19 @@ export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
           rafRef.current = null;
         }
         animStateRef.current = null;
+        onDoneRef.current = null;
       },
     }));
+
+    // Cancel any in-flight rAF loop on unmount to prevent running against a detached canvas.
+    useEffect(() => {
+      return () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      };
+    }, []);
 
     // Load sprite sheet when tileset changes
     useEffect(() => {
@@ -122,6 +135,7 @@ export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
         const flashOverride = new Map<string, string>(); // entityId → rgba color
         const scaleOverride = new Map<string, number>(); // entityId → scale (0-1)
 
+        const tileFlashMap = new Map<string, TileFlashAnim>();
         if (animState) {
           for (const anim of animState.entityPositions) {
             const p = clamp((now - anim.startTime) / anim.duration, 0, 1);
@@ -137,6 +151,9 @@ export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
           for (const anim of animState.entityScales) {
             const p = clamp((now - anim.startTime) / anim.duration, 0, 1);
             scaleOverride.set(anim.entityId, collapse(p).scale);
+          }
+          for (const tf of animState.tileFlashes) {
+            tileFlashMap.set(tf.key, tf);
           }
         }
 
@@ -196,7 +213,7 @@ export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
 
             // Tile flash overlay
             if (animState) {
-              const tf = animState.tileFlashes.find(t => t.key === `${x},${y}`);
+              const tf = tileFlashMap.get(`${x},${y}`);
               if (tf) {
                 const p = clamp((now - tf.startTime) / tf.duration, 0, 1);
                 ctx.fillStyle = tileFlash(tf.rgbColor, p, tf.peakAlpha);

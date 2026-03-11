@@ -13,6 +13,11 @@
   "include": ["src/**/*.ts"],
   "exclude": [],
   "references": [
-    { "path": "../../../libs/wrastlin/shared/tsconfig.lib.json" }
+    {
+      "path": "../../../libs/wrastlin/shared/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/shared/betting/tsconfig.lib.json"
+    }
   ]
 }
