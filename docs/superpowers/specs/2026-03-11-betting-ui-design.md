@@ -11,6 +11,37 @@ A React UI for the wrastlin betting system. Managers can browse all propositions
 
 ---
 
+## Prerequisites
+
+### Vitest + RTL setup
+
+Add a `test` block to `apps/wrastlin/game/vite.config.mts`:
+
+```typescript
+test: {
+  environment: 'jsdom',
+  globals: true,
+  setupFiles: ['./src/test/setup.ts'],
+}
+```
+
+Create `apps/wrastlin/game/src/test/setup.ts` that imports `@testing-library/jest-dom`. Add `@testing-library/react`, `@testing-library/jest-dom`, and `@testing-library/user-event` as dev dependencies.
+
+### TypeScript project reference
+
+`apps/wrastlin/game/tsconfig.app.json` currently only references `libs/wrastlin/shared`. Add `@org/betting` so TypeScript's composite mode accepts the import:
+
+```json
+"references": [
+  { "path": "../../../libs/wrastlin/shared/tsconfig.lib.json" },
+  { "path": "../../../libs/shared/betting/tsconfig.lib.json" }
+]
+```
+
+(Vite bundling works without this via the path alias, but `tsc --build` will reject the import without it.)
+
+---
+
 ## Routes & Navigation
 
 Three new React Router routes added to `App.tsx`. A "Bets" link added to the nav bar alongside "My Wrestler" and "Weekly Submission".
@@ -23,45 +54,38 @@ Three new React Router routes added to `App.tsx`. A "Bets" link added to the nav
 
 ---
 
-## Views
+## API Client Changes
 
-### `BettingList` (`/bets`)
+### Error propagation
 
-- On mount: fetch `GET /bets/propositions` (all propositions)
-- Renders each proposition as a row: question, status badge (`open`/`closed`/`resolved`), `closesAt` date
-- Each row is a link to `/bets/:id`
-- "Create Proposition" button navigates to `/bets/new`
+The existing `post` and `get` helpers throw `new Error('... failed: <status>')` on non-ok responses, discarding the server's JSON body. This makes it impossible to surface server error messages like "Insufficient funds" or "Propositions can only be created during week_open phase" in the UI.
 
-### `CreateProposition` (`/bets/new`)
-
-- Fields:
-  - Question (text input)
-  - Closes At (datetime-local input)
-  - Event Key (text input — week number or identifier)
-  - Options list — dynamic, starts with 2 rows, add/remove buttons; each row is a label text input; `optionId` auto-generated on submit as `opt-1`, `opt-2`, etc.
-- Submit → `POST /bets/propositions` with `createdBy: 'm-001'`
-- On success → navigate to `/bets/:id` for the newly created proposition
-
-### `PropositionDetail` (`/bets/:id`)
-
-- On mount: fetch `GET /bets/propositions/:id` (returns proposition + pool), `GET /managers/m-001` (money balance), `GET /bets/entries?bettorId=m-001` (manager's existing entries on this proposition)
-- Shows: question, status, `closesAt`, each option with its pool total
-- Shows manager's current balance above the bet form
-- If status is `open`: bet form — radio buttons for each option, integer amount input (min 1), submit button → `POST /bets/propositions/:id/entries`
-- After placing a bet: re-fetches proposition + entries to refresh pool totals
-- If status is `closed` or `resolved`: no bet form shown
-
----
-
-## API Client Additions
-
-New methods added to `apps/wrastlin/game/src/api/client.ts`:
+Introduce a custom error class in `client.ts`:
 
 ```typescript
-getPropositions: (status?: string) =>
-  get<(BetProposition & { pool: BetPool })[]>(
-    status ? `/bets/propositions?status=${status}` : '/bets/propositions'
-  ),
+export class ApiError extends Error {
+  constructor(public readonly serverMessage: string, public readonly status: number) {
+    super(serverMessage);
+  }
+}
+```
+
+Update `post` and `get` to parse the JSON error body and throw `ApiError`:
+
+```typescript
+if (!res.ok) {
+  const body = await res.json().catch(() => ({}));
+  throw new ApiError((body as { error?: string }).error ?? `request failed: ${res.status}`, res.status);
+}
+```
+
+Components catch errors; when `err instanceof ApiError`, display `err.serverMessage`.
+
+### New API methods
+
+```typescript
+getPropositions: () =>
+  get<BetProposition[]>('/bets/propositions'),
 getProposition: (id: string) =>
   get<BetProposition & { pool: BetPool }>(`/bets/propositions/${id}`),
 createProposition: (body: CreatePropositionBody) =>
@@ -72,7 +96,66 @@ getMyEntries: (bettorId: string) =>
   get<BetEntry[]>(`/bets/entries?bettorId=${bettorId}`),
 ```
 
-Types `BetProposition`, `BetPool`, and `BetEntry` imported from `@org/betting`. `CreatePropositionBody` and `PlaceEntryBody` defined inline in `client.ts`.
+Types `BetProposition`, `BetPool`, and `BetEntry` imported from `@org/betting`. Local types:
+
+```typescript
+interface CreatePropositionBody {
+  createdBy: string;
+  question: string;
+  // eventKey is always a string from the UI; backend accepts string | number
+  options: { optionId: string; label: string }[];
+  closesAt: string;
+  eventKey: string;
+}
+
+interface PlaceEntryBody {
+  bettorId: string;
+  optionId: string;
+  amount: number;
+}
+```
+
+---
+
+## Views
+
+### Date formatting
+
+All `closesAt` fields are rendered with `toLocaleDateString('en-US')` for locale stability across environments.
+
+### `BettingList` (`/bets`)
+
+- On mount: fetch `GET /bets/propositions` → `BetProposition[]` (no pool on list endpoint)
+- States: loading (`<p>Loading...</p>`), error (`<p style={{ color: 'red' }}>Error: {err.message}</p>`), data
+- Renders each proposition as a row: the question text is an `<a>` / `<Link>` to `/bets/:id`, followed by a status badge (`open`/`closed`/`resolved`) and `closesAt` formatted with `toLocaleDateString('en-US')`
+- "Create Proposition" button navigates to `/bets/new`
+
+### `CreateProposition` (`/bets/new`)
+
+- Fields:
+  - Question (text input)
+  - Closes At (datetime-local input)
+  - Event Key (text input)
+  - Options list — dynamic, starts with 2 rows, add/remove buttons; each row is a label text input; on submit, `optionId` is auto-generated by re-indexing the remaining options in order: `opt-1`, `opt-2`, etc. (e.g. if the user had 3 options and removed the middle one, the remaining 2 become `opt-1` and `opt-2`)
+- Submit → `POST /bets/propositions` with `createdBy: 'm-001'`
+- On success → navigate to `/bets/${response.propositionId}`
+- On `ApiError`: display `err.serverMessage` inline below the submit button
+- On other error: display generic error message
+
+### `PropositionDetail` (`/bets/:id`)
+
+- `id` comes from `useParams<{ id: string }>()`. If `id` is undefined (misconfigured route), render nothing (return `null`).
+- On mount: fetch `GET /bets/propositions/:id`, `GET /managers/m-001`, and `GET /bets/entries?bettorId=m-001` in parallel via `Promise.all`
+- The entries response contains all entries for the bettor across all propositions; filter client-side by `entry.propositionId === id` to get entries for this proposition only
+- States: loading, error, data
+- Shows: question, status, `closesAt` (formatted with `toLocaleDateString('en-US')`), each option label with its pool total from `pool.byOption[optionId] ?? 0`
+- Shows manager's current money balance (e.g. "Balance: $1000") above the bet form
+- If manager has already placed entries on this proposition (from client-side filtered entries): show "You bet $X on [option label]" for each
+- If status is `open`: bet form — radio buttons for each option (label + pool total), integer amount input (min 1, step 1), submit button → `POST /bets/propositions/:id/entries` with `{ bettorId: 'm-001', optionId, amount }`
+- On successful bet: re-fetch `GET /bets/propositions/:id` and `GET /bets/entries?bettorId=m-001` in parallel (no loading state shown during re-fetch); update state with fresh data
+- On `ApiError` from bet submit: display `err.serverMessage` below the submit button
+- On other bet error: show generic error message
+- If status is `closed` or `resolved`: no bet form shown
 
 ---
 
@@ -80,6 +163,7 @@ Types `BetProposition`, `BetPool`, and `BetEntry` imported from `@org/betting`. 
 
 | File | Purpose |
 |------|---------|
+| `apps/wrastlin/game/src/test/setup.ts` | RTL jest-dom setup |
 | `apps/wrastlin/game/src/views/BettingList.tsx` | Proposition list view |
 | `apps/wrastlin/game/src/views/BettingList.spec.tsx` | RTL tests for BettingList |
 | `apps/wrastlin/game/src/views/CreateProposition.tsx` | Create proposition form view |
@@ -93,26 +177,57 @@ Types `BetProposition`, `BetPool`, and `BetEntry` imported from `@org/betting`. 
 
 | File | Change |
 |------|--------|
+| `apps/wrastlin/game/vite.config.mts` | Add `test` block (jsdom, globals, setupFiles) |
+| `apps/wrastlin/game/tsconfig.app.json` | Add `@org/betting` reference |
+| `apps/wrastlin/game/package.json` | Add `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event` as devDependencies |
 | `apps/wrastlin/game/src/App.tsx` | Add `/bets`, `/bets/new`, `/bets/:id` routes + nav link |
-| `apps/wrastlin/game/src/api/client.ts` | Add 5 new betting API methods |
+| `apps/wrastlin/game/src/api/client.ts` | Add `ApiError` class, update `post`/`get` to propagate server error body, add 5 new betting API methods |
 
 ---
 
 ## Testing
 
-Tests use vitest + React Testing Library. The `api` client module is mocked via `vi.mock('../api/client.js')`. Tests are written before implementation (TDD).
+Tests use vitest + React Testing Library. The `api` module is mocked via `vi.mock('../api/client.js')`. All tests are written before implementation (TDD). Date assertions use `new Date(fixture.closesAt).toLocaleDateString('en-US')` rather than hardcoded strings to avoid locale sensitivity.
 
-| File | Coverage |
-|------|----------|
-| `BettingList.spec.tsx` | Renders list from mocked `getPropositions`; status badges; "Create Proposition" navigates to `/bets/new`; proposition row links to `/bets/:id` |
-| `CreateProposition.spec.tsx` | Renders form; add/remove option rows; submit calls `createProposition` with correct shape; navigates to detail on success |
-| `PropositionDetail.spec.tsx` | Renders question + pool totals per option; shows manager balance; renders bet form when `open`; submit calls `placeBet`; re-fetches after bet; hides bet form when `closed`/`resolved` |
+### `BettingList.spec.tsx`
+- Renders loading state initially
+- Renders proposition list from mocked `getPropositions`; question text is a link to `/bets/:id`
+- Shows correct status badge per proposition
+- Shows `closesAt` formatted as `toLocaleDateString('en-US')`
+- "Create Proposition" button navigates to `/bets/new`
+- Renders error message when `getPropositions` rejects
+
+### `CreateProposition.spec.tsx`
+- Renders form with 2 option rows by default
+- "Add option" button appends a new row
+- "Remove" button removes that row
+- Removing middle option and submitting re-indexes remaining IDs: `opt-1`, `opt-2`
+- Submit calls `createProposition` with the correct shape
+- Navigates to `/bets/${response.propositionId}` on success
+- Shows `ApiError.serverMessage` on `ApiError` response
+- Shows error message on other errors
+
+### `PropositionDetail.spec.tsx`
+- Renders loading state initially
+- Renders question, status, formatted `closesAt`, option labels with pool totals
+- Shows manager balance
+- Shows "You bet $X on [label]" for existing manager entries on this proposition
+- Does not show existing-bet display for entries on a different `propositionId`
+- Renders bet form (radio buttons + amount input) when status is `open`
+- Submit calls `placeBet` with correct `bettorId`, `optionId`, and integer `amount`
+- Re-fetches proposition and entries (parallel) after successful bet; updates pool totals in UI
+- Shows `ApiError.serverMessage` on `ApiError` from bet submit
+- Shows generic error on other bet errors
+- Does not render bet form when status is `closed`
+- Does not render bet form when status is `resolved`
+- Renders error message when initial fetches fail
 
 ---
 
 ## Deferred
 
 - Filtering propositions by status in the list view
-- Showing all of a manager's entries across all propositions
+- Showing all of a manager's entries across all propositions (separate "My Bets" page)
 - Admin resolve UI (currently admin-only via `POST /bets/propositions/:id/resolve`, no UI planned)
 - Odds display (e.g. implied probability from pool totals)
+- Phase-aware disabling of the Create form (currently handles the 400 gracefully at submit time)
