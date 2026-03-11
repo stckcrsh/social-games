@@ -280,6 +280,7 @@ export function GamePage() {
       wsRef.current = null;
       navigatedRef.current = false;
       ws.close();
+      schedulerRef.current.cancel();
     };
   }, [runId, navigate]);
 
