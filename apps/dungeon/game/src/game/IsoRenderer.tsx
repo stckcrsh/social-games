@@ -1,6 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import type { Tile } from '@org/shared';
 import type { Tileset, TileColors } from './tileset';
+import type { AnimationState } from './animation/AnimationState.js';
+import { slide, lunge, flash, burst, tileFlash, collapse, missIndicator, projectile } from './animation/animationPrimitives.js';
 
 interface IsoRendererProps {
   grid: Tile[][];
@@ -10,119 +12,294 @@ interface IsoRendererProps {
   highlightedCells?: { x: number; y: number; valid: boolean }[];
 }
 
-export function IsoRenderer({ grid, player, enemies, tileset, highlightedCells }: IsoRendererProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sheetRef  = useRef<HTMLImageElement | null>(null);
-  const sheetReadyRef = useRef(false);
+export interface IsoRendererHandle {
+  startAnimating(animState: AnimationState, onDone: () => void): void;
+  cancelAnimation(): void;
+}
 
-  const rows = grid.length;
-  const cols = rows > 0 ? grid[0].length : 0;
-  const { tileW, tileH, wallH } = tileset;
+// ── Module-level helpers ──────────────────────────────────────────────────────
 
-  // offsetX: shift right so (0, rows-1) tile starts at cx=0
-  const offsetX = rows * (tileW / 2);
-  // offsetY: pad top so wall tops never go above y=0
-  const offsetY = wallH;
+function tileToScreen(
+  pos: { x: number; y: number },
+  offsetX: number, offsetY: number,
+  tileW: number, tileH: number,
+): { cx: number; cy: number } {
+  const topX = offsetX + (pos.x - pos.y) * (tileW / 2);
+  const topY = offsetY + (pos.x + pos.y) * (tileH / 2);
+  return { cx: topX - tileW / 2, cy: topY };
+}
 
-  const canvasWidth  = (rows + cols) * (tileW / 2);
-  const canvasHeight = offsetY + (rows + cols) * (tileH / 2) + tileH;
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
 
-  // Load sprite sheet when tileset changes
-  useEffect(() => {
-    const { sprites } = tileset;
-    if (!sprites) {
-      sheetRef.current = null;
+export const IsoRenderer = forwardRef<IsoRendererHandle, IsoRendererProps>(
+  function IsoRenderer({ grid, player, enemies, tileset, highlightedCells }, ref) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const sheetRef  = useRef<HTMLImageElement | null>(null);
+    const sheetReadyRef = useRef(false);
+
+    const rafRef = useRef<number | null>(null);
+    const animStateRef = useRef<AnimationState | null>(null);
+    const onDoneRef = useRef<(() => void) | null>(null);
+    const redrawRef = useRef<((animState?: AnimationState | null) => void) | null>(null);
+
+    const rows = grid.length;
+    const cols = rows > 0 ? grid[0].length : 0;
+    const { tileW, tileH, wallH } = tileset;
+
+    // offsetX: shift right so (0, rows-1) tile starts at cx=0
+    const offsetX = rows * (tileW / 2);
+    // offsetY: pad top so wall tops never go above y=0
+    const offsetY = wallH;
+
+    const canvasWidth  = (rows + cols) * (tileW / 2);
+    const canvasHeight = offsetY + (rows + cols) * (tileH / 2) + tileH;
+
+    useImperativeHandle(ref, () => ({
+      startAnimating(animState, onDone) {
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        animStateRef.current = animState;
+        onDoneRef.current = onDone;
+
+        function loop() {
+          redrawRef.current?.(animStateRef.current);
+          if (!animStateRef.current?.done) {
+            rafRef.current = requestAnimationFrame(loop);
+          } else {
+            rafRef.current = null;
+            animStateRef.current = null;
+            onDoneRef.current?.();
+          }
+        }
+        rafRef.current = requestAnimationFrame(loop);
+      },
+      cancelAnimation() {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+        animStateRef.current = null;
+      },
+    }));
+
+    // Load sprite sheet when tileset changes
+    useEffect(() => {
+      const { sprites } = tileset;
+      if (!sprites) {
+        sheetRef.current = null;
+        sheetReadyRef.current = false;
+        return;
+      }
+      // Reuse existing image if it's already for this sheet URL
+      if (sheetRef.current?.src.endsWith(sprites.sheet)) return;
+
       sheetReadyRef.current = false;
-      return;
-    }
-    // Reuse existing image if it's already for this sheet URL
-    if (sheetRef.current?.src.endsWith(sprites.sheet)) return;
-
-    sheetReadyRef.current = false;
-    const img = new Image();
-    img.src = sprites.sheet;
-    img.onload = () => {
+      const img = new Image();
+      img.src = sprites.sheet;
+      img.onload = () => {
+        sheetRef.current = img;
+        sheetReadyRef.current = true;
+        // Trigger a redraw by touching the canvas directly
+        const canvas = canvasRef.current;
+        if (canvas) canvas.dispatchEvent(new Event('sheetloaded'));
+      };
       sheetRef.current = img;
-      sheetReadyRef.current = true;
-      // Trigger a redraw by touching the canvas directly
+    }, [tileset]);
+
+    useEffect(() => {
       const canvas = canvasRef.current;
-      if (canvas) canvas.dispatchEvent(new Event('sheetloaded'));
-    };
-    sheetRef.current = img;
-  }, [tileset]);
+      if (!canvas || rows === 0 || cols === 0) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || rows === 0 || cols === 0) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      function redrawWithAnim(ctx: CanvasRenderingContext2D, animState?: AnimationState | null) {
+        ctx.clearRect(0, 0, canvas!.width, canvas!.height);
+        const now = performance.now();
 
-    function redraw() {
-      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+        // ── Build override maps from animState ──────────────────────────────────
+        const posOverride = new Map<string, { x: number; y: number }>();
+        const flashOverride = new Map<string, string>(); // entityId → rgba color
+        const scaleOverride = new Map<string, number>(); // entityId → scale (0-1)
 
-      // Build highlight lookup
-      const highlightAt = new Map<string, boolean>();
-      for (const cell of highlightedCells ?? []) {
-        highlightAt.set(`${cell.x},${cell.y}`, cell.valid);
-      }
+        if (animState) {
+          for (const anim of animState.entityPositions) {
+            const p = clamp((now - anim.startTime) / anim.duration, 0, 1);
+            const pos = anim.kind === 'slide'
+              ? slide(anim.from, anim.to, p)
+              : lunge(anim.from, anim.to, p);
+            posOverride.set(anim.entityId, pos);
+          }
+          for (const anim of animState.entityFlashes) {
+            const p = clamp((now - anim.startTime) / anim.duration, 0, 1);
+            flashOverride.set(anim.entityId, flash(anim.rgbColor, p));
+          }
+          for (const anim of animState.entityScales) {
+            const p = clamp((now - anim.startTime) / anim.duration, 0, 1);
+            scaleOverride.set(anim.entityId, collapse(p).scale);
+          }
+        }
 
-      // Build entity-position lookup
-      const entityAt = new Map<string, 'player' | 'chase' | 'patrol' | 'charger'>();
-      entityAt.set(`${player.pos.x},${player.pos.y}`, 'player');
-      for (const e of enemies) {
-        const role: 'chase' | 'patrol' | 'charger' =
-          e.aiType === 'patrol_loop' ? 'patrol'
-          : e.aiType === 'charger'   ? 'charger'
-          : 'chase';
-        entityAt.set(`${e.pos.x},${e.pos.y}`, role);
-      }
+        // ── Separate animated vs static entities ──────────────────────────────
+        const highlightAt = new Map<string, boolean>();
+        for (const cell of highlightedCells ?? []) {
+          highlightAt.set(`${cell.x},${cell.y}`, cell.valid);
+        }
 
-      // Painter's algorithm: increasing diagonal (x+y), then increasing x
-      for (let d = 0; d < rows + cols - 1; d++) {
-        for (let x = 0; x < cols; x++) {
-          const y = d - x;
-          if (y < 0 || y >= rows) continue;
+        type EntityRole = 'player' | 'chase' | 'patrol' | 'charger';
+        const staticEntityAt = new Map<string, EntityRole>();
+        const animatedEntities: Array<{ role: EntityRole; pos: { x: number; y: number }; id: string }> = [];
 
-          const tile = grid[y][x];
+        // Player
+        const playerAnimatedPos = posOverride.get('player');
+        if (playerAnimatedPos) {
+          animatedEntities.push({ role: 'player', pos: playerAnimatedPos, id: 'player' });
+        } else {
+          staticEntityAt.set(`${player.pos.x},${player.pos.y}`, 'player');
+        }
 
-          // Top vertex of tile diamond in screen space
-          const topX = offsetX + (x - y) * (tileW / 2);
-          const topY = offsetY + (x + y) * (tileH / 2);
-          // Bounding-box origin (top-left of tileW × tileH rect)
-          const cx = topX - tileW / 2;
-          const cy = topY;
+        // Enemies
+        for (const e of enemies) {
+          const role: EntityRole =
+            e.aiType === 'patrol_loop' ? 'patrol'
+            : e.aiType === 'charger'   ? 'charger'
+            : 'chase';
+          const enemyAnimPos = posOverride.get(e.id);
+          if (enemyAnimPos) {
+            animatedEntities.push({ role, pos: enemyAnimPos, id: e.id });
+          } else {
+            staticEntityAt.set(`${e.pos.x},${e.pos.y}`, role);
+          }
+        }
 
-          drawTile(ctx!, cx, cy, tile, tileset, sheetReadyRef.current ? sheetRef.current : null);
+        // ── Painter's algorithm (static entities only) ─────────────────────────
+        for (let d = 0; d < rows + cols - 1; d++) {
+          for (let x = 0; x < cols; x++) {
+            const y = d - x;
+            if (y < 0 || y >= rows) continue;
 
-          const hlValid = highlightAt.get(`${x},${y}`);
-          if (hlValid !== undefined) {
-            ctx!.fillStyle = hlValid ? 'rgba(255, 220, 50, 0.4)' : 'rgba(160, 160, 160, 0.4)';
-            diamond(ctx!, cx, cy, tileW, tileH);
-            ctx!.fill();
+            const tile = grid[y][x];
+            const topX = offsetX + (x - y) * (tileW / 2);
+            const topY = offsetY + (x + y) * (tileH / 2);
+            const cx = topX - tileW / 2;
+            const cy = topY;
+
+            drawTile(ctx, cx, cy, tile, tileset, sheetReadyRef.current ? sheetRef.current : null);
+
+            // Highlight
+            const hlValid = highlightAt.get(`${x},${y}`);
+            if (hlValid !== undefined) {
+              ctx.fillStyle = hlValid ? 'rgba(255, 220, 50, 0.4)' : 'rgba(160, 160, 160, 0.4)';
+              diamond(ctx, cx, cy, tileW, tileH);
+              ctx.fill();
+            }
+
+            // Tile flash overlay
+            if (animState) {
+              const tf = animState.tileFlashes.find(t => t.key === `${x},${y}`);
+              if (tf) {
+                const p = clamp((now - tf.startTime) / tf.duration, 0, 1);
+                ctx.fillStyle = tileFlash(tf.rgbColor, p, tf.peakAlpha);
+                diamond(ctx, cx, cy, tileW, tileH);
+                ctx.fill();
+              }
+            }
+
+            // Static entity
+            const role = staticEntityAt.get(`${x},${y}`);
+            if (role) {
+              const entityId = role === 'player' ? 'player' : enemies.find(e => e.pos.x === x && e.pos.y === y)?.id ?? '';
+              const sc = scaleOverride.get(entityId) ?? 1;
+              const fl = flashOverride.get(entityId);
+              drawEntityWithOverrides(ctx, cx, cy, role, tileset, sc, fl);
+            }
+          }
+        }
+
+        // ── Animated entities (drawn at fractional positions) ──────────────────
+        for (const anim of animatedEntities) {
+          const { cx, cy } = tileToScreen(anim.pos, offsetX, offsetY, tileW, tileH);
+          const sc = scaleOverride.get(anim.id) ?? 1;
+          const fl = flashOverride.get(anim.id);
+          drawEntityWithOverrides(ctx, cx, cy, anim.role, tileset, sc, fl);
+        }
+
+        // ── Bursts ───────────────────────────────────────────────────────────────
+        if (animState) {
+          for (const b of animState.bursts) {
+            const p = clamp((now - b.startTime) / b.duration, 0, 1);
+            const { radiusPx, alpha } = burst(b.tileRadiusPx, p);
+            const { cx, cy } = tileToScreen({ x: b.x, y: b.y }, offsetX, offsetY, tileW, tileH);
+            const centerX = cx + tileW / 2;
+            const centerY = cy + tileH / 2;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#ff8800';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radiusPx, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = `rgba(255, 140, 0, ${alpha * 0.25})`;
+            ctx.fill();
+            ctx.restore();
           }
 
-          const role = entityAt.get(`${x},${y}`);
-          if (role) {
-            drawEntity(ctx!, cx, cy, role, tileset);
+          // ── Projectiles ────────────────────────────────────────────────────────
+          for (const proj of animState.projectiles) {
+            const p = clamp((now - proj.startTime) / proj.duration, 0, 1);
+            const pos = projectile(proj.from, proj.to, p);
+            const { cx, cy } = tileToScreen(pos, offsetX, offsetY, tileW, tileH);
+            ctx.save();
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(cx + tileW / 2, cy + tileH / 2, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // ── Miss indicators ────────────────────────────────────────────────────
+          for (const miss of animState.missIndicators) {
+            const p = clamp((now - miss.startTime) / miss.duration, 0, 1);
+            const { alpha } = missIndicator(p);
+            const { cx, cy } = tileToScreen(miss.at, offsetX, offsetY, tileW, tileH);
+            const midX = cx + tileW / 2;
+            const midY = cy + tileH / 2;
+            const s = 8;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(midX - s, midY - s); ctx.lineTo(midX + s, midY + s);
+            ctx.moveTo(midX + s, midY - s); ctx.lineTo(midX - s, midY + s);
+            ctx.stroke();
+            ctx.restore();
           }
         }
       }
-    }
 
-    const onSheetLoaded = () => redraw();
-    canvas.addEventListener('sheetloaded', onSheetLoaded);
+      // Expose redrawWithAnim via ref so the rAF loop can call it with latest props
+      redrawRef.current = (animState?: AnimationState | null) => redrawWithAnim(ctx, animState);
 
-    redraw();
+      function redraw() {
+        redrawWithAnim(ctx, null);
+      }
 
-    return () => canvas.removeEventListener('sheetloaded', onSheetLoaded);
-  }, [grid, player, enemies, tileset, rows, cols, offsetX, offsetY, tileW, tileH, wallH, highlightedCells]);
+      const onSheetLoaded = () => redraw();
+      canvas.addEventListener('sheetloaded', onSheetLoaded);
 
-  return (
-    <div style={{ overflowX: 'auto', overflowY: 'auto', maxWidth: '100%' }}>
-      <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} />
-    </div>
-  );
-}
+      redraw();
+
+      return () => canvas.removeEventListener('sheetloaded', onSheetLoaded);
+    }, [grid, player, enemies, tileset, rows, cols, offsetX, offsetY, tileW, tileH, wallH, highlightedCells]);
+
+    return (
+      <div style={{ overflowX: 'auto', overflowY: 'auto', maxWidth: '100%' }}>
+        <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} />
+      </div>
+    );
+  }
+);
 
 // ── Drawing primitives ────────────────────────────────────────────────────────
 
@@ -300,6 +477,36 @@ function drawTile(
 // ── Entity drawing ────────────────────────────────────────────────────────────
 
 type EntityRole = 'player' | 'chase' | 'patrol' | 'charger';
+
+function drawEntityWithOverrides(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number,
+  role: EntityRole,
+  tileset: Tileset,
+  scale: number,
+  flashColor: string | undefined,
+) {
+  const { tileW, tileH } = tileset;
+  const midX = cx + tileW / 2;
+  const midY = cy + tileH / 2;
+
+  ctx.save();
+  if (scale !== 1) {
+    ctx.translate(midX, midY);
+    ctx.scale(scale, scale);
+    ctx.translate(-midX, -midY);
+  }
+
+  drawEntity(ctx, cx, cy, role, tileset);
+
+  // Flash overlay: draw a translucent colored diamond over the entity area
+  if (flashColor) {
+    ctx.fillStyle = flashColor;
+    diamond(ctx, cx, cy - tileset.entityH * 0.5, tileW, tileH);
+    ctx.fill();
+  }
+  ctx.restore();
+}
 
 function drawEntity(
   ctx: CanvasRenderingContext2D,
