@@ -1,0 +1,20 @@
+{
+  "name": "@org/wrastlin-ui-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "*"
+  },
+  "nx": {
+    "implicitDependencies": ["wrastlin-service"],
+    "targets": {
+      "e2e": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm playwright test",
+          "cwd": "apps/wrastlin/wrastlin-ui-e2e"
+        }
+      }
+    }
+  }
+}
