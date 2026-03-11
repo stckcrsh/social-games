@@ -3,15 +3,38 @@
   "compileOnSave": false,
   "files": [],
   "references": [
-    { "path": "./libs/dungeon/shared" },
-    { "path": "./libs/dungeon/items" },
-    { "path": "./apps/dungeon/dungeon-service" },
-    { "path": "./apps/dungeon/meta-service" },
-    { "path": "./apps/dungeon/dungeon-ui-e2e" },
-    { "path": "./apps/dungeon/game" },
-    { "path": "./libs/wrastlin/shared" },
-    { "path": "./apps/wrastlin/meta-service" },
-    { "path": "./apps/wrastlin/game" },
-    { "path": "./libs/shared/betting" }
+    {
+      "path": "./libs/dungeon/shared"
+    },
+    {
+      "path": "./libs/dungeon/items"
+    },
+    {
+      "path": "./apps/dungeon/dungeon-service"
+    },
+    {
+      "path": "./apps/dungeon/meta-service"
+    },
+    {
+      "path": "./apps/dungeon/dungeon-ui-e2e"
+    },
+    {
+      "path": "./apps/dungeon/game"
+    },
+    {
+      "path": "./libs/wrastlin/shared"
+    },
+    {
+      "path": "./apps/wrastlin/meta-service"
+    },
+    {
+      "path": "./apps/wrastlin/game"
+    },
+    {
+      "path": "./libs/shared/betting"
+    },
+    {
+      "path": "./apps/wrastlin/wrastlin-ui-e2e"
+    }
   ]
 }

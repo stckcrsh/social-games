@@ -8,7 +8,7 @@ const ALL_EVENT_TYPES = [
   'interacted', 'tile_changed', 'mechanism_solved', 'mechanism_reset',
   'fire_damage', 'fire_spread', 'explosion', 'explosion_wall_destroyed',
   'explosion_entity_damage', 'oil_ignited', 'mine_placed', 'mine_detonated',
-  'slot_switched', 'room_transition', 'run_end', 'noop', 'player_action',
+  'slot_switched', 'room_transition', 'run_start', 'run_end', 'noop', 'player_action',
 ] as const;
 
 const VALID_VALUES = ['action', 'impact', 'consequence', 'cleanup', 'skip'] as const;
