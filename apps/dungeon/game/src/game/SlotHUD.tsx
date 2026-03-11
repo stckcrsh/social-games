@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import type { HudSignal } from './animation/AnimationScheduler.js';
+
 const ICONS: Record<string, string> = {
   hammer:      '🔨',
   rivet_gun:   '🔫',
@@ -14,14 +17,38 @@ interface SlotHUDProps {
   slotA: SlotEntry;
   slotB: SlotEntry;
   activeSlot: 'A' | 'B';
+  hudSignal?: HudSignal | null;
 }
 
-export function SlotHUD({ slotA, slotB, activeSlot }: SlotHUDProps) {
+export function SlotHUD({ slotA, slotB, activeSlot, hudSignal }: SlotHUDProps) {
+  const [flashSlot, setFlashSlot] = useState<'A' | 'B' | null>(null);
+  const [failMsg, setFailMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hudSignal) return;
+    if (hudSignal.type === 'slotFlash') {
+      setFlashSlot(activeSlot);
+      const t = setTimeout(() => setFlashSlot(null), 300);
+      return () => clearTimeout(t);
+    }
+    if (hudSignal.type === 'itemFail') {
+      setFailMsg(hudSignal.reason);
+      const t = setTimeout(() => setFailMsg(null), 600);
+      return () => clearTimeout(t);
+    }
+    if (hudSignal.type === 'itemWhiff') {
+      setFlashSlot(activeSlot);
+      const t = setTimeout(() => setFlashSlot(null), 200);
+      return () => clearTimeout(t);
+    }
+  }, [hudSignal, activeSlot]);
+
   return (
     <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
       {(['A', 'B'] as const).map(slot => {
         const entry = slot === 'A' ? slotA : slotB;
         const active = activeSlot === slot;
+        const isFlashing = flashSlot === slot;
         return (
           <div
             key={slot}
@@ -30,8 +57,12 @@ export function SlotHUD({ slotA, slotB, activeSlot }: SlotHUDProps) {
               width: '72px',
               padding: '0.4rem 0.5rem 0.5rem',
               background: '#1a1a2e',
-              border: active ? '2px solid #00ffff' : '2px solid #333',
-              boxShadow: active ? '0 0 8px #00ffff88' : 'none',
+              border: active ? '2px solid #00ffff'
+                : isFlashing ? '2px solid #ffff00'
+                : '2px solid #333',
+              boxShadow: active ? '0 0 8px #00ffff88'
+                : isFlashing ? '0 0 8px #ffff0088'
+                : 'none',
               borderRadius: '6px',
               textAlign: 'center',
               userSelect: 'none',
@@ -81,6 +112,18 @@ export function SlotHUD({ slotA, slotB, activeSlot }: SlotHUDProps) {
                 borderRadius: '4px',
               }}>
                 cd:{entry.cooldown}
+              </div>
+            )}
+
+            {/* Fail message overlay */}
+            {failMsg && active && (
+              <div style={{
+                position: 'absolute', bottom: '4px', left: '4px', right: '4px',
+                background: '#cc000088', color: '#ff8888', fontSize: '0.6rem',
+                fontFamily: 'monospace', padding: '1px 3px', borderRadius: '3px',
+                textAlign: 'center',
+              }}>
+                {failMsg}
               </div>
             )}
           </div>
