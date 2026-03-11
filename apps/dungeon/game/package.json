@@ -4,5 +4,16 @@
   "private": true,
   "dependencies": {
     "react-router-dom": "^6.30.3"
+  },
+  "nx": {
+    "targets": {
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm vitest run",
+          "cwd": "apps/dungeon/game"
+        }
+      }
+    }
   }
 }
