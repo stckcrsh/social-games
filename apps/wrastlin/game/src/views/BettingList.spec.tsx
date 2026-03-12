@@ -9,6 +9,13 @@ vi.mock('../api/client.js', () => ({
   api: { getPropositions: vi.fn() },
 }));
 
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
 const openProp: BetProposition = {
   propositionId: 'prop-1',
   createdBy: 'm-001',
@@ -43,6 +50,7 @@ function renderList() {
 describe('BettingList', () => {
   beforeEach(() => {
     vi.mocked(api.getPropositions).mockResolvedValue([openProp, resolvedProp]);
+    mockNavigate.mockReset();
   });
 
   it('shows loading state initially', () => {
@@ -69,8 +77,8 @@ describe('BettingList', () => {
   it('shows status badge for each proposition', async () => {
     renderList();
     await waitFor(() => {
-      expect(screen.getByText(/open/)).toBeInTheDocument();
-      expect(screen.getByText(/resolved/)).toBeInTheDocument();
+      expect(screen.getByText('[open]')).toBeInTheDocument();
+      expect(screen.getByText('[resolved]')).toBeInTheDocument();
     });
   });
 
@@ -87,6 +95,14 @@ describe('BettingList', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Create Proposition' })).toBeInTheDocument();
     });
+  });
+
+  it('navigates to /bets/new when "Create Proposition" is clicked', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await waitFor(() => screen.getByRole('button', { name: 'Create Proposition' }));
+    await user.click(screen.getByRole('button', { name: 'Create Proposition' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/bets/new');
   });
 
   it('renders error message when getPropositions rejects', async () => {
