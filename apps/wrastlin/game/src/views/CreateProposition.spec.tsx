@@ -117,6 +117,7 @@ describe('CreateProposition', () => {
           createdBy: 'm-001',
           question: 'Who wins?',
           eventKey: '2',
+          closesAt: '2026-03-20T17:00:00.000Z',
           options: [
             { optionId: 'opt-1', label: 'Rex' },
             { optionId: 'opt-2', label: 'Mike' },
