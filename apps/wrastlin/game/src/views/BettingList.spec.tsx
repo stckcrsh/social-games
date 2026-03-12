@@ -28,6 +28,7 @@ const resolvedProp: BetProposition = {
   propositionId: 'prop-2',
   question: 'Will Rex win by KO?',
   status: 'resolved',
+  closesAt: '2026-03-08T20:00:00.000Z',
   winningOptionIds: ['opt-1'],
 };
 

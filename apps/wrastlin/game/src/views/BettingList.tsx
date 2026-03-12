@@ -33,9 +33,7 @@ export function BettingList() {
             {' '}
             <span>[{p.status}]</span>
             {' '}
-            {p.status !== 'resolved' && (
-              <span>{new Date(p.closesAt).toLocaleDateString('en-US')}</span>
-            )}
+            <span>{new Date(p.closesAt).toLocaleDateString('en-US')}</span>
           </li>
         ))}
       </ul>
