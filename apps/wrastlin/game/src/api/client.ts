@@ -36,9 +36,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const errBody = await res.json().catch(() => ({}));
+    const body = await res.json().catch(() => ({}));
     throw new ApiError(
-      (errBody as { error?: string }).error ?? `request failed: ${res.status}`,
+      (body as { error?: string }).error ?? `request failed: ${res.status}`,
       res.status
     );
   }

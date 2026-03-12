@@ -16,10 +16,13 @@ describe('ApiError propagation', () => {
       json: () => Promise.resolve({ error: 'Insufficient funds' }),
     } as Response);
 
-    await expect(api.getPropositions()).rejects.toMatchObject({
-      serverMessage: 'Insufficient funds',
-      status: 400,
-    });
+    try {
+      await api.getPropositions();
+      expect.fail('should have thrown');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ApiError);
+      expect(e).toMatchObject({ serverMessage: 'Insufficient funds', status: 400 });
+    }
   });
 
   it('throws ApiError with generic message when error body has no error field', async () => {

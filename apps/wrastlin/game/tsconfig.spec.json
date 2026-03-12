@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["dom", "es2022"],
+    "types": ["node", "vite/client", "vitest/globals"],
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.spec.tsx", "src/test/setup.ts"],
+  "references": [
+    { "path": "../../../libs/wrastlin/shared/tsconfig.lib.json" },
+    { "path": "../../../libs/shared/betting/tsconfig.lib.json" }
+  ]
+}
