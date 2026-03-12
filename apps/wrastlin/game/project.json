@@ -24,6 +24,13 @@
       "options": {
         "configFile": "apps/wrastlin/game/vite.config.mts"
       }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/apps/wrastlin/game"],
+      "options": {
+        "configFile": "apps/wrastlin/game/vite.config.mts"
+      }
     }
   },
   "tags": []

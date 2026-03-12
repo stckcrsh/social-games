@@ -1,0 +1,48 @@
+import { api, ApiError } from './client.js';
+
+describe('ApiError propagation', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('throws ApiError with serverMessage from error body on non-ok response', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ error: 'Insufficient funds' }),
+    } as Response);
+
+    await expect(api.getPropositions()).rejects.toMatchObject({
+      serverMessage: 'Insufficient funds',
+      status: 400,
+    });
+  });
+
+  it('throws ApiError with generic message when error body has no error field', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({}),
+    } as Response);
+
+    await expect(api.getPropositions()).rejects.toMatchObject({
+      serverMessage: 'request failed: 500',
+    });
+  });
+
+  it('throws ApiError with generic message when error body fails to parse', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: () => Promise.reject(new Error('not json')),
+    } as Response);
+
+    await expect(api.getPropositions()).rejects.toMatchObject({
+      serverMessage: 'request failed: 503',
+    });
+  });
+});

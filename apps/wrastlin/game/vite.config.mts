@@ -25,4 +25,14 @@ export default defineConfig({
     reportCompressedSize: true,
     commonjsOptions: { transformMixedEsModules: true },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.spec.tsx', 'src/**/*.spec.ts'],
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: '../../../coverage/apps/wrastlin/game',
+    },
+  },
 });
