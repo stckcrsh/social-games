@@ -80,15 +80,62 @@ A **segment** is any unit of a show — either a match or a promo. This aligns w
 
 ---
 
-## rivalryHeat
+## Type Notes
 
-`rivalryHeat` is a pre-computed booking signal — not stored, computed at pipeline entry from wrestler relationships:
+### OutlineSegment vs Segment
 
+The existing `Segment` type in `@org/wrastlin-shared` uses a closed union for `type`:
+`'opening-promo' | 'singles-match' | 'backstage-confrontation' | 'interview' | 'betrayal' | 'title-match' | 'main-event'`
+
+Agent 1 produces a different shape — `OutlineSegment` — which uses a simpler `type: 'promo' | 'match'` with an explicit `matchType` field for match variety. `OutlineSegment` is a planning type; the existing `Segment` is the resolved, post-production type. They are separate. The pipeline transforms `OutlineSegment[]` into `Segment[]` during world state update (Step 8, deterministic, not AI).
+
+`OutlineSegment` includes an `order` field (1-based position in the show) that does not exist on the current `Segment` type.
+
+### rivalryHeat
+
+`rivalryHeat` is a pre-computed booking signal — not stored, computed at pipeline entry from wrestler relationships. The `Wrestler.relationships` field is an array of `{ wrestlerId: string; respect: number; hatred: number; trust: number }`. The computation:
+
+```typescript
+function rivalryHeat(wrestlers: Wrestler[], a: string, b: string): number {
+  const aHatesB = wrestlers.find(w => w.wrestlerId === a)
+    ?.relationships.find(r => r.wrestlerId === b)?.hatred ?? 0;
+  const bHatesA = wrestlers.find(w => w.wrestlerId === b)
+    ?.relationships.find(r => r.wrestlerId === a)?.hatred ?? 0;
+  return Math.round((aHatesB + bHatesA) / 2);
+}
 ```
-rivalryHeat(A, B) = round((A.relationships[B].hatred + B.relationships[A].hatred) / 2)
+
+Each wrestler in `{{WRESTLERS_JSON}}` receives a pre-computed `rivalryHeat` map keyed by other wrestler IDs, e.g. `{ "w-002": 8, "w-003": 3 }`.
+
+A standalone `Rivalry` entity (with `phase`, `history`, `paidOff`) is deferred until feud phase tracking is needed.
+
+### finisher field
+
+`Wrestler` does not currently have a `finisher` field. This field needs to be added to the `Wrestler` type in `@org/wrastlin-shared` (a string, e.g. `"Dominion Driver"`). Agent 2 requires it. This is a prerequisite for implementing Agent 2.
+
+### matchStyle in wrestler payload
+
+`matchStyle` (`'technical' | 'brawl' | 'high-fly' | 'heel' | 'face'`) lives on `ManagerAdvice` in `WeeklySubmission`, not on `Wrestler`. When building Agent 2's wrestler payload, the caller looks up the wrestler's manager submission for the current week and merges `advice.matchStyle` into the wrestler object as `matchStyle`. If no submission exists for that wrestler's manager, `matchStyle` is omitted.
+
+### Announcer type
+
+Announcer personas are not yet in the data model. Define a minimal `Announcer` type for Agent 4:
+
+```typescript
+interface Announcer {
+  announcerId: string;
+  name: string;
+  role: 'play-by-play' | 'color';
+  theme: string;        // one sentence describing voice/personality
+  catchphrases: string[];
+}
 ```
 
-This value is injected into the wrestlers payload for Agent 1. A standalone `Rivalry` entity (with `phase`, `history`, `paidOff`) is deferred until phase tracking is needed.
+Announcer data is stored as static JSON at `apps/wrastlin/meta-service/data/static/announcers.json`. No runtime mutations — announcers don't change week to week.
+
+### Note on JSON schema doc
+
+`apps/wrastlin/docs/08_json_schemas.md` is stale in several places (uses `targetId` instead of `wrestlerId` on relationships, uses `bribe` instead of `bribeAmount` on story requests, uses `crowdReaction: 0` instead of `'hot' | 'lukewarm' | 'dead'`). The authoritative source for field names is the TypeScript types in `@org/wrastlin-shared`.
 
 ---
 
@@ -100,10 +147,10 @@ This value is injected into the wrestlers payload for Agent 1. A standalone `Riv
 
 | Placeholder | Contents |
 |---|---|
-| `{{WEEK}}` | Current week number |
-| `{{PREVIOUS_OUTLINES_JSON}}` | Last 2 show outlines (segments only, no beats) |
-| `{{WRESTLERS_JSON}}` | All wrestlers with `name`, `gimmick`, `emotionalState`, and a pre-computed `rivalryHeat` map e.g. `{ "w-002": 8, "w-003": 3 }` |
-| `{{SUBMISSIONS_JSON}}` | All manager submissions for this week |
+| `{{WEEK}}` | Current week number (integer) |
+| `{{PREVIOUS_OUTLINES_JSON}}` | Array of last 2 `ShowOutline` objects (segments only, no beats) |
+| `{{WRESTLERS_JSON}}` | All wrestlers: `wrestlerId`, `name`, `gimmick`, `emotionalState`, `rivalryHeat` (pre-computed map) |
+| `{{SUBMISSIONS_JSON}}` | All `WeeklySubmission` objects pre-filtered to the current week: `managerId`, `wrestlerId` (joined from `Manager.wrestlerId` where `Manager.managerId === submission.managerId`), `advice` (`matchStyle`, `targetOpponent`), `storyRequests` (`type`, `target`, `bribeAmount`) |
 
 **Output format:** Strict JSON.
 
@@ -206,15 +253,26 @@ Respond with only valid JSON matching the schema exactly. No prose, no explanati
 
 **Runs:** Once per match segment, in parallel with Agent 3.
 
+**Prerequisites:** `Wrestler.finisher` field must be added to `@org/wrastlin-shared` before this agent can be called.
+
 **Input placeholders:**
 
 | Placeholder | Contents |
 |---|---|
-| `{{SEGMENT_ID}}` | The segmentId from the show outline |
-| `{{SEGMENT_JSON}}` | The single match segment: matchType, participants, interference, headliner |
-| `{{WRESTLERS_JSON}}` | Participants + interference wrestlers with `name`, `stats`, `personality`, `emotionalState`, `finisher`, and `matchStyle` (from manager submission if available) |
+| `{{SEGMENT_ID}}` | The segmentId from the show outline (used in output) |
+| `{{SEGMENT_JSON}}` | The single match segment: `matchType`, `participants`, `interference`, `headliner` |
+| `{{WRESTLERS_JSON}}` | Participants + interference wrestlers: `wrestlerId`, `name`, `gimmick`, `stats`, `personality`, `emotionalState`, `finisher`, `matchStyle` (merged from manager submission if available) |
 
 **Output format:** Strict JSON.
+
+**Beat types:**
+- `action` — a move, spot, or significant moment. `actor` is the performing wrestler.
+- `pause` — a crowd reaction beat. `actor` is `null`. `durationMs` is required.
+- `near-finish` — a cover or submission attempt that fails. `actor` is the attacker.
+- `interference` — an outside wrestler enters. `actor` is the interfering wrestler.
+- `finish` — the match-ending move. `actor` is the winner. Always the last beat.
+
+`durationMs` is only meaningful on `pause` beats. Set to `0` on all other beat types.
 
 **Output schema:**
 ```json
@@ -224,7 +282,7 @@ Respond with only valid JSON matching the schema exactly. No prose, no explanati
     {
       "order": 1,
       "type": "action | pause | near-finish | interference | finish",
-      "actor": "wrestlerId or null for pause",
+      "actor": "wrestlerId or null",
       "description": "one sentence describing what happens",
       "durationMs": 0
     }
@@ -256,8 +314,9 @@ making each match feel distinct.
   appropriate moment (never in the opening phase)
 - The finish type should reflect wrestler personality:
   high honor → prefer clean finish; high ego + low honor → prefer dirty or interference
-- Pauses are crowd moments — use them after near-finishes and the final finish
+- Pause beats are crowd moments — use them after near-finishes and the final finish
 - Never end on a pause beat
+- durationMs is only set on pause beats; use 0 for all other beat types
 
 ## Context
 
@@ -271,7 +330,8 @@ This is the match you are scripting. matchType affects the kinds of moves availa
 Stats determine capability — high agility enables high-flying moves, high strength
 enables power moves. Personality shapes finish preference and desperation moments.
 emotionalState affects reliability: low confidence wrestlers hesitate; high
-frustration wrestlers take shortcuts.
+frustration wrestlers take shortcuts. finisher is the wrestler's signature
+finishing move. matchStyle (when present) is their manager's strategic advice.
 
 {{WRESTLERS_JSON}}
 
@@ -284,7 +344,7 @@ Respond with only valid JSON matching the schema exactly. No prose, no explanati
     {
       "order": 1,
       "type": "action | pause | near-finish | interference | finish",
-      "actor": "wrestlerId or null for pause",
+      "actor": "wrestlerId or null for pause beats",
       "description": "one sentence describing what happens",
       "durationMs": 0
     }
@@ -309,10 +369,10 @@ Respond with only valid JSON matching the schema exactly. No prose, no explanati
 
 | Placeholder | Contents |
 |---|---|
-| `{{SEGMENT_JSON}}` | The promo segment: participants, goal |
-| `{{PARTICIPANTS_JSON}}` | Wrestler profiles with `name`, `gimmick`, `personality`, `emotionalState`, `memories` (last 3 weeks only) |
-| `{{TARGET_JSON}}` | Target wrestler profile + shared memories with participants, or `null` |
-| `{{PERSONAS_JSON}}` | Available non-wrestler personas (interviewers, authority figures), or `[]` |
+| `{{SEGMENT_JSON}}` | The promo segment: `participants`, `goal` |
+| `{{PARTICIPANTS_JSON}}` | Wrestler profiles: `wrestlerId`, `name`, `gimmick`, `personality`, `emotionalState`, `memories` (filtered to last 3 weeks — all memories in that window, regardless of who is involved) |
+| `{{TARGET_JSON}}` | Target wrestler profile + that wrestler's memories where `source` or `target` matches any participant, or `null` if promo is self-hype. Relationship-filtered rather than time-filtered because only rivalry-relevant history matters for the target. |
+| `{{PERSONAS_JSON}}` | Available non-wrestler personas (`Announcer`-shaped objects with `name`, `role`, `theme`), or `[]` |
 
 **Output format:** Human-readable screenplay. Exact format TBD pending audio generation tool selection.
 
@@ -361,8 +421,8 @@ what they would say and how they would say it.
 {{PARTICIPANTS_JSON}}
 
 ### Target
-The wrestler this promo is directed at, if any. Include their history with
-the participants so rivalries feel grounded.
+The wrestler this promo is directed at, if any. Memories listed here are ones
+involving both the target and the participants — use them for specific callbacks.
 
 {{TARGET_JSON}}
 
@@ -395,8 +455,8 @@ ACTORS: Name (role), Name (role)
 
 | Placeholder | Contents |
 |---|---|
-| `{{MATCH_BEATS_JSON}}` | Full MatchBeats output from Agent 2 — ordered beats + result |
-| `{{ANNOUNCERS_JSON}}` | Announcer profiles with `name`, `role` (play-by-play or color), `theme`, `catchphrases[]` |
+| `{{MATCH_BEATS_JSON}}` | Full `MatchBeats` output from Agent 2 — ordered beats + result |
+| `{{ANNOUNCERS_JSON}}` | Array of `Announcer` objects loaded from `data/static/announcers.json`: `announcerId`, `name`, `role`, `theme`, `catchphrases` |
 
 **Output format:** Human-readable screenplay. Exact format TBD pending audio generation tool selection.
 
@@ -421,7 +481,7 @@ who describes the action and a color commentator who adds personality and analys
 - Every action, near-finish, interference, and finish beat must be called by
   play-by-play — nothing happens silently
 - Color commentary reacts to what play-by-play just said — it never just repeats it
-- Pause beats become PAUSE lines with the beat's durationMs
+- Pause beats become PAUSE lines with the beat's durationMs value
 - Near-finishes get escalating excitement — each one should feel more desperate
   than the last
 - The finish gets the biggest reaction from both announcers
@@ -464,16 +524,15 @@ Each agent is a function `(input) → output`. Testing strategy:
 
 2. **Schema validation at boundaries** — Add runtime validation on every agent's input and output. Catches mismatches immediately when swapping in real AI agents.
 
-3. **Existing `showGenerator.ts` as Agent 1 stub** — The current deterministic show generator produces output structurally similar to ShowOutline. Adapt its output to the new schema and use it as the Agent 1 stub while building the AI version.
+3. **`showGenerator.ts` as Agent 1 stub** — The current deterministic show generator can serve as a stub while building the AI version. Note: its output uses the old `SegmentType` union (`'opening-promo'`, `'singles-match'`, etc.) and will require transformation into `OutlineSegment` format (`type: 'promo' | 'match'`, `matchType`, `goal`, `headliner`, `order`).
 
-4. **World state update tests** — The post-pipeline state update (relationships, memories, money) is deterministic. Unit test it independently using fixture MatchBeats results.
+4. **World state update tests** — The post-pipeline state update (relationships, memories, money) is deterministic. Unit test it independently using fixture `MatchBeats` results.
 
 ---
 
 ## Deferred
 
 - Standalone `Rivalry` entity with `phase`, `history`, `paidOff` — deferred until feud phase tracking is needed
-- Final screenplay output format — locked down once audio generation tool is selected
-- Announcer persona data model and storage location
+- Final screenplay output format for Agents 3 and 4 — locked down once audio generation tool is selected
 - Auto-generation of betting propositions from show outline
 - Auto-resolution of bets after match beats are produced
