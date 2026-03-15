@@ -8,7 +8,8 @@
     "emotionalState": { "confidence": 9, "frustration": 2, "fatigue": 3 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 4
+    "managerTrust": 4,
+    "finisher": "Dominion Driver"
   },
   {
     "wrestlerId": "w-002",
@@ -19,7 +20,8 @@
     "emotionalState": { "confidence": 7, "frustration": 3, "fatigue": 4 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 8
+    "managerTrust": 8,
+    "finisher": "Honor Lock"
   },
   {
     "wrestlerId": "w-003",
@@ -30,7 +32,8 @@
     "emotionalState": { "confidence": 5, "frustration": 6, "fatigue": 3 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 3
+    "managerTrust": 3,
+    "finisher": "Slick Sneak Attack"
   },
   {
     "wrestlerId": "w-004",
@@ -41,7 +44,8 @@
     "emotionalState": { "confidence": 7, "frustration": 7, "fatigue": 5 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 5
+    "managerTrust": 5,
+    "finisher": "Iron Smash"
   },
   {
     "wrestlerId": "w-005",
@@ -52,7 +56,8 @@
     "emotionalState": { "confidence": 8, "frustration": 2, "fatigue": 4 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 6
+    "managerTrust": 6,
+    "finisher": "Dazzler Finale"
   },
   {
     "wrestlerId": "w-006",
@@ -63,6 +68,7 @@
     "emotionalState": { "confidence": 5, "frustration": 5, "fatigue": 6 },
     "relationships": [],
     "memories": [],
-    "managerTrust": 7
+    "managerTrust": 7,
+    "finisher": "Blaze Rush"
   }
 ]

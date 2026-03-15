@@ -13,6 +13,7 @@ const mockWrestler: Wrestler = {
   relationships: [],
   memories: [],
   managerTrust: 5,
+  finisher: 'Test Finisher',
 };
 
 beforeEach(() => {

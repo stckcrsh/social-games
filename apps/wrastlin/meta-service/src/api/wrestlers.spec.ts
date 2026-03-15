@@ -14,6 +14,7 @@ const mockWrestler = {
   relationships: [],
   memories: [],
   managerTrust: 4,
+  finisher: 'Dominion Driver',
 };
 
 describe('wrestler routes', () => {

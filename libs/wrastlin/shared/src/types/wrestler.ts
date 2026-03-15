@@ -47,4 +47,5 @@ export interface Wrestler {
   relationships: Relationship[];
   memories: Memory[];
   managerTrust: number; // 1-10
+  finisher: string;
 }

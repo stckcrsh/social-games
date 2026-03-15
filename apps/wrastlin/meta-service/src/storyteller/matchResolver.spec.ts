@@ -12,6 +12,7 @@ const makeWrestler = (overrides: Partial<Wrestler> = {}): Wrestler => ({
   relationships: [],
   memories: [],
   managerTrust: 5,
+  finisher: 'Test Finisher',
   ...overrides,
 });
 
