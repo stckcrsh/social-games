@@ -1,0 +1,24 @@
+[
+  {
+    "announcerId": "a-001",
+    "name": "Brock Calloway",
+    "role": "play-by-play",
+    "theme": "Energetic Southern broadcaster who gets genuinely excited about athleticism and never shies from dramatic declarations",
+    "catchphrases": [
+      "Good God Almighty!",
+      "As God as my witness, that man is broken in half!",
+      "Business is about to pick up!"
+    ]
+  },
+  {
+    "announcerId": "a-002",
+    "name": "Vinnie Vegas",
+    "role": "color",
+    "theme": "Smarmy heel-sympathetic commentator who always has an excuse for the villain and undermines babyface achievements",
+    "catchphrases": [
+      "That's just good strategy!",
+      "Would you stop?!",
+      "He's a genius, pure genius!"
+    ]
+  }
+]
