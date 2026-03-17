@@ -3,7 +3,7 @@ import {
   readDynamicJson,
   writeDynamicJson,
 } from '../data/persistence.js';
-import type { Wrestler, Manager, WeeklyState, WeeklySubmission } from '@org/wrastlin-shared';
+import type { Wrestler, Manager, WeeklyState, WeeklySubmission, Announcer } from '@org/wrastlin-shared';
 
 export function loadWrestlers(): Wrestler[] {
   try {
@@ -47,4 +47,8 @@ export function loadSubmissions(week: number): WeeklySubmission[] {
 
 export function saveSubmissions(week: number, submissions: WeeklySubmission[]): void {
   writeDynamicJson(`submissions/week-${week}.json`, submissions);
+}
+
+export function loadAnnouncers(): Announcer[] {
+  return readStaticJson<Announcer[]>('announcers.json');
 }
