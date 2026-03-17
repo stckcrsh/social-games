@@ -46,3 +46,10 @@ Thumbs.db
 vite.config.*.timestamp*
 test-output
 .worktrees/
+
+# environment files
+.env
+.env.*
+
+# wrastlin show generation run logs
+apps/wrastlin/meta-service/data/runs/
