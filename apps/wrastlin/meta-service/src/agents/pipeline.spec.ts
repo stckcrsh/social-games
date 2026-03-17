@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import type { Wrestler, Manager, Announcer } from '@org/wrastlin-shared';
 import type { GeneratedMatchSegment, GeneratedPromoSegment } from './types.js';
 import { runShowPipeline } from './pipeline.js';
+import { PartialRunError } from './pipeline.js';
+import type { MatchBeatsInput, MatchBeats } from './types.js';
 import { stubShowOutlineAgent } from './stubs/stubShowOutlineAgent.js';
 import { stubMatchBeatsAgent } from './stubs/stubMatchBeatsAgent.js';
 import { stubPromoScreenplayAgent } from './stubs/stubPromoScreenplayAgent.js';
@@ -144,5 +146,44 @@ describe('runShowPipeline', () => {
     });
     const orders = result.segments.map(s => s.order);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
+  });
+
+  it('throws PartialRunError when a segment agent fails, after letting other segments finish', async () => {
+    let matchCallCount = 0;
+    const failingMatchBeats = vi.fn(async (input: MatchBeatsInput): Promise<MatchBeats> => {
+      matchCallCount++;
+      if (matchCallCount === 1) throw new Error('agent failed');
+      return stubMatchBeatsAgent(input);
+    });
+
+    await expect(runShowPipeline({
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      wrestlers: WRESTLERS,
+      managers: MANAGERS,
+      submissions: [],
+      announcers: ANNOUNCERS,
+      agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
+    })).rejects.toThrow(PartialRunError);
+
+    // Both match segments were still attempted (allSettled, not all)
+    expect(failingMatchBeats).toHaveBeenCalledTimes(2);
+  });
+
+  it('PartialRunError includes the failed segment id', async () => {
+    const failingMatchBeats = vi.fn(async (): Promise<MatchBeats> => {
+      throw new Error('timeout');
+    });
+
+    const err = await runShowPipeline({
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      wrestlers: WRESTLERS,
+      managers: MANAGERS,
+      submissions: [],
+      announcers: ANNOUNCERS,
+      agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
+    }).catch(e => e);
+
+    expect(err).toBeInstanceOf(PartialRunError);
+    expect((err as PartialRunError).failedSegmentIds.length).toBeGreaterThan(0);
   });
 });
