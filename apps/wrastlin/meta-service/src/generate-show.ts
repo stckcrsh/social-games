@@ -11,6 +11,7 @@ import { stubShowOutlineAgent } from './agents/stubs/stubShowOutlineAgent.js';
 import { stubMatchBeatsAgent } from './agents/stubs/stubMatchBeatsAgent.js';
 import { stubPromoScreenplayAgent } from './agents/stubs/stubPromoScreenplayAgent.js';
 import { stubAnnouncerScreenplayAgent } from './agents/stubs/stubAnnouncerScreenplayAgent.js';
+import { createClaudeShowOutlineAgent } from './agents/claudeShowOutlineAgent.js';
 import type {
   GeneratedSegment,
   GeneratedMatchSegment,
@@ -60,14 +61,16 @@ async function main(): Promise<void> {
   }
 
   if (!useStub) {
-    console.error('AI agents are not yet implemented. Use --stub for testing.');
-    console.error('  pnpm nx run wrastlin-service:generate-show -- --stub');
-    process.exit(1);
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY env var is required when not using --stub');
+      process.exit(1);
+    }
   }
 
   const week = state.currentWeek;
   console.log(`\n=== GENERATING SHOW FOR WEEK ${week} ===`);
-  console.log(`Mode: stub agents`);
+  console.log(`Mode: ${useStub ? 'stub agents' : 'AI outline + stub beats/screenplays'}`);
 
   const wrestlers = loadWrestlers();
   const managers = loadManagers();
@@ -92,7 +95,7 @@ async function main(): Promise<void> {
       type: 'run_started',
       runId: log.runId,
       week,
-      mode: 'stub',
+      mode: useStub ? 'stub' : 'ai',
       timestamp: new Date().toISOString(),
     });
     console.log(`\nRun log: data/runs/${log.runId}.jsonl`);
@@ -101,7 +104,9 @@ async function main(): Promise<void> {
   const runner = new OutboxRunner(log);
 
   const baseAgents = {
-    showOutline: stubShowOutlineAgent,
+    showOutline: useStub
+      ? stubShowOutlineAgent
+      : createClaudeShowOutlineAgent(process.env.ANTHROPIC_API_KEY!),
     matchBeats: stubMatchBeatsAgent,
     promoScreenplay: stubPromoScreenplayAgent,
     announcerScreenplay: stubAnnouncerScreenplayAgent,
