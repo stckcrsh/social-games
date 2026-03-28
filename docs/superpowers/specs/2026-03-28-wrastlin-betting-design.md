@@ -22,23 +22,22 @@ Replaces all existing betting scaffolding (`libs/shared/betting/`, `apps/wrastli
 Betting runs as a **parallel state machine** alongside the weekly phase cycle. State lives in `data/runtime/betting/state.json`, separate from `data/runtime/state.json`.
 
 ```
-idle → open → closed → settled → idle
+open → closed → settled
 ```
 
 | Phase | What's allowed |
 |-------|---------------|
-| `idle` | No betting activity for this week |
 | `open` | Players create propositions AND place bets on existing propositions simultaneously |
 | `closed` | Window shut; `run-judge` can be executed; `resolve-proposition` available for flagged bets |
 | `settled` | All payouts applied; week complete |
 
-Transitions are admin-driven (manual NX targets). There is no automatic transition — the admin opens and closes the window when the group is available.
+Transitions are admin-driven (manual NX targets). There is no automatic transition — the admin opens and closes the window when the group is available. `open-betting` creates the state file for the current week starting in `open`. No state file means no active betting window.
 
 ```ts
 interface BettingState {
   week: number
-  phase: 'idle' | 'open' | 'closed' | 'settled'
-  openedAt?: string    // ISO
+  phase: 'open' | 'closed' | 'settled'
+  openedAt: string     // ISO — set when open-betting runs
   closedAt?: string    // ISO
   settledAt?: string   // ISO
 }
@@ -98,7 +97,7 @@ winnerShare = (entryAmount / totalStakedOnWinningOption) * totalPool
 
 The full payout (including original stake) is credited via `PendingPayout` ticket.
 
-If no entries exist on the winning option (everyone bet wrong), the pool is refunded — each bettor gets their original stake back. This is written as individual `payout_calculated` events equal to each entry's original amount.
+If no entries exist on the winning option (everyone bet wrong), the pool is not refunded — all stakes are lost. No `payout_calculated` events are written for that proposition.
 
 ### PendingPayout (JSONL event)
 
@@ -110,11 +109,13 @@ Not stored as a separate file. Written as a `payout_calculated` event in the wee
 
 ```
 data/runtime/betting/
-  state.json                  ← BettingState
-  propositions.json           ← BetProposition[]
-  entries.json                ← BetEntry[]
-  week-{N}.jsonl              ← Judge/payout run log (one per week)
+  state.json                         ← BettingState
+  propositions-{week}.json           ← BetProposition[] for week N
+  entries-{week}.json                ← BetEntry[] for week N
+  week-{N}.jsonl                     ← Judge/payout run log (one per week)
 ```
+
+Week-scoped filenames for propositions and entries preserve history across weeks without overwriting.
 
 ---
 
@@ -144,7 +145,7 @@ All under `pnpm nx run wrastlin-service:<target>`.
 
 | Target | Transition | What it does |
 |--------|-----------|--------------|
-| `open-betting` | `idle → open` | Opens the window for current week |
+| `open-betting` | (creates state) → `open` | Creates betting state for current week in `open` phase |
 | `close-betting` | `open → closed` | Closes the window |
 | `run-judge` | (within `closed`) | LLM judges all propositions in parallel; writes JSONL events; prints summary of ambiguous flags |
 | `resolve-proposition` | (within `closed`) | Manually set winner on a flagged proposition: `--id <propositionId> --winning-option <optionId>` |
