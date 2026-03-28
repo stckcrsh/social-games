@@ -53,3 +53,6 @@ test-output
 
 # wrastlin show generation run logs
 apps/wrastlin/meta-service/data/runs/
+
+# brainstorming visual companion
+.superpowers/
