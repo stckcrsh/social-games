@@ -65,4 +65,12 @@ export async function bettingRoutes(app: FastifyInstance): Promise<void> {
     const entries = loadEntries(state.week);
     return reply.send(bettorId ? entries.filter(e => e.bettorId === bettorId) : entries);
   });
+
+  app.get('/bets/state', async (_req, reply) => {
+    const state = loadBettingState();
+    if (state === null) {
+      return reply.status(404).send({ error: 'No active betting window' });
+    }
+    return reply.send(state);
+  });
 }

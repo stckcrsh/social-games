@@ -166,3 +166,28 @@ describe('GET /bets/entries', () => {
     await app.close();
   });
 });
+
+describe('GET /bets/state', () => {
+  it('returns betting state when an active window exists', async () => {
+    vi.spyOn(persistence, 'loadBettingState').mockReturnValue(openState);
+
+    const app = Fastify();
+    await app.register(bettingRoutes);
+
+    const res = await app.inject({ method: 'GET', url: '/bets/state' });
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toMatchObject({ week: 7, phase: 'open' });
+    await app.close();
+  });
+
+  it('returns 404 when no active betting window', async () => {
+    vi.spyOn(persistence, 'loadBettingState').mockReturnValue(null);
+
+    const app = Fastify();
+    await app.register(bettingRoutes);
+
+    const res = await app.inject({ method: 'GET', url: '/bets/state' });
+    expect(res.statusCode).toBe(404);
+    await app.close();
+  });
+});
