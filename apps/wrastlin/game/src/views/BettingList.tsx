@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
-import type { BetProposition } from '@org/betting';
+import type { BetProposition } from '@org/wrastlin-shared';
 
 export function BettingList() {
   const [propositions, setPropositions] = useState<BetProposition[] | null>(null);
@@ -29,11 +29,7 @@ export function BettingList() {
             key={p.propositionId}
             style={{ marginBottom: '0.5rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}
           >
-            <Link to={`/bets/${p.propositionId}`}>{p.question}</Link>
-            {' '}
-            <span>[{p.status}]</span>
-            {' '}
-            <span>{new Date(p.closesAt).toLocaleDateString('en-US')}</span>
+            <Link to={`/bets/${p.propositionId}`}>{p.statement}</Link>
           </li>
         ))}
       </ul>

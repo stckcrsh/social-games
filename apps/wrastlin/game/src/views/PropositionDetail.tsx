@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
-import type { BetProposition, BetPool, BetEntry } from '@org/betting';
+import type { BetProposition, BetEntry } from '@org/wrastlin-shared';
 import type { Manager } from '@org/wrastlin-shared';
 
 const MANAGER_ID = 'm-001';
 
 export function PropositionDetail() {
   const { id } = useParams<{ id: string }>();
-  const [proposition, setProposition] = useState<(BetProposition & { pool: BetPool }) | null>(null);
+  const [proposition, setProposition] = useState<BetProposition | null>(null);
   const [manager, setManager] = useState<Manager | null>(null);
   const [myEntries, setMyEntries] = useState<BetEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,15 +63,13 @@ export function PropositionDetail() {
 
   return (
     <div style={{ padding: '1rem', maxWidth: '600px' }}>
-      <h2>{proposition.question}</h2>
-      <p>Status: {proposition.status}</p>
-      <p>Closes: {new Date(proposition.closesAt).toLocaleDateString('en-US')}</p>
+      <h2>{proposition.statement}</h2>
 
       <h3>Options</h3>
       <ul>
         {proposition.options.map(opt => (
           <li key={opt.optionId}>
-            {opt.label} — ${proposition.pool.byOption[opt.optionId] ?? 0} in pool
+            {opt.label}
           </li>
         ))}
       </ul>
@@ -87,8 +85,7 @@ export function PropositionDetail() {
 
       <p>Balance: ${manager.money}</p>
 
-      {proposition.status === 'open' && (
-        <div>
+      <div>
           <h3>Place a Bet</h3>
           {proposition.options.map(opt => (
             <label key={opt.optionId} style={{ display: 'block', marginBottom: '0.25rem' }}>
@@ -99,7 +96,7 @@ export function PropositionDetail() {
                 checked={selectedOption === opt.optionId}
                 onChange={e => setSelectedOption(e.target.value)}
               />
-              {' '}{opt.label} (${proposition.pool.byOption[opt.optionId] ?? 0})
+              {' '}{opt.label}
             </label>
           ))}
           <div style={{ marginTop: '0.5rem' }}>
@@ -122,7 +119,6 @@ export function PropositionDetail() {
           </button>
           {betError && <p style={{ color: 'red', marginTop: '0.5rem' }}>{betError}</p>}
         </div>
-      )}
     </div>
   );
 }

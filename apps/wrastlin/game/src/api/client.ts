@@ -6,7 +6,7 @@ import type {
   ManagerAdvice,
   StoryRequest,
 } from '@org/wrastlin-shared';
-import type { BetProposition, BetPool, BetEntry } from '@org/betting';
+import type { BetProposition, BetEntry } from '@org/wrastlin-shared';
 
 const BASE = '/api'; // proxied to http://localhost:3002 by Vite
 
@@ -47,9 +47,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 
 interface CreatePropositionBody {
   createdBy: string;
-  question: string;
+  statement: string;
   options: { optionId: string; label: string }[];
-  closesAt: string;
   // always string from UI; backend accepts string | number
   eventKey: string;
 }
@@ -74,7 +73,7 @@ export const api = {
 
   // Betting
   getPropositions: () => get<BetProposition[]>('/bets/propositions'),
-  getProposition: (id: string) => get<BetProposition & { pool: BetPool }>(`/bets/propositions/${id}`),
+  getProposition: (id: string) => get<BetProposition>(`/bets/propositions/${id}`),
   createProposition: (body: CreatePropositionBody) => post<BetProposition>('/bets/propositions', body),
   placeBet: (propositionId: string, body: PlaceEntryBody) =>
     post<BetEntry>(`/bets/propositions/${propositionId}/entries`, body),

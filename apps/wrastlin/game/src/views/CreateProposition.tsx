@@ -4,8 +4,7 @@ import { api, ApiError } from '../api/client.js';
 
 export function CreateProposition() {
   const navigate = useNavigate();
-  const [question, setQuestion] = useState('');
-  const [closesAt, setClosesAt] = useState('');
+  const [statement, setStatement] = useState('');
   const [eventKey, setEventKey] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
@@ -29,8 +28,7 @@ export function CreateProposition() {
     try {
       const result = await api.createProposition({
         createdBy: 'm-001',
-        question,
-        closesAt: new Date(closesAt).toISOString(),
+        statement,
         eventKey,
         options: options.map((label, i) => ({ optionId: `opt-${i + 1}`, label })),
       });
@@ -46,15 +44,9 @@ export function CreateProposition() {
       <h2>Create Proposition</h2>
 
       <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="question">Question</label>
+        <label htmlFor="statement">Statement</label>
         <br />
-        <input id="question" value={question} onChange={e => setQuestion(e.target.value)} style={{ width: '100%' }} />
-      </div>
-
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="closesAt">Closes At</label>
-        <br />
-        <input id="closesAt" type="datetime-local" value={closesAt} onChange={e => setClosesAt(e.target.value)} />
+        <input id="statement" value={statement} onChange={e => setStatement(e.target.value)} style={{ width: '100%' }} />
       </div>
 
       <div style={{ marginBottom: '0.5rem' }}>

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
 import { CreateProposition } from './CreateProposition.js';
-import type { BetProposition } from '@org/betting';
+import type { BetProposition } from '@org/wrastlin-shared';
 
 const mockNavigate = vi.fn();
 
@@ -28,10 +28,8 @@ vi.mock('react-router-dom', async () => {
 const fixtureProp: BetProposition = {
   propositionId: 'new-prop-1',
   createdBy: 'm-001',
-  question: 'Test question',
+  statement: 'Test question',
   options: [{ optionId: 'opt-1', label: 'A' }, { optionId: 'opt-2', label: 'B' }],
-  status: 'open',
-  closesAt: '2026-03-20T12:00:00.000Z',
   eventKey: '1',
   createdAt: '2026-03-11T10:00:00.000Z',
 };
@@ -86,9 +84,8 @@ describe('CreateProposition', () => {
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
     await user.click(removeButtons[1]);
     // Fill required fields and submit
-    await user.type(screen.getByLabelText('Question'), 'A question');
+    await user.type(screen.getByLabelText('Statement'), 'A question');
     await user.type(screen.getByLabelText('Event Key'), '1');
-    await user.type(screen.getByLabelText('Closes At'), '2026-03-20T12:00');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(vi.mocked(api.createProposition)).toHaveBeenCalledWith(
@@ -105,9 +102,8 @@ describe('CreateProposition', () => {
   it('submit calls createProposition with correct shape', async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Question'), 'Who wins?');
+    await user.type(screen.getByLabelText('Statement'), 'Who wins?');
     await user.type(screen.getByLabelText('Event Key'), '2');
-    await user.type(screen.getByLabelText('Closes At'), '2026-03-20T12:00');
     await user.type(screen.getByLabelText('Option 1'), 'Rex');
     await user.type(screen.getByLabelText('Option 2'), 'Mike');
     await user.click(screen.getByRole('button', { name: 'Create' }));
@@ -115,9 +111,8 @@ describe('CreateProposition', () => {
       expect(vi.mocked(api.createProposition)).toHaveBeenCalledWith(
         expect.objectContaining({
           createdBy: 'm-001',
-          question: 'Who wins?',
+          statement: 'Who wins?',
           eventKey: '2',
-          closesAt: '2026-03-20T17:00:00.000Z',
           options: [
             { optionId: 'opt-1', label: 'Rex' },
             { optionId: 'opt-2', label: 'Mike' },
@@ -130,9 +125,8 @@ describe('CreateProposition', () => {
   it('navigates to /bets/:id using response.propositionId on success', async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Question'), 'Test');
+    await user.type(screen.getByLabelText('Statement'), 'Test');
     await user.type(screen.getByLabelText('Event Key'), '1');
-    await user.type(screen.getByLabelText('Closes At'), '2026-03-20T12:00');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/bets/new-prop-1');
@@ -146,9 +140,8 @@ describe('CreateProposition', () => {
     );
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Question'), 'Test');
+    await user.type(screen.getByLabelText('Statement'), 'Test');
     await user.type(screen.getByLabelText('Event Key'), '1');
-    await user.type(screen.getByLabelText('Closes At'), '2026-03-20T12:00');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(
@@ -161,9 +154,8 @@ describe('CreateProposition', () => {
     vi.mocked(api.createProposition).mockRejectedValue(new Error('Network error'));
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Question'), 'Test');
+    await user.type(screen.getByLabelText('Statement'), 'Test');
     await user.type(screen.getByLabelText('Event Key'), '1');
-    await user.type(screen.getByLabelText('Closes At'), '2026-03-20T12:00');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();

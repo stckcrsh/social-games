@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
 import { PropositionDetail } from './PropositionDetail.js';
-import type { BetProposition, BetPool, BetEntry } from '@org/betting';
+import type { BetProposition, BetEntry } from '@org/wrastlin-shared';
 import type { Manager } from '@org/wrastlin-shared';
 
 vi.mock('../api/client.js', () => ({
@@ -24,19 +24,16 @@ vi.mock('../api/client.js', () => ({
   },
 }));
 
-const fixtureProposition: BetProposition & { pool: BetPool } = {
+const fixtureProposition: BetProposition = {
   propositionId: 'prop-1',
   createdBy: 'm-001',
-  question: 'Who will win match 1?',
+  statement: 'Who will win match 1?',
   options: [
     { optionId: 'opt-1', label: 'Rex Dominion' },
     { optionId: 'opt-2', label: 'Iron Mike' },
   ],
-  status: 'open',
-  closesAt: '2026-03-15T20:00:00.000Z',
   eventKey: '1',
   createdAt: '2026-03-11T10:00:00.000Z',
-  pool: { totalPot: 150, byOption: { 'opt-1': 100, 'opt-2': 50 } },
 };
 
 const fixtureManager: Manager = {
@@ -78,27 +75,18 @@ describe('PropositionDetail', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('renders question and status after load', async () => {
+  it('renders statement after load', async () => {
     renderDetail();
     await waitFor(() => {
       expect(screen.getByText('Who will win match 1?')).toBeInTheDocument();
-      expect(screen.getByText(/Status: open/)).toBeInTheDocument();
     });
   });
 
-  it('renders closesAt as en-US locale date', async () => {
-    renderDetail();
-    const expected = new Date(fixtureProposition.closesAt).toLocaleDateString('en-US');
-    await waitFor(() => {
-      expect(screen.getByText(new RegExp(expected))).toBeInTheDocument();
-    });
-  });
-
-  it('renders option labels with pool totals', async () => {
+  it('renders option labels', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByText('Rex Dominion — $100 in pool')).toBeInTheDocument();
-      expect(screen.getByText('Iron Mike — $50 in pool')).toBeInTheDocument();
+      expect(screen.getByText('Rex Dominion')).toBeInTheDocument();
+      expect(screen.getByText('Iron Mike')).toBeInTheDocument();
     });
   });
 
@@ -126,31 +114,11 @@ describe('PropositionDetail', () => {
     });
   });
 
-  it('renders bet form when status is open', async () => {
+  it('renders bet form with options', async () => {
     renderDetail();
     await waitFor(() => {
       expect(screen.getByRole('radio', { name: /Rex Dominion/ })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Place Bet' })).toBeInTheDocument();
-    });
-  });
-
-  it('does NOT render bet form when status is closed', async () => {
-    vi.mocked(api.getProposition).mockResolvedValue({ ...fixtureProposition, status: 'closed' });
-    renderDetail();
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
-    });
-  });
-
-  it('does NOT render bet form when status is resolved', async () => {
-    vi.mocked(api.getProposition).mockResolvedValue({
-      ...fixtureProposition,
-      status: 'resolved',
-      winningOptionIds: ['opt-1'],
-    });
-    renderDetail();
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
     });
   });
 
