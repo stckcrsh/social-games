@@ -45,6 +45,7 @@ try {
   );
 
   const log = new BettingRunLog(bettingLogPath(bettingState.week));
+  if (log.isJudged(propositionId)) throw new Error(`Proposition already judged: ${propositionId}`);
   log.append({ type: 'judgement_completed', runId: log.runId, propositionId, winningOptionIds: [winningOptionId], rationale: 'Manually resolved by admin', confidence: 'clear', timestamp: new Date().toISOString() });
   log.append({ type: 'payout_calculated', runId: log.runId, propositionId, payouts, timestamp: new Date().toISOString() });
 
