@@ -27,19 +27,15 @@ vi.mock('react-router-dom', async () => {
 
 const fixtureProp: BetProposition = {
   propositionId: 'new-prop-1',
+  week: 7,
   createdBy: 'm-001',
-  statement: 'Test question',
+  statement: 'Test statement',
   options: [{ optionId: 'opt-1', label: 'A' }, { optionId: 'opt-2', label: 'B' }],
-  eventKey: '1',
-  createdAt: '2026-03-11T10:00:00.000Z',
+  createdAt: '2026-03-28T10:00:00.000Z',
 };
 
 function renderForm() {
-  return render(
-    <MemoryRouter>
-      <CreateProposition />
-    </MemoryRouter>
-  );
+  return render(<MemoryRouter><CreateProposition /></MemoryRouter>);
 }
 
 describe('CreateProposition', () => {
@@ -48,105 +44,73 @@ describe('CreateProposition', () => {
     mockNavigate.mockReset();
   });
 
-  it('renders form with 2 option rows by default', () => {
+  it('renders Statement input', () => {
+    renderForm();
+    expect(screen.getByLabelText('Statement')).toBeInTheDocument();
+  });
+
+  it('does NOT render Closes At or Event Key inputs', () => {
+    renderForm();
+    expect(screen.queryByLabelText('Closes At')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Event Key')).not.toBeInTheDocument();
+  });
+
+  it('renders 2 option rows by default', () => {
     renderForm();
     expect(screen.getByLabelText('Option 1')).toBeInTheDocument();
     expect(screen.getByLabelText('Option 2')).toBeInTheDocument();
   });
 
-  it('"Add option" button appends a new row', async () => {
+  it('"Add option" appends a new row', async () => {
     const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole('button', { name: 'Add option' }));
     expect(screen.getByLabelText('Option 3')).toBeInTheDocument();
   });
 
-  it('"Remove" button removes that option row and re-indexes remaining', async () => {
+  it('"Remove" removes that option row', async () => {
     const user = userEvent.setup();
     renderForm();
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
-    await user.click(removeButtons[0]); // remove first option
-    // After removal: only one option remains, re-indexed as "Option 1"
+    await user.click(screen.getAllByRole('button', { name: 'Remove' })[0]);
     expect(screen.getByLabelText('Option 1')).toBeInTheDocument();
     expect(screen.queryByLabelText('Option 2')).not.toBeInTheDocument();
-  });
-
-  it('removing middle option re-indexes remaining options as opt-1, opt-2', async () => {
-    const user = userEvent.setup();
-    renderForm();
-    // Add a third option first
-    await user.click(screen.getByRole('button', { name: 'Add option' }));
-    // Fill them
-    await user.type(screen.getByLabelText('Option 1'), 'Alpha');
-    await user.type(screen.getByLabelText('Option 2'), 'Beta');
-    await user.type(screen.getByLabelText('Option 3'), 'Gamma');
-    // Remove middle
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
-    await user.click(removeButtons[1]);
-    // Fill required fields and submit
-    await user.type(screen.getByLabelText('Statement'), 'A question');
-    await user.type(screen.getByLabelText('Event Key'), '1');
-    await user.click(screen.getByRole('button', { name: 'Create' }));
-    await waitFor(() => {
-      expect(vi.mocked(api.createProposition)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          options: [
-            { optionId: 'opt-1', label: 'Alpha' },
-            { optionId: 'opt-2', label: 'Gamma' },
-          ],
-        })
-      );
-    });
   });
 
   it('submit calls createProposition with correct shape', async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Statement'), 'Who wins?');
-    await user.type(screen.getByLabelText('Event Key'), '2');
-    await user.type(screen.getByLabelText('Option 1'), 'Rex');
-    await user.type(screen.getByLabelText('Option 2'), 'Mike');
+    await user.type(screen.getByLabelText('Statement'), 'Steve will lose');
+    await user.type(screen.getByLabelText('Option 1'), 'Yes');
+    await user.type(screen.getByLabelText('Option 2'), 'No');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
-      expect(vi.mocked(api.createProposition)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          createdBy: 'm-001',
-          statement: 'Who wins?',
-          eventKey: '2',
-          options: [
-            { optionId: 'opt-1', label: 'Rex' },
-            { optionId: 'opt-2', label: 'Mike' },
-          ],
-        })
-      );
+      expect(vi.mocked(api.createProposition)).toHaveBeenCalledWith({
+        managerId: 'm-001',
+        statement: 'Steve will lose',
+        options: [{ label: 'Yes' }, { label: 'No' }],
+      });
     });
   });
 
-  it('navigates to /bets/:id using response.propositionId on success', async () => {
+  it('navigates to /bets/:id on success', async () => {
     const user = userEvent.setup();
     renderForm();
     await user.type(screen.getByLabelText('Statement'), 'Test');
-    await user.type(screen.getByLabelText('Event Key'), '1');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/bets/new-prop-1');
     });
   });
 
-  it('shows serverMessage on ApiError response', async () => {
+  it('shows serverMessage on ApiError', async () => {
     const { ApiError: Err } = await import('../api/client.js');
-    vi.mocked(api.createProposition).mockRejectedValue(
-      new Err('Propositions can only be created during week_open phase', 400)
-    );
+    vi.mocked(api.createProposition).mockRejectedValue(new Err('Betting window is not open', 409));
     const user = userEvent.setup();
     renderForm();
     await user.type(screen.getByLabelText('Statement'), 'Test');
-    await user.type(screen.getByLabelText('Event Key'), '1');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
-      expect(
-        screen.getByText('Propositions can only be created during week_open phase')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Betting window is not open')).toBeInTheDocument();
     });
   });
 
@@ -155,7 +119,6 @@ describe('CreateProposition', () => {
     const user = userEvent.setup();
     renderForm();
     await user.type(screen.getByLabelText('Statement'), 'Test');
-    await user.type(screen.getByLabelText('Event Key'), '1');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();

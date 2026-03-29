@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
 
+const MANAGER_ID = 'm-001';
+
 export function CreateProposition() {
   const navigate = useNavigate();
   const [statement, setStatement] = useState('');
-  const [eventKey, setEventKey] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -27,10 +28,9 @@ export function CreateProposition() {
     setSubmitting(true);
     try {
       const result = await api.createProposition({
-        createdBy: 'm-001',
+        managerId: MANAGER_ID,
         statement,
-        eventKey,
-        options: options.map((label, i) => ({ optionId: `opt-${i + 1}`, label })),
+        options: options.map(label => ({ label })),
       });
       navigate(`/bets/${result.propositionId}`);
     } catch (e) {
@@ -46,13 +46,12 @@ export function CreateProposition() {
       <div style={{ marginBottom: '0.5rem' }}>
         <label htmlFor="statement">Statement</label>
         <br />
-        <input id="statement" value={statement} onChange={e => setStatement(e.target.value)} style={{ width: '100%' }} />
-      </div>
-
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="eventKey">Event Key</label>
-        <br />
-        <input id="eventKey" value={eventKey} onChange={e => setEventKey(e.target.value)} />
+        <input
+          id="statement"
+          value={statement}
+          onChange={e => setStatement(e.target.value)}
+          style={{ width: '100%' }}
+        />
       </div>
 
       <h3>Options</h3>
