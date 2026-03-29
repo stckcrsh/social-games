@@ -5,3 +5,4 @@ export * from './types/manager.js';
 export * from './types/submission.js';
 export * from './types/state.js';
 export * from './types/announcer.js';
+export * from './types/betting.js';

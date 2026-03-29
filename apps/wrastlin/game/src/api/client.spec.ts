@@ -48,4 +48,15 @@ describe('ApiError propagation', () => {
       serverMessage: 'request failed: 503',
     });
   });
+
+  it('getBettingState returns null when server returns 404', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'No active betting window' }),
+    } as Response);
+
+    const result = await api.getBettingState();
+    expect(result).toBeNull();
+  });
 });

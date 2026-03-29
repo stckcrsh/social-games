@@ -5,8 +5,10 @@ import type {
   WeeklyState,
   ManagerAdvice,
   StoryRequest,
+  BetProposition,
+  BetEntry,
+  BettingState,
 } from '@org/wrastlin-shared';
-import type { BetProposition, BetPool, BetEntry } from '@org/betting';
 
 const BASE = '/api'; // proxied to http://localhost:3002 by Vite
 
@@ -36,9 +38,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const errBody = await res.json().catch(() => ({}));
     throw new ApiError(
-      (body as { error?: string }).error ?? `request failed: ${res.status}`,
+      (errBody as { error?: string }).error ?? `request failed: ${res.status}`,
       res.status
     );
   }
@@ -46,16 +48,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 interface CreatePropositionBody {
-  createdBy: string;
-  question: string;
-  options: { optionId: string; label: string }[];
-  closesAt: string;
-  // always string from UI; backend accepts string | number
-  eventKey: string;
+  managerId: string;
+  statement: string;
+  options: { label: string }[];
 }
 
 interface PlaceEntryBody {
-  bettorId: string;
+  managerId: string;
   optionId: string;
   amount: number;
 }
@@ -73,10 +72,19 @@ export const api = {
   getSubmissions: (week: number) => get<WeeklySubmission[]>(`/submissions/week/${week}`),
 
   // Betting
+  getBettingState: async (): Promise<BettingState | null> => {
+    try {
+      return await get<BettingState>('/bets/state');
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
+  },
   getPropositions: () => get<BetProposition[]>('/bets/propositions'),
-  getProposition: (id: string) => get<BetProposition & { pool: BetPool }>(`/bets/propositions/${id}`),
+  getProposition: (id: string) => get<BetProposition>(`/bets/propositions/${id}`),
   createProposition: (body: CreatePropositionBody) => post<BetProposition>('/bets/propositions', body),
   placeBet: (propositionId: string, body: PlaceEntryBody) =>
     post<BetEntry>(`/bets/propositions/${propositionId}/entries`, body),
   getMyEntries: (bettorId: string) => get<BetEntry[]>(`/bets/entries?bettorId=${bettorId}`),
+  getAllEntries: () => get<BetEntry[]>('/bets/entries'),
 };
