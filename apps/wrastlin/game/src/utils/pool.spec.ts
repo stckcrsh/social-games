@@ -20,8 +20,9 @@ describe('computePool', () => {
   });
 
   it('excludes entries from other propositions', () => {
-    const result = computePool(entries, 'prop-1');
-    expect(result.total).toBe(100); // not 200
+    const result = computePool(entries, 'prop-2');
+    expect(result.total).toBe(100);
+    expect(result.byOption).toEqual({ 'opt-1': 100 });
   });
 
   it('returns zero total and empty byOption when no entries match', () => {
