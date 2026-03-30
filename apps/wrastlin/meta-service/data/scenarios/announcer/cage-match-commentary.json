@@ -1,0 +1,34 @@
+{
+  "matchBeats": {
+    "segmentId": "test-seg-001",
+    "beats": [
+      { "order": 1, "type": "action", "actor": "w-001", "description": "Rex Dominion slams Steel Purity into the cage wall", "durationMs": 0 },
+      { "order": 2, "type": "action", "actor": "w-002", "description": "Steel Purity reverses with a snap suplex", "durationMs": 0 },
+      { "order": 3, "type": "near-finish", "actor": "w-002", "description": "Purity locks in the Honor Lock — Rex barely reaches the rope", "durationMs": 0 },
+      { "order": 4, "type": "pause", "actor": null, "description": "crowd erupts", "durationMs": 2000 },
+      { "order": 5, "type": "interference", "actor": "w-006", "description": "Rookie Blaze slides under the cage door and attacks Purity from behind", "durationMs": 0 },
+      { "order": 6, "type": "finish", "actor": "w-001", "description": "Rex hits the Dominion Driver on the distracted Purity for the win", "durationMs": 0 }
+    ],
+    "result": {
+      "winner": "w-001",
+      "finishType": "interference",
+      "crowdReaction": "hot"
+    }
+  },
+  "announcers": [
+    {
+      "announcerId": "a-001",
+      "name": "Brock Calloway",
+      "role": "play-by-play",
+      "theme": "Energetic",
+      "catchphrases": ["What a moment!", "I can't believe it!"]
+    },
+    {
+      "announcerId": "a-002",
+      "name": "Vinnie Vegas",
+      "role": "color",
+      "theme": "Cynical heel sympathizer",
+      "catchphrases": ["Smart move.", "That's just good strategy."]
+    }
+  ]
+}

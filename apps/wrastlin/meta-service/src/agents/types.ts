@@ -21,9 +21,9 @@ export interface MatchOutlineSegment {
   segmentId: string;
   order: number;
   type: 'match';
-  matchType: string;        // 'singles' | 'tag-team' | 'cage' | 'ladder' | ...
-  participants: string[];   // wrestlerIds
-  interference: string[];   // wrestlerIds who interfere (empty if none)
+  matchType: string;          // 'singles' | 'tag-team' | 'cage' | 'ladder' | ...
+  participants: string[][];   // teams of wrestlerIds: [[w1, w2], [w3, w4]] or [[w1], [w2]] for singles
+  interference: string[];     // wrestlerIds who interfere (empty if none)
   headliner: boolean;
 }
 

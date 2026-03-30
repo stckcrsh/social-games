@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const STATIC_DIR = process.env.STATIC_DATA_DIR
-  ?? path.resolve(__dirname, '../data/static');
+  ?? path.resolve(import.meta.dirname, '../data/static');
 const DYNAMIC_DIR = process.env.DYNAMIC_DATA_DIR
-  ?? path.resolve(__dirname, '../data/runtime');
+  ?? path.resolve(import.meta.dirname, '../data/runtime');
 
 export function readStaticJson<T>(filename: string): T {
   const filepath = path.join(STATIC_DIR, filename);

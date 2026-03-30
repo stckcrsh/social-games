@@ -15,7 +15,7 @@ export function loadPrompt(
   // Resolve dir inside the function so process.env.PROMPTS_DIR can be overridden
   // in tests after module load.
   const dir = process.env.PROMPTS_DIR
-    ?? path.resolve(import.meta.dirname, '../../prompts');
+    ?? path.resolve(import.meta.dirname, '../prompts');
   const template = fs.readFileSync(path.join(dir, filename), 'utf-8');
   return interpolate(template, variables);
 }

@@ -4,12 +4,13 @@ import path from 'node:path';
 export type AgentType = 'showOutline' | 'matchBeats' | 'promoScreenplay' | 'announcerScreenplay';
 
 export type LogEntry =
-  | { type: 'run_started';     runId: string; week: number; mode: 'stub' | 'ai'; timestamp: string }
-  | { type: 'agent_started';   runId: string; agentType: AgentType; segmentId: string | null; input: unknown; timestamp: string }
-  | { type: 'agent_completed'; runId: string; agentType: AgentType; segmentId: string | null; output: unknown; timestamp: string }
-  | { type: 'agent_failed';    runId: string; agentType: AgentType; segmentId: string | null; error: string; timestamp: string }
-  | { type: 'run_completed';   runId: string; showId: string; timestamp: string }
-  | { type: 'run_failed';      runId: string; failedSegments: string[]; timestamp: string };
+  | { type: 'run_started';      runId: string; week: number; mode: 'stub' | 'ai'; timestamp: string }
+  | { type: 'agent_started';    runId: string; agentType: AgentType; segmentId: string | null; input: unknown; timestamp: string }
+  | { type: 'prompt_rendered';  runId: string; agentType: AgentType; segmentId: string | null; prompt: string; timestamp: string }
+  | { type: 'agent_completed';  runId: string; agentType: AgentType; segmentId: string | null; output: unknown; timestamp: string }
+  | { type: 'agent_failed';     runId: string; agentType: AgentType; segmentId: string | null; error: string; timestamp: string }
+  | { type: 'run_completed';    runId: string; showId: string; timestamp: string }
+  | { type: 'run_failed';       runId: string; failedSegments: string[]; timestamp: string };
 
 function cacheKey(agentType: AgentType, segmentId: string | null): string {
   return `${agentType}:${segmentId ?? 'root'}`;

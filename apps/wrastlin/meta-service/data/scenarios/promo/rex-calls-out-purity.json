@@ -1,0 +1,40 @@
+{
+  "segment": {
+    "segmentId": "test-promo-001",
+    "order": 1,
+    "type": "promo",
+    "participants": ["w-001"],
+    "target": "w-002",
+    "goal": "Rex publicly humiliates Steel Purity and dares him to a cage match"
+  },
+  "participants": [
+    {
+      "wrestlerId": "w-001",
+      "name": "Rex Dominion",
+      "gimmick": "The Arrogant Champion",
+      "personality": { "ego": 9, "anger": 7, "honor": 2, "loyalty": 3, "ambition": 8 },
+      "emotionalState": { "confidence": 9, "frustration": 2, "fatigue": 3 },
+      "memories": [
+        { "memoryId": "m-001", "type": "humiliation", "source": "w-002", "target": "w-001", "week": 2, "intensity": 8 }
+      ]
+    }
+  ],
+  "target": {
+    "wrestlerId": "w-002",
+    "name": "Steel Purity",
+    "gimmick": "The Honorable Warrior",
+    "personality": { "ego": 3, "anger": 4, "honor": 10, "loyalty": 8, "ambition": 5 },
+    "sharedMemories": [
+      { "memoryId": "m-001", "type": "humiliation", "source": "w-002", "target": "w-001", "week": 2, "intensity": 8 }
+    ]
+  },
+  "personas": [
+    {
+      "announcerId": "a-001",
+      "name": "Brock Calloway",
+      "role": "play-by-play",
+      "theme": "Energetic",
+      "catchphrases": ["What a moment!", "I can't believe it!"]
+    }
+  ]
+}

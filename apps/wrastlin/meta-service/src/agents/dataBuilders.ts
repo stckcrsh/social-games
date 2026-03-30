@@ -86,7 +86,7 @@ export function buildMatchBeatsInput(
   allManagers: Manager[],
   submissions: WeeklySubmission[],
 ): MatchBeatsInput {
-  const relevantIds = new Set([...segment.participants, ...segment.interference]);
+  const relevantIds = new Set([...segment.participants.flat(), ...segment.interference]);
   const wrestlers: WrestlerForMatchBeats[] = allWrestlers
     .filter(w => relevantIds.has(w.wrestlerId))
     .map(w => {

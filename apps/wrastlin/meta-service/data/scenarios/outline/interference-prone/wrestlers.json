@@ -1,0 +1,103 @@
+[
+  {
+    "wrestlerId": "w-001",
+    "name": "Rex Dominion",
+    "gimmick": "The Arrogant Champion",
+    "stats": { "strength": 80, "agility": 60, "endurance": 75, "charisma": 70 },
+    "personality": { "ego": 9, "anger": 7, "honor": 2, "loyalty": 3, "ambition": 8 },
+    "emotionalState": { "confidence": 9, "frustration": 4, "fatigue": 3 },
+    "relationships": [
+      { "wrestlerId": "w-002", "hatred": 10, "respect": 2, "trust": 1 },
+      { "wrestlerId": "w-003", "hatred": 7, "respect": 3, "trust": 2 },
+      { "wrestlerId": "w-006", "hatred": 8, "respect": 1, "trust": 1 }
+    ],
+    "memories": [
+      { "memoryId": "m-001", "type": "humiliation", "source": "w-002", "target": "w-001", "week": 3, "intensity": 9 },
+      { "memoryId": "m-002", "type": "betrayal", "source": "w-006", "target": "w-001", "week": 4, "intensity": 8 }
+    ],
+    "managerTrust": 4,
+    "finisher": "Dominion Driver"
+  },
+  {
+    "wrestlerId": "w-002",
+    "name": "Steel Purity",
+    "gimmick": "The Honorable Warrior",
+    "stats": { "strength": 75, "agility": 65, "endurance": 80, "charisma": 65 },
+    "personality": { "ego": 3, "anger": 6, "honor": 10, "loyalty": 8, "ambition": 5 },
+    "emotionalState": { "confidence": 8, "frustration": 6, "fatigue": 4 },
+    "relationships": [
+      { "wrestlerId": "w-001", "hatred": 10, "respect": 2, "trust": 1 },
+      { "wrestlerId": "w-006", "hatred": 8, "respect": 1, "trust": 1 }
+    ],
+    "memories": [
+      { "memoryId": "m-003", "type": "injury", "source": "w-001", "target": "w-002", "week": 2, "intensity": 9 },
+      { "memoryId": "m-004", "type": "betrayal", "source": "w-006", "target": "w-002", "week": 4, "intensity": 8 }
+    ],
+    "managerTrust": 8,
+    "finisher": "Honor Lock"
+  },
+  {
+    "wrestlerId": "w-003",
+    "name": "Slick Vince",
+    "gimmick": "The Cowardly Schemer",
+    "stats": { "strength": 50, "agility": 85, "endurance": 55, "charisma": 80 },
+    "personality": { "ego": 6, "anger": 3, "honor": 1, "loyalty": 2, "ambition": 7 },
+    "emotionalState": { "confidence": 6, "frustration": 5, "fatigue": 2 },
+    "relationships": [
+      { "wrestlerId": "w-001", "hatred": 7, "respect": 4, "trust": 2 },
+      { "wrestlerId": "w-004", "hatred": 6, "respect": 3, "trust": 1 }
+    ],
+    "memories": [],
+    "managerTrust": 3,
+    "finisher": "Slick Sneak Attack"
+  },
+  {
+    "wrestlerId": "w-004",
+    "name": "Iron Maddox",
+    "gimmick": "The Unfeeling Brawler",
+    "stats": { "strength": 90, "agility": 40, "endurance": 85, "charisma": 40 },
+    "personality": { "ego": 5, "anger": 10, "honor": 5, "loyalty": 6, "ambition": 4 },
+    "emotionalState": { "confidence": 7, "frustration": 9, "fatigue": 5 },
+    "relationships": [
+      { "wrestlerId": "w-003", "hatred": 9, "respect": 1, "trust": 1 },
+      { "wrestlerId": "w-001", "hatred": 7, "respect": 2, "trust": 1 }
+    ],
+    "memories": [
+      { "memoryId": "m-005", "type": "humiliation", "source": "w-003", "target": "w-004", "week": 3, "intensity": 8 }
+    ],
+    "managerTrust": 5,
+    "finisher": "Iron Smash"
+  },
+  {
+    "wrestlerId": "w-005",
+    "name": "Dazzle King",
+    "gimmick": "The Showman",
+    "stats": { "strength": 60, "agility": 80, "endurance": 65, "charisma": 95 },
+    "personality": { "ego": 7, "anger": 3, "honor": 5, "loyalty": 5, "ambition": 6 },
+    "emotionalState": { "confidence": 8, "frustration": 2, "fatigue": 3 },
+    "relationships": [
+      { "wrestlerId": "w-003", "hatred": 5, "respect": 4, "trust": 2 }
+    ],
+    "memories": [],
+    "managerTrust": 6,
+    "finisher": "Dazzler Finale"
+  },
+  {
+    "wrestlerId": "w-006",
+    "name": "Rookie Blaze",
+    "gimmick": "The Hungry Newcomer — recently turned heel",
+    "stats": { "strength": 65, "agility": 72, "endurance": 70, "charisma": 60 },
+    "personality": { "ego": 7, "anger": 8, "honor": 3, "loyalty": 2, "ambition": 10 },
+    "emotionalState": { "confidence": 7, "frustration": 8, "fatigue": 4 },
+    "relationships": [
+      { "wrestlerId": "w-001", "hatred": 8, "respect": 3, "trust": 1 },
+      { "wrestlerId": "w-002", "hatred": 7, "respect": 2, "trust": 1 }
+    ],
+    "memories": [
+      { "memoryId": "m-006", "type": "betrayal", "source": "w-006", "target": "w-001", "week": 4, "intensity": 9 },
+      { "memoryId": "m-007", "type": "betrayal", "source": "w-006", "target": "w-002", "week": 4, "intensity": 9 }
+    ],
+    "managerTrust": 2,
+    "finisher": "Blaze Rush"
+  }
+]

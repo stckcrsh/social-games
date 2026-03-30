@@ -1,0 +1,9 @@
+[
+  { "managerId": "m-001", "wrestlerId": "w-001", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-002", "wrestlerId": "w-002", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-003", "wrestlerId": "w-003", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-004", "wrestlerId": "w-004", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-005", "wrestlerId": "w-005", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-006", "wrestlerId": "w-006", "money": 1000, "trustLevel": "medium" },
+  { "managerId": "m-007", "wrestlerId": "w-007", "money": 5000, "trustLevel": "medium" }
+]

@@ -1,0 +1,126 @@
+[
+  {
+    "wrestlerId": "w-001",
+    "name": "Rex Dominion",
+    "gimmick": "The Arrogant Champion",
+    "stats": { "strength": 80, "agility": 60, "endurance": 75, "charisma": 70 },
+    "personality": { "ego": 9, "anger": 7, "honor": 2, "loyalty": 3, "ambition": 8 },
+    "emotionalState": { "confidence": 9, "frustration": 2, "fatigue": 3 },
+    "relationships": [
+      { "wrestlerId": "w-002", "hatred": 8, "respect": 4, "trust": 1 }
+    ],
+    "memories": [],
+    "managerTrust": 4,
+    "finisher": "Dominion Driver"
+  },
+  {
+    "wrestlerId": "w-002",
+    "name": "Steel Purity",
+    "gimmick": "The Honorable Warrior",
+    "stats": { "strength": 75, "agility": 65, "endurance": 80, "charisma": 65 },
+    "personality": { "ego": 3, "anger": 4, "honor": 10, "loyalty": 8, "ambition": 5 },
+    "emotionalState": { "confidence": 7, "frustration": 3, "fatigue": 4 },
+    "relationships": [
+      { "wrestlerId": "w-001", "hatred": 9, "respect": 3, "trust": 1 }
+    ],
+    "memories": [],
+    "managerTrust": 8,
+    "finisher": "Honor Lock"
+  },
+  {
+    "wrestlerId": "w-003",
+    "name": "Slick Vince",
+    "gimmick": "The Cowardly Schemer",
+    "stats": { "strength": 50, "agility": 85, "endurance": 55, "charisma": 80 },
+    "personality": { "ego": 6, "anger": 3, "honor": 1, "loyalty": 2, "ambition": 7 },
+    "emotionalState": { "confidence": 5, "frustration": 6, "fatigue": 3 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 3,
+    "finisher": "Slick Sneak Attack"
+  },
+  {
+    "wrestlerId": "w-004",
+    "name": "Iron Maddox",
+    "gimmick": "The Unfeeling Brawler",
+    "stats": { "strength": 90, "agility": 40, "endurance": 85, "charisma": 40 },
+    "personality": { "ego": 5, "anger": 9, "honor": 5, "loyalty": 6, "ambition": 4 },
+    "emotionalState": { "confidence": 7, "frustration": 7, "fatigue": 5 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 5,
+    "finisher": "Iron Smash"
+  },
+  {
+    "wrestlerId": "w-005",
+    "name": "Dazzle King",
+    "gimmick": "The Showman",
+    "stats": { "strength": 60, "agility": 80, "endurance": 65, "charisma": 95 },
+    "personality": { "ego": 7, "anger": 3, "honor": 5, "loyalty": 5, "ambition": 6 },
+    "emotionalState": { "confidence": 8, "frustration": 2, "fatigue": 4 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 6,
+    "finisher": "Dazzler Finale"
+  },
+  {
+    "wrestlerId": "w-006",
+    "name": "Rookie Blaze",
+    "gimmick": "The Hungry Newcomer",
+    "stats": { "strength": 60, "agility": 70, "endurance": 70, "charisma": 55 },
+    "personality": { "ego": 4, "anger": 5, "honor": 6, "loyalty": 7, "ambition": 10 },
+    "emotionalState": { "confidence": 5, "frustration": 5, "fatigue": 6 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 7,
+    "finisher": "Blaze Rush"
+  },
+  {
+    "wrestlerId": "w-007",
+    "name": "Phantom Strike",
+    "gimmick": "The Silent Assassin",
+    "stats": { "strength": 70, "agility": 90, "endurance": 65, "charisma": 50 },
+    "personality": { "ego": 4, "anger": 6, "honor": 5, "loyalty": 5, "ambition": 7 },
+    "emotionalState": { "confidence": 7, "frustration": 3, "fatigue": 4 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 5,
+    "finisher": "Phantom Kick"
+  },
+  {
+    "wrestlerId": "w-008",
+    "name": "Big Thunder Jake",
+    "gimmick": "The Powerhouse Monster",
+    "stats": { "strength": 95, "agility": 30, "endurance": 90, "charisma": 45 },
+    "personality": { "ego": 6, "anger": 8, "honor": 4, "loyalty": 6, "ambition": 5 },
+    "emotionalState": { "confidence": 8, "frustration": 4, "fatigue": 5 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 4,
+    "finisher": "Thunder Slam"
+  },
+  {
+    "wrestlerId": "w-009",
+    "name": "Nova Flash",
+    "gimmick": "The High-Flying Daredevil",
+    "stats": { "strength": 50, "agility": 95, "endurance": 60, "charisma": 75 },
+    "personality": { "ego": 5, "anger": 3, "honor": 7, "loyalty": 6, "ambition": 8 },
+    "emotionalState": { "confidence": 8, "frustration": 2, "fatigue": 5 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 6,
+    "finisher": "Nova Spiral"
+  },
+  {
+    "wrestlerId": "w-010",
+    "name": "Grim Reapers",
+    "gimmick": "The Death Cult Veteran",
+    "stats": { "strength": 75, "agility": 55, "endurance": 80, "charisma": 60 },
+    "personality": { "ego": 7, "anger": 7, "honor": 3, "loyalty": 4, "ambition": 6 },
+    "emotionalState": { "confidence": 7, "frustration": 5, "fatigue": 4 },
+    "relationships": [],
+    "memories": [],
+    "managerTrust": 4,
+    "finisher": "Reaper's Embrace"
+  }
+]
