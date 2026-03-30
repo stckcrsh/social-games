@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/wrastlin/meta-service"],
       "options": {
-        "command": "node scripts/build.js",
+        "command": "node scripts/build.cjs",
         "cwd": "apps/wrastlin/meta-service"
       }
     },
@@ -16,7 +16,7 @@
       "continuous": true,
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/build.js && node dist/main.js",
+        "command": "node scripts/build.cjs && node dist/main.js",
         "cwd": "apps/wrastlin/meta-service"
       }
     },
@@ -31,7 +31,42 @@
     "generate-show": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/build.js && node dist/generate-show.js",
+        "command": "node scripts/build.cjs && node dist/generate-show.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "open-betting": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node dist/run-open-betting.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "close-betting": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node dist/run-close-betting.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "run-judge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node --env-file=.env dist/run-judge.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "resolve-proposition": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node dist/run-resolve-proposition.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "apply-payouts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node dist/run-apply-payouts.js",
         "cwd": "apps/wrastlin/meta-service"
       }
     }

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
 
+const MANAGER_ID = 'm-001';
+
 export function CreateProposition() {
   const navigate = useNavigate();
-  const [question, setQuestion] = useState('');
-  const [closesAt, setClosesAt] = useState('');
-  const [eventKey, setEventKey] = useState('');
+  const [statement, setStatement] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -28,11 +28,9 @@ export function CreateProposition() {
     setSubmitting(true);
     try {
       const result = await api.createProposition({
-        createdBy: 'm-001',
-        question,
-        closesAt: new Date(closesAt).toISOString(),
-        eventKey,
-        options: options.map((label, i) => ({ optionId: `opt-${i + 1}`, label })),
+        managerId: MANAGER_ID,
+        statement,
+        options: options.map(label => ({ label })),
       });
       navigate(`/bets/${result.propositionId}`);
     } catch (e) {
@@ -46,21 +44,14 @@ export function CreateProposition() {
       <h2>Create Proposition</h2>
 
       <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="question">Question</label>
+        <label htmlFor="statement">Statement</label>
         <br />
-        <input id="question" value={question} onChange={e => setQuestion(e.target.value)} style={{ width: '100%' }} />
-      </div>
-
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="closesAt">Closes At</label>
-        <br />
-        <input id="closesAt" type="datetime-local" value={closesAt} onChange={e => setClosesAt(e.target.value)} />
-      </div>
-
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label htmlFor="eventKey">Event Key</label>
-        <br />
-        <input id="eventKey" value={eventKey} onChange={e => setEventKey(e.target.value)} />
+        <input
+          id="statement"
+          value={statement}
+          onChange={e => setStatement(e.target.value)}
+          style={{ width: '100%' }}
+        />
       </div>
 
       <h3>Options</h3>

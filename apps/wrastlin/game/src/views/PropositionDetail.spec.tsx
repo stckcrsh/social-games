@@ -3,14 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
 import { PropositionDetail } from './PropositionDetail.js';
-import type { BetProposition, BetPool, BetEntry } from '@org/betting';
-import type { Manager } from '@org/wrastlin-shared';
+import type { BetProposition, BetEntry, BettingState, Manager } from '@org/wrastlin-shared';
 
 vi.mock('../api/client.js', () => ({
   api: {
+    getBettingState: vi.fn(),
     getProposition: vi.fn(),
     getManager: vi.fn(),
-    getMyEntries: vi.fn(),
+    getAllEntries: vi.fn(),
     placeBet: vi.fn(),
   },
   ApiError: class ApiError extends Error {
@@ -24,19 +24,29 @@ vi.mock('../api/client.js', () => ({
   },
 }));
 
-const fixtureProposition: BetProposition & { pool: BetPool } = {
+const openState: BettingState = { week: 7, phase: 'open', openedAt: '2026-03-28T10:00:00.000Z' };
+const closedState: BettingState = { ...openState, phase: 'closed' };
+
+const fixtureProposition: BetProposition = {
   propositionId: 'prop-1',
+  week: 7,
   createdBy: 'm-001',
-  question: 'Who will win match 1?',
+  statement: 'Dazzling Steve will lose to Vern',
   options: [
     { optionId: 'opt-1', label: 'Rex Dominion' },
     { optionId: 'opt-2', label: 'Iron Mike' },
   ],
-  status: 'open',
-  closesAt: '2026-03-15T20:00:00.000Z',
-  eventKey: '1',
-  createdAt: '2026-03-11T10:00:00.000Z',
-  pool: { totalPot: 150, byOption: { 'opt-1': 100, 'opt-2': 50 } },
+  createdAt: '2026-03-28T10:00:00.000Z',
+};
+
+const resolvedProposition: BetProposition = {
+  ...fixtureProposition,
+  judgement: {
+    winningOptionIds: ['opt-1'],
+    rationale: 'Rex won by submission.',
+    confidence: 'clear',
+  },
+  resolvedAt: '2026-03-29T11:00:00.000Z',
 };
 
 const fixtureManager: Manager = {
@@ -46,14 +56,10 @@ const fixtureManager: Manager = {
   trustLevel: 'medium',
 };
 
-const fixtureEntry: BetEntry = {
-  entryId: 'entry-1',
-  propositionId: 'prop-1',
-  bettorId: 'm-001',
-  optionId: 'opt-1',
-  amount: 50,
-  placedAt: '2026-03-11T11:00:00.000Z',
-};
+const allEntries: BetEntry[] = [
+  { entryId: 'e-1', propositionId: 'prop-1', bettorId: 'm-001', optionId: 'opt-1', amount: 100, placedAt: '' },
+  { entryId: 'e-2', propositionId: 'prop-1', bettorId: 'm-002', optionId: 'opt-2', amount: 50, placedAt: '' },
+];
 
 function renderDetail(propId = 'prop-1') {
   return render(
@@ -67,10 +73,14 @@ function renderDetail(propId = 'prop-1') {
 
 describe('PropositionDetail', () => {
   beforeEach(() => {
+    vi.mocked(api.getBettingState).mockResolvedValue(openState);
     vi.mocked(api.getProposition).mockResolvedValue(fixtureProposition);
     vi.mocked(api.getManager).mockResolvedValue(fixtureManager);
-    vi.mocked(api.getMyEntries).mockResolvedValue([]);
-    vi.mocked(api.placeBet).mockResolvedValue(fixtureEntry);
+    vi.mocked(api.getAllEntries).mockResolvedValue(allEntries);
+    vi.mocked(api.placeBet).mockResolvedValue({
+      entryId: 'e-new', propositionId: 'prop-1', bettorId: 'm-001',
+      optionId: 'opt-1', amount: 25, placedAt: '',
+    });
   });
 
   it('shows loading state initially', () => {
@@ -78,94 +88,81 @@ describe('PropositionDetail', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('renders question and status after load', async () => {
+  it('renders proposition statement after load', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByText('Who will win match 1?')).toBeInTheDocument();
-      expect(screen.getByText(/Status: open/)).toBeInTheDocument();
+      expect(screen.getByText('Dazzling Steve will lose to Vern')).toBeInTheDocument();
     });
   });
 
-  it('renders closesAt as en-US locale date', async () => {
-    renderDetail();
-    const expected = new Date(fixtureProposition.closesAt).toLocaleDateString('en-US');
-    await waitFor(() => {
-      expect(screen.getByText(new RegExp(expected))).toBeInTheDocument();
-    });
-  });
-
-  it('renders option labels with pool totals', async () => {
+  it('renders option labels with pool totals from entries', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByText('Rex Dominion — $100 in pool')).toBeInTheDocument();
-      expect(screen.getByText('Iron Mike — $50 in pool')).toBeInTheDocument();
+      expect(screen.getByText(/Rex Dominion.*\$100/)).toBeInTheDocument();
+      expect(screen.getByText(/Iron Mike.*\$50/)).toBeInTheDocument();
     });
   });
 
   it('shows manager balance', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByText('Balance: $500')).toBeInTheDocument();
+      expect(screen.getByText(/Balance: \$500/)).toBeInTheDocument();
     });
   });
 
-  it('shows existing bet when manager has entry for this proposition', async () => {
-    vi.mocked(api.getMyEntries).mockResolvedValue([fixtureEntry]);
+  it('shows my existing bets', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByText(/You bet \$50 on Rex Dominion/)).toBeInTheDocument();
+      expect(screen.getByText(/You bet \$100 on Rex Dominion/)).toBeInTheDocument();
     });
   });
 
-  it('does NOT show existing-bet line for entries on a different proposition', async () => {
-    const otherEntry: BetEntry = { ...fixtureEntry, propositionId: 'other-prop', entryId: 'entry-2' };
-    vi.mocked(api.getMyEntries).mockResolvedValue([otherEntry]);
+  it('does NOT show amount input before an option is clicked', async () => {
     renderDetail();
-    await waitFor(() => {
-      expect(screen.queryByText(/You bet/)).not.toBeInTheDocument();
-    });
+    await waitFor(() => screen.getByText('Dazzling Steve will lose to Vern'));
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
   });
 
-  it('renders bet form when status is open', async () => {
-    renderDetail();
-    await waitFor(() => {
-      expect(screen.getByRole('radio', { name: /Rex Dominion/ })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Place Bet' })).toBeInTheDocument();
-    });
-  });
-
-  it('does NOT render bet form when status is closed', async () => {
-    vi.mocked(api.getProposition).mockResolvedValue({ ...fixtureProposition, status: 'closed' });
-    renderDetail();
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
-    });
-  });
-
-  it('does NOT render bet form when status is resolved', async () => {
-    vi.mocked(api.getProposition).mockResolvedValue({
-      ...fixtureProposition,
-      status: 'resolved',
-      winningOptionIds: ['opt-1'],
-    });
-    renderDetail();
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
-    });
-  });
-
-  it('calls placeBet with correct args on submit', async () => {
+  it('clicking an option expands its inline bet form', async () => {
     const user = userEvent.setup();
     renderDetail();
-    await waitFor(() => screen.getByRole('radio', { name: /Rex Dominion/ }));
-    await user.click(screen.getByRole('radio', { name: /Rex Dominion/ }));
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
+    expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Place Bet' })).toBeInTheDocument();
+  });
+
+  it('clicking the same option again collapses the form', async () => {
+    const user = userEvent.setup();
+    renderDetail();
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
+    expect(screen.queryByRole('button', { name: 'Place Bet' })).not.toBeInTheDocument();
+  });
+
+  it('switching to another option shows only one Place Bet button', async () => {
+    const user = userEvent.setup();
+    renderDetail();
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Iron Mike/ }));
+    expect(screen.getAllByRole('button', { name: 'Place Bet' })).toHaveLength(1);
+  });
+
+  it('calls placeBet with managerId when submitted', async () => {
+    const user = userEvent.setup();
+    renderDetail();
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
     const amountInput = screen.getByRole('spinbutton');
     await user.clear(amountInput);
     await user.type(amountInput, '75');
     await user.click(screen.getByRole('button', { name: 'Place Bet' }));
     await waitFor(() => {
       expect(vi.mocked(api.placeBet)).toHaveBeenCalledWith('prop-1', {
-        bettorId: 'm-001',
+        managerId: 'm-001',
         optionId: 'opt-1',
         amount: 75,
       });
@@ -175,37 +172,48 @@ describe('PropositionDetail', () => {
   it('re-fetches proposition and entries after successful bet', async () => {
     const user = userEvent.setup();
     renderDetail();
-    await waitFor(() => screen.getByRole('radio', { name: /Rex Dominion/ }));
-    await user.click(screen.getByRole('radio', { name: /Rex Dominion/ }));
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
     await user.click(screen.getByRole('button', { name: 'Place Bet' }));
     await waitFor(() => {
       expect(vi.mocked(api.getProposition)).toHaveBeenCalledTimes(2);
-      expect(vi.mocked(api.getMyEntries)).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(api.getAllEntries)).toHaveBeenCalledTimes(2);
     });
   });
 
   it('shows serverMessage on ApiError from placeBet', async () => {
     const { ApiError: Err } = await import('../api/client.js');
-    vi.mocked(api.placeBet).mockRejectedValue(new Err('Insufficient funds', 400));
+    vi.mocked(api.placeBet).mockRejectedValue(new Err('Insufficient funds', 422));
     const user = userEvent.setup();
     renderDetail();
-    await waitFor(() => screen.getByRole('radio', { name: /Rex Dominion/ }));
-    await user.click(screen.getByRole('radio', { name: /Rex Dominion/ }));
+    await waitFor(() => screen.getByRole('button', { name: /Rex Dominion/ }));
+    await user.click(screen.getByRole('button', { name: /Rex Dominion/ }));
     await user.click(screen.getByRole('button', { name: 'Place Bet' }));
     await waitFor(() => {
       expect(screen.getByText('Insufficient funds')).toBeInTheDocument();
     });
   });
 
-  it('shows generic error on non-ApiError failure from placeBet', async () => {
-    vi.mocked(api.placeBet).mockRejectedValue(new Error('Network error'));
-    const user = userEvent.setup();
+  it('does NOT show clickable option buttons when phase is not open', async () => {
+    vi.mocked(api.getBettingState).mockResolvedValue(closedState);
     renderDetail();
-    await waitFor(() => screen.getByRole('radio', { name: /Rex Dominion/ }));
-    await user.click(screen.getByRole('radio', { name: /Rex Dominion/ }));
-    await user.click(screen.getByRole('button', { name: 'Place Bet' }));
+    await waitFor(() => screen.getByText('Dazzling Steve will lose to Vern'));
+    expect(screen.queryByRole('button', { name: /Rex Dominion/ })).not.toBeInTheDocument();
+  });
+
+  it('shows judge rationale when proposition is resolved', async () => {
+    vi.mocked(api.getProposition).mockResolvedValue(resolvedProposition);
+    renderDetail();
     await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+      expect(screen.getByText('Rex won by submission.')).toBeInTheDocument();
+    });
+  });
+
+  it('highlights winning option when resolved', async () => {
+    vi.mocked(api.getProposition).mockResolvedValue(resolvedProposition);
+    renderDetail();
+    await waitFor(() => {
+      expect(screen.getByText(/Rex Dominion.*winner/i)).toBeInTheDocument();
     });
   });
 

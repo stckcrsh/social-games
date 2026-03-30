@@ -20,8 +20,7 @@
     "paths": {
       "@org/shared": ["./libs/dungeon/shared/src/index.ts"],
       "@org/items": ["./libs/dungeon/items/src/index.ts"],
-      "@org/wrastlin-shared": ["./libs/wrastlin/shared/src/index.ts"],
-      "@org/betting": ["./libs/shared/betting/src/index.ts"]
+      "@org/wrastlin-shared": ["./libs/wrastlin/shared/src/index.ts"]
     }
   }
 }

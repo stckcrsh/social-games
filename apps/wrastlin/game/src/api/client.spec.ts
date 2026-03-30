@@ -59,4 +59,17 @@ describe('ApiError propagation', () => {
     const result = await api.getBettingState();
     expect(result).toBeNull();
   });
+
+  it('getBettingState re-throws non-404 errors', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: 'Internal server error' }),
+    } as Response);
+
+    await expect(api.getBettingState()).rejects.toMatchObject({
+      serverMessage: 'Internal server error',
+      status: 500,
+    });
+  });
 });
