@@ -291,3 +291,136 @@ flowchart LR
     GS -->|write emotions| WJ
     GS -->|write| SJ
 ```
+
+---
+
+## 6. AI Show Generation Pipeline — `runShowPipeline`
+
+What happens inside `runShowPipeline()` — the replacement for the old deterministic `generateShow()`. Three async steps; steps 2 and 3 are fully parallel across segments.
+
+```mermaid
+flowchart TD
+    INPUT["Inputs
+    showOutlineInput, wrestlers, managers,
+    submissions, announcers, agents ×4"]
+
+    INPUT --> STEP1
+
+    STEP1["① ShowOutline agent
+    agents.showOutline(showOutlineInput)
+    → ShowOutline { segments[] }
+    (each segment: type 'match' | 'promo')"]
+
+    STEP1 --> STEP2
+
+    subgraph STEP2 ["② Promise.all — one task per segment"]
+        direction LR
+        SEG_M["Segment type == 'match'
+        buildMatchBeatsInput(segment, wrestlers,
+          managers, submissions)
+        → agents.matchBeats(input)
+        → MatchBeats"]
+
+        SEG_P["Segment type == 'promo'
+        buildPromoScreenplayInput(segment,
+          wrestlers, week, announcers)
+        → agents.promoScreenplay(input)
+        → PromoScreenplay"]
+    end
+
+    STEP2 --> STEP3
+
+    subgraph STEP3 ["③ Promise.all — one task per SegmentResult"]
+        direction LR
+        ANN["SegmentResult type == 'match'
+        buildAnnouncerScreenplayInput(beats, announcers)
+        → agents.announcerScreenplay(input)
+        → GeneratedMatchSegment
+        { ...segment, beats, announcerScreenplay }"]
+
+        PROMO_PASS["SegmentResult type == 'promo'
+        (no announcer needed)
+        → GeneratedPromoSegment
+        { ...segment, promoScreenplay }"]
+    end
+
+    STEP3 --> SORT["Sort segments by order field"]
+    SORT --> OUT["GeneratedShow
+    { showOutline, segments: GeneratedSegment[] }"]
+```
+
+---
+
+## 7. Agent Architecture — Prompts, Inputs, and Dependency Injection
+
+How each AI agent is wired: prompt templates on disk, data builders transform raw game data into structured inputs, and the `agents` object is injected so stubs can replace real AI calls in tests.
+
+```mermaid
+flowchart TD
+    subgraph DISK ["prompts/ (Markdown files)"]
+        P1["show-outline.md
+        {{WEEK}}, {{WRESTLERS}},
+        {{SUBMISSIONS}}, {{PREVIOUS_OUTLINES}}"]
+        P2["match-beats.md
+        {{SEGMENT}}, {{WRESTLERS}}"]
+        P3["promo-screenplay.md
+        {{SEGMENT}}, {{PARTICIPANTS}},
+        {{TARGET}}, {{PERSONAS}}"]
+        P4["announcer-screenplay.md
+        {{MATCH_BEATS}}, {{ANNOUNCERS}}"]
+    end
+
+    subgraph LOADER ["promptLoader.ts"]
+        LD["loadPrompt(filename, variables)
+        • reads PROMPTS_DIR env var (or default path)
+        • reads template file
+        • replaces {{PLACEHOLDERS}}
+        → filled prompt string"]
+    end
+
+    subgraph BUILDERS ["dataBuilders.ts"]
+        B1["buildShowOutlineInput(week, wrestlers,
+          managers, submissions, previousOutlines)
+        → ShowOutlineInput"]
+        B2["buildMatchBeatsInput(segment, wrestlers,
+          managers, submissions)
+        → MatchBeatsInput"]
+        B3["buildPromoScreenplayInput(segment,
+          wrestlers, week, announcers)
+        → PromoScreenplayInput"]
+        B4["buildAnnouncerScreenplayInput(beats,
+          announcers)
+        → AnnouncerScreenplayInput"]
+        B5["computeRivalryHeat(wrestlers, idA, idB)
+        (hatred[A→B] + hatred[B→A]) / 2
+        → number 0–10"]
+    end
+
+    subgraph AGENTS ["Agent function types (types.ts)"]
+        A1["ShowOutlineAgentFn
+        (input: ShowOutlineInput) → Promise<ShowOutline>"]
+        A2["MatchBeatsAgentFn
+        (input: MatchBeatsInput) → Promise<MatchBeats>"]
+        A3["PromoScreenplayAgentFn
+        (input: PromoScreenplayInput) → Promise<PromoScreenplay>"]
+        A4["AnnouncerScreenplayAgentFn
+        (input: AnnouncerScreenplayInput) → Promise<AnnouncerScreenplay>"]
+    end
+
+    subgraph IMPLS ["Implementations (injected at runtime)"]
+        REAL["Real AI agents
+        loadPrompt() + call Claude API"]
+        STUB["Stub agents (stubs/)
+        return hardcoded valid fixtures
+        used in pipeline.spec.ts"]
+    end
+
+    P1 & P2 & P3 & P4 --> LD
+    B1 --> A1
+    B2 --> A2
+    B3 --> A3
+    B4 --> A4
+    LD -.->|prompt string| REAL
+    REAL --> A1 & A2 & A3 & A4
+    STUB --> A1 & A2 & A3 & A4
+```

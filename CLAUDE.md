@@ -22,6 +22,14 @@
 
 <!-- nx configuration end-->
 
+## Git Worktrees
+
+**Always use a git worktree before starting feature work.** Never develop directly on `main`.
+
+- Use `superpowers:using-git-worktrees` skill to set up the workspace
+- Worktrees live in `.worktrees/` (already gitignored)
+- One worktree per feature/game — keeps dungeon and wrastlin work isolated
+
 ## Test-Driven Development
 
 **Iron law: no production code without a failing test first.**

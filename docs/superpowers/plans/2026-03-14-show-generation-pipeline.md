@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-03-14-show-generation-prompts-design.md`
 
+> **Worktree required:** Before starting Task 1, use `superpowers:using-git-worktrees` to create an isolated worktree. Never commit directly to `main`.
+
 ---
 
 ## File Map
@@ -197,6 +199,9 @@ Add `finisher: 'Test Finisher'` to any Wrestler fixtures in this file.
 Add `finisher: 'Test Finisher'` to any Wrestler fixtures in this file.
 
 After updating, any future spec files that construct `Wrestler` objects must also include `finisher`.
+
+If there are other spec files in `src/` that construct typed `Wrestler` objects not listed above,
+the TypeScript compiler will report errors in the next step — fix them the same way.
 
 - [ ] **Step 4: Run tests to confirm nothing broke**
 
@@ -850,9 +855,6 @@ Expected: FAIL — `Cannot find module './promptLoader.js'`
 import fs from 'node:fs';
 import path from 'node:path';
 
-const PROMPTS_DIR = process.env.PROMPTS_DIR
-  ?? path.resolve(import.meta.dirname, '../../prompts');
-
 export function interpolate(
   template: string,
   variables: Record<string, string>,
@@ -864,7 +866,11 @@ export function loadPrompt(
   filename: string,
   variables: Record<string, string>,
 ): string {
-  const template = fs.readFileSync(path.join(PROMPTS_DIR, filename), 'utf-8');
+  // Resolve dir inside the function so process.env.PROMPTS_DIR can be overridden
+  // in tests after module load.
+  const dir = process.env.PROMPTS_DIR
+    ?? path.resolve(import.meta.dirname, '../../prompts');
+  const template = fs.readFileSync(path.join(dir, filename), 'utf-8');
   return interpolate(template, variables);
 }
 ```
@@ -1711,6 +1717,8 @@ import type {
   GeneratedSegment,
   MatchOutlineSegment,
   PromoOutlineSegment,
+  MatchBeats,
+  PromoScreenplay,
 } from './types.js';
 import {
   buildMatchBeatsInput,
@@ -1732,6 +1740,11 @@ interface PipelineParams {
   };
 }
 
+// Intermediate types carry narrowed segment so no `as` casts are needed downstream
+type MatchResult = { type: 'match'; segment: MatchOutlineSegment; beats: MatchBeats };
+type PromoResult = { type: 'promo'; segment: PromoOutlineSegment; promoScreenplay: PromoScreenplay };
+type SegmentResult = MatchResult | PromoResult;
+
 export async function runShowPipeline(params: PipelineParams): Promise<GeneratedShow> {
   const { showOutlineInput, wrestlers, managers, submissions, announcers, agents } = params;
 
@@ -1741,41 +1754,34 @@ export async function runShowPipeline(params: PipelineParams): Promise<Generated
   // Step 2: Process all segments in parallel
   //   - matches → get beats
   //   - promos  → get screenplay
-  const segmentResults = await Promise.all(
-    showOutline.segments.map(async segment => {
+  const segmentResults: SegmentResult[] = await Promise.all(
+    showOutline.segments.map(async (segment): Promise<SegmentResult> => {
       if (segment.type === 'match') {
-        const input = buildMatchBeatsInput(segment as MatchOutlineSegment, wrestlers, managers, submissions);
+        const input = buildMatchBeatsInput(segment, wrestlers, managers, submissions);
         const beats = await agents.matchBeats(input);
-        return { segment, beats };
+        return { type: 'match', segment, beats };
       } else {
         const input = buildPromoScreenplayInput(
-          segment as PromoOutlineSegment,
+          segment,
           wrestlers,
           showOutlineInput.week,
           announcers,
         );
         const promoScreenplay = await agents.promoScreenplay(input);
-        return { segment, promoScreenplay };
+        return { type: 'promo', segment, promoScreenplay };
       }
     }),
   );
 
   // Step 3: Run announcer screenplays for all match segments in parallel
   const generatedSegments: GeneratedSegment[] = await Promise.all(
-    segmentResults.map(async result => {
-      if ('beats' in result) {
+    segmentResults.map(async (result): Promise<GeneratedSegment> => {
+      if (result.type === 'match') {
         const input = buildAnnouncerScreenplayInput(result.beats, announcers);
         const announcerScreenplay = await agents.announcerScreenplay(input);
-        return {
-          ...(result.segment as MatchOutlineSegment),
-          beats: result.beats,
-          announcerScreenplay,
-        } as GeneratedMatchSegment;
+        return { ...result.segment, beats: result.beats, announcerScreenplay };
       } else {
-        return {
-          ...(result.segment as PromoOutlineSegment),
-          promoScreenplay: result.promoScreenplay,
-        } as GeneratedPromoSegment;
+        return { ...result.segment, promoScreenplay: result.promoScreenplay };
       }
     }),
   );
