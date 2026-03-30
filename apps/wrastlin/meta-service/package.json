@@ -2,8 +2,5 @@
   "name": "@org/wrastlin-meta-service",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0"
-  }
+  "type": "module"
 }
