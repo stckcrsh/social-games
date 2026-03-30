@@ -15,6 +15,7 @@
       "executor": "@nx/vite:dev-server",
       "continuous": true,
       "options": {
+        "buildTarget": "wrastlin-game:build",
         "configFile": "apps/wrastlin/game/vite.config.mts"
       }
     },
