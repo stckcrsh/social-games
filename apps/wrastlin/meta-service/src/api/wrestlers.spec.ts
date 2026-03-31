@@ -11,8 +11,6 @@ const mockWrestler = {
   stats: { strength: 80, agility: 60, endurance: 75, charisma: 70 },
   personality: { ego: 9, anger: 7, honor: 2, loyalty: 3, ambition: 8 },
   emotionalState: { confidence: 9, frustration: 2, fatigue: 3 },
-  relationships: [],
-  memories: [],
   managerTrust: 4,
   finisher: 'Dominion Driver',
 };

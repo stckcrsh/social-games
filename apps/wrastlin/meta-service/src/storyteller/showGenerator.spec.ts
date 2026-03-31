@@ -9,14 +9,14 @@ const wrestlers: Wrestler[] = [
     stats: { strength: 70, agility: 70, endurance: 70, charisma: 70 },
     personality: { ego: 3, anger: 3, honor: 8, loyalty: 7, ambition: 5 },
     emotionalState: { confidence: 7, frustration: 3, fatigue: 3 },
-    relationships: [], memories: [], managerTrust: 7, finisher: 'Test Finisher',
+    managerTrust: 7, finisher: 'Test Finisher',
   },
   {
     wrestlerId: 'w-b', name: 'Wrestler B', gimmick: 'Heel',
     stats: { strength: 75, agility: 65, endurance: 70, charisma: 65 },
     personality: { ego: 8, anger: 7, honor: 2, loyalty: 3, ambition: 8 },
     emotionalState: { confidence: 8, frustration: 4, fatigue: 4 },
-    relationships: [], memories: [], managerTrust: 4, finisher: 'Test Finisher',
+    managerTrust: 4, finisher: 'Test Finisher',
   },
 ];
 

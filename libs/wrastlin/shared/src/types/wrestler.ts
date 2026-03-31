@@ -1,21 +1,3 @@
-export interface Relationship {
-  wrestlerId: string;
-  hatred: number;   // 1-10
-  respect: number;  // 1-10
-  trust: number;    // 1-10
-}
-
-export type MemoryType = 'humiliation' | 'betrayal' | 'victory' | 'injury' | 'promo';
-
-export interface Memory {
-  memoryId: string;
-  type: MemoryType;
-  source: string;   // wrestlerId or 'manager'
-  target: string;
-  week: number;
-  intensity: number; // 1-10
-}
-
 export interface WrestlerStats {
   strength: number;   // 1-100
   agility: number;
@@ -44,8 +26,6 @@ export interface Wrestler {
   stats: WrestlerStats;
   personality: WrestlerPersonality;
   emotionalState: WrestlerEmotions;
-  relationships: Relationship[];
-  memories: Memory[];
   managerTrust: number; // 1-10
   finisher: string;
 }

@@ -25,8 +25,6 @@ function makeWrestler(id: string): Wrestler {
     stats: { strength: 70, agility: 70, endurance: 70, charisma: 70 },
     personality: { ego: 5, anger: 5, honor: 5, loyalty: 5, ambition: 5 },
     emotionalState: { confidence: 5, frustration: 5, fatigue: 5 },
-    relationships: [],
-    memories: [],
     managerTrust: 5,
     finisher: 'Test Finisher',
   };

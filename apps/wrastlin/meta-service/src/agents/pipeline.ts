@@ -53,14 +53,13 @@ export async function runShowPipeline(params: PipelineParams): Promise<Generated
   const step2Settled = await Promise.allSettled(
     showOutline.segments.map(async (segment): Promise<SegmentResult> => {
       if (segment.type === 'match') {
-        const input = buildMatchBeatsInput(segment, wrestlers, managers, submissions);
+        const input = buildMatchBeatsInput(segment, wrestlers);
         const beats = await agents.matchBeats(input);
         return { type: 'match', segment, beats };
       } else {
         const input = buildPromoScreenplayInput(
           segment,
           wrestlers,
-          showOutlineInput.week,
           announcers,
         );
         const promoScreenplay = await agents.promoScreenplay(input);

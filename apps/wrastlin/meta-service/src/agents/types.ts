@@ -2,7 +2,6 @@ import type {
   WrestlerStats,
   WrestlerPersonality,
   WrestlerEmotions,
-  Memory,
   Announcer,
 } from '@org/wrastlin-shared';
 
@@ -101,21 +100,13 @@ export interface WrestlerSummaryForOutline {
   name: string;
   gimmick: string;
   emotionalState: WrestlerEmotions;
-  rivalryHeat: Record<string, number>;  // { "w-002": 8, "w-003": 3, ... }
 }
 
 export interface SubmissionSummaryForOutline {
   managerId: string;
   wrestlerId: string;    // joined from Manager.wrestlerId
-  advice: {
-    matchStyle?: string;
-    targetOpponent?: string;
-  };
-  storyRequests: Array<{
-    type: string;
-    target?: string;
-    bribeAmount: number;
-  }>;
+  showRequest: string;
+  bribeAmount: number;
 }
 
 export interface ShowOutlineInput {
@@ -133,7 +124,6 @@ export interface WrestlerForMatchBeats {
   personality: WrestlerPersonality;
   emotionalState: WrestlerEmotions;
   finisher: string;
-  matchStyle?: string;   // from manager submission advice; absent if no submission
 }
 
 export interface MatchBeatsInput {
@@ -147,7 +137,6 @@ export interface ParticipantForPromo {
   gimmick: string;
   personality: WrestlerPersonality;
   emotionalState: WrestlerEmotions;
-  memories: Memory[];    // filtered to last 3 weeks (week >= currentWeek - 2)
 }
 
 export interface TargetForPromo {
@@ -155,7 +144,6 @@ export interface TargetForPromo {
   name: string;
   gimmick: string;
   personality: WrestlerPersonality;
-  sharedMemories: Memory[];   // memories where source or target matches any participant
 }
 
 export interface PromoScreenplayInput {
