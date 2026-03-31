@@ -67,6 +67,8 @@ export interface ThreadActorState {
 
 export interface SocialThread {
   threadId: string;
+  title: string;                // human-readable e.g. "Rex vs Steel Conflict"
+                                // set by mutation layer on creation; stable anchor for wiki pages
   subjects: string[];           // wrestlerIds — the main wrestlers involved
   tags: string[];               // free-form e.g. ['conflict', 'betrayal', 'title']
   createdWeek: number;
@@ -81,6 +83,7 @@ export interface SocialThread {
 - No `status` field on Thread — a thread is active while any actor has `care > 0`. Threads with all care at zero are removed from storage during cleanup.
 - `actorStates` is an array embedded in the thread (not a separate collection), because retrieval needs both thread content and actor care values in one load.
 - Care is per-wrestler: two actors in the same thread can care very differently about it.
+- `title` is a stable human-readable anchor set once at thread creation. A future wiki agent can use `lastUpdatedWeek` and `NarrativeEvent.week` to scope to "what changed this week" and feed thread titles + actor summaries directly into wiki page prose.
 
 ---
 
