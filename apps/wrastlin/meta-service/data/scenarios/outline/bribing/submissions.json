@@ -3,10 +3,8 @@
     "submissionId": "sub-001",
     "managerId": "m-001",
     "week": 1,
-    "advice": { "matchStyle": "technical", "targetOpponent": "w-002" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-002", "bribeAmount": 100 }
-    ],
+    "showRequest": "Book Rex Dominion vs Steel Purity",
+    "bribeAmount": 100,
     "wrestlerMessage": "Rex wants a shot at Purity. We're paying to make it happen.",
     "submittedAt": "2026-03-20T17:00:00.000Z"
   },
@@ -14,10 +12,8 @@
     "submissionId": "sub-002",
     "managerId": "m-002",
     "week": 1,
-    "advice": { "matchStyle": "brawl", "targetOpponent": "w-003" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-003", "bribeAmount": 200 }
-    ],
+    "showRequest": "Book Steel Purity vs Slick Vince",
+    "bribeAmount": 200,
     "wrestlerMessage": "Purity is done with Rex. It's Vince who needs to be made an example of.",
     "submittedAt": "2026-03-20T17:30:00.000Z"
   },
@@ -25,10 +21,8 @@
     "submissionId": "sub-003",
     "managerId": "m-003",
     "week": 1,
-    "advice": { "matchStyle": "heel", "targetOpponent": "w-004" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-004", "bribeAmount": 300 }
-    ],
+    "showRequest": "Book Slick Vince vs Iron Maddox",
+    "bribeAmount": 300,
     "wrestlerMessage": "Vince has been dodging Maddox long enough. Book it.",
     "submittedAt": "2026-03-20T18:00:00.000Z"
   },
@@ -36,8 +30,8 @@
     "submissionId": "sub-004",
     "managerId": "m-004",
     "week": 1,
-    "advice": {},
-    "storyRequests": [],
+    "showRequest": "",
+    "bribeAmount": 0,
     "wrestlerMessage": "Maddox doesn't care who it is. He'll smash whoever shows up.",
     "submittedAt": "2026-03-20T18:30:00.000Z"
   },
@@ -45,10 +39,8 @@
     "submissionId": "sub-005",
     "managerId": "m-005",
     "week": 1,
-    "advice": { "matchStyle": "high-fly", "targetOpponent": "w-006" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-006", "bribeAmount": 0 }
-    ],
+    "showRequest": "Book Dazzle King vs Rookie Blaze",
+    "bribeAmount": 0,
     "wrestlerMessage": "Dazzle King and Blaze have been going back and forth. Give the crowd what they want.",
     "submittedAt": "2026-03-20T19:00:00.000Z"
   },
@@ -56,10 +48,8 @@
     "submissionId": "sub-006",
     "managerId": "m-006",
     "week": 1,
-    "advice": { "matchStyle": "high-fly", "targetOpponent": "w-005" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-005", "bribeAmount": 0 }
-    ],
+    "showRequest": "Book Rookie Blaze vs Dazzle King",
+    "bribeAmount": 0,
     "wrestlerMessage": "Blaze vs Dazzle King. The fans are already chanting for it.",
     "submittedAt": "2026-03-20T19:30:00.000Z"
   },
@@ -67,10 +57,8 @@
     "submissionId": "sub-007",
     "managerId": "m-007",
     "week": 1,
-    "advice": { "matchStyle": "brawl", "targetOpponent": "w-004" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-004", "bribeAmount": 2000 }
-    ],
+    "showRequest": "Book my wrestler in the main event",
+    "bribeAmount": 2000,
     "wrestlerMessage": "Golden Tyrant wants Maddox and the money is on the table. Make it the main event.",
     "submittedAt": "2026-03-20T20:00:00.000Z"
   }

@@ -3,10 +3,8 @@
     "submissionId": "sub-001",
     "managerId": "m-001",
     "week": 1,
-    "advice": { "matchStyle": "technical", "targetOpponent": "w-001" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-001", "bribeAmount": 0 }
-    ],
+    "showRequest": "Book Steel Purity vs Rex Dominion — keep Rookie Blaze out of the match",
+    "bribeAmount": 0,
     "wrestlerMessage": "Blaze turned on both of us last week. I want Rex in that ring and I want Blaze nowhere near it — keep him out.",
     "submittedAt": "2026-03-20T18:00:00.000Z"
   },
@@ -14,10 +12,8 @@
     "submissionId": "sub-002",
     "managerId": "m-002",
     "week": 1,
-    "advice": { "matchStyle": "heel", "targetOpponent": "w-002" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-002", "bribeAmount": 150 }
-    ],
+    "showRequest": "Book Rex Dominion vs Steel Purity",
+    "bribeAmount": 150,
     "wrestlerMessage": "Purity thinks he's got momentum. Shut it down. And if Blaze shows up, let him — it only helps us.",
     "submittedAt": "2026-03-20T19:00:00.000Z"
   },
@@ -25,10 +21,8 @@
     "submissionId": "sub-003",
     "managerId": "m-004",
     "week": 1,
-    "advice": { "matchStyle": "brawl", "targetOpponent": "w-003" },
-    "storyRequests": [
-      { "type": "feud", "target": "w-003", "bribeAmount": 100 }
-    ],
+    "showRequest": "Book Iron Maddox vs Slick Vince in a brawl — no outside interference",
+    "bribeAmount": 100,
     "wrestlerMessage": "Vince embarrassed you last week with that sneak attack. I want him in a brawl — no running, no hiding. And if anyone tries to get involved, Maddox handles them.",
     "submittedAt": "2026-03-20T19:30:00.000Z"
   }
