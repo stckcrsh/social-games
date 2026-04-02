@@ -13,7 +13,7 @@ export default defineConfig({
     globals: false,
     environment: 'node',
     pool: 'forks',
-    include: ['src/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'promptfoo/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
       reportsDirectory: '../../../coverage/apps/wrastlin/meta-service',
