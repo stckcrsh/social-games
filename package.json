@@ -35,6 +35,7 @@
     "jsdom": "~22.1.0",
     "nx": "22.5.1",
     "prettier": "^2.6.2",
+    "promptfoo": "^0.105.0",
     "tslib": "^2.3.0",
     "tsx": "^4.0.0",
     "typescript": "~5.9.2",
@@ -67,6 +68,7 @@
     "onlyBuiltDependencies": [
       "@swc/core",
       "bcrypt",
+      "better-sqlite3",
       "esbuild",
       "nx",
       "unrs-resolver",
