@@ -1,0 +1,50 @@
+description: Show Outline Agent — prompt engineering tests
+
+prompts:
+  - ../prompts/show-outline.md
+
+providers:
+  - id: openai:gpt-4o
+    config:
+      temperature: 0
+      max_tokens: 2048
+
+tests:
+  - description: "stacked-requests: two managers stack requests for the same matchup"
+    vars:
+      WEEK: "1"
+      PREVIOUS_OUTLINES_JSON: "[]"
+      WRESTLERS_JSON: "file://vars/stacked-requests/wrestlers.json"
+      SUBMISSIONS_JSON: "file://vars/stacked-requests/submissions.json"
+    assert:
+      - type: javascript
+        value: "file://assertions/bookingRules.mjs"
+      - type: llm-rubric
+        value: >
+          The show request with the highest effective bribe became the headliner.
+          (Effective bribe = sum of bribeAmounts when two managers request the same
+          matchup — a "stacked" request.) Given the SUBMISSIONS_JSON context and
+          the output, was booking priority correctly followed?
+      - type: llm-rubric
+        value: >
+          Each promo segment has exactly one stated goal: either self-hype OR
+          targeting a rival — not both simultaneously.
+
+  - description: "bribing: $2000 bid wins headliner in at least 8 of 10 runs"
+    vars:
+      WEEK: "1"
+      PREVIOUS_OUTLINES_JSON: "[]"
+      WRESTLERS_JSON: "file://vars/bribing/wrestlers.json"
+      SUBMISSIONS_JSON: "file://vars/bribing/submissions.json"
+    options:
+      numRepeat: 10
+    assert:
+      - type: javascript
+        value: "file://assertions/bookingRules.mjs"
+        threshold: 1.0
+      - type: llm-rubric
+        value: >
+          The wrestler managed by m-007 (wrestlerId w-007, known as "Golden Tyrant")
+          is in the headliner match. Their manager submitted a $2000 bribe, by far
+          the highest in the card. Was this honored?
+        threshold: 0.8
