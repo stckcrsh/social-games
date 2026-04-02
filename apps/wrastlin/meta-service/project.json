@@ -69,6 +69,20 @@
         "command": "node scripts/build.cjs && node dist/run-apply-payouts.js",
         "cwd": "apps/wrastlin/meta-service"
       }
+    },
+    "build-promptfoo-vars": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build-promptfoo-vars.mjs",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
+    "promptfoo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec promptfoo eval -c promptfoo/promptfooconfig.yaml",
+        "cwd": "apps/wrastlin/meta-service"
+      }
     }
   },
   "tags": []
