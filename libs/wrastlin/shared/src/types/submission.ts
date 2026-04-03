@@ -1,14 +1,8 @@
-export type MatchStyle = 'technical' | 'brawl' | 'high-fly' | 'heel' | 'face';
 export type StoryRequestType = 'push' | 'feud' | 'betrayal' | 'title-shot' | 'promo';
-
-export interface ManagerAdvice {
-  matchStyle: MatchStyle;
-  targetOpponent?: string; // wrestlerId
-}
 
 export interface StoryRequest {
   type: StoryRequestType;
-  target?: string; // wrestlerId
+  target?: string;       // wrestlerId
   bribeAmount: number;
 }
 
@@ -16,8 +10,9 @@ export interface WeeklySubmission {
   submissionId: string;
   managerId: string;
   week: number;
-  advice: ManagerAdvice;
-  storyRequests: StoryRequest[];
-  wrestlerMessage?: string; // optional message/letter to the wrestler
-  submittedAt: string; // ISO timestamp
+  showRequest: string;         // free-form text sent to the show generator
+  bribeAmount: number;         // dollars offered to influence booking
+  storyRequests?: StoryRequest[];
+  wrestlerMessage?: string;    // optional message to the wrestler
+  submittedAt: string;         // ISO timestamp
 }

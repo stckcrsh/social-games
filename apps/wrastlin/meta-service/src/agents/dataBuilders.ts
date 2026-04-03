@@ -3,6 +3,7 @@ import type {
   Manager,
   WeeklySubmission,
   Announcer,
+  SocialThread,
 } from '@org/wrastlin-shared';
 import type {
   ShowOutline,
@@ -18,6 +19,7 @@ import type {
   TargetForPromo,
   AnnouncerScreenplayInput,
   MatchBeats,
+  WrestlerThoughtProcessInput,
 } from './types.js';
 
 export function buildShowOutlineInput(
@@ -111,4 +113,32 @@ export function buildAnnouncerScreenplayInput(
   announcers: Announcer[],
 ): AnnouncerScreenplayInput {
   return { matchBeats, announcers };
+}
+
+export function buildWrestlerThoughtProcessInput(
+  wrestler: Wrestler,
+  submission: WeeklySubmission | undefined,
+  allThreads: SocialThread[],
+): WrestlerThoughtProcessInput {
+  const activeThreads = allThreads.filter(t =>
+    t.subjects.includes(wrestler.wrestlerId) ||
+    t.actorStates.some(a => a.wrestlerId === wrestler.wrestlerId)
+  );
+
+  return {
+    wrestler: {
+      wrestlerId: wrestler.wrestlerId,
+      name: wrestler.name,
+      gimmick: wrestler.gimmick,
+      personality: wrestler.personality,
+      emotionalState: wrestler.emotionalState,
+    },
+    submission: submission
+      ? {
+          wrestlerMessage: submission.wrestlerMessage,
+          storyRequests: submission.storyRequests,
+        }
+      : null,
+    activeThreads,
+  };
 }

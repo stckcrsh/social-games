@@ -3,6 +3,8 @@ import type {
   WrestlerPersonality,
   WrestlerEmotions,
   Announcer,
+  SocialThread,
+  StoryRequest,
 } from '@org/wrastlin-shared';
 
 // ── Show Outline (Agent 1 output) ────────────────────────────────────────────
@@ -91,6 +93,7 @@ export type GeneratedSegment = GeneratedMatchSegment | GeneratedPromoSegment;
 export interface GeneratedShow {
   showOutline: ShowOutline;
   segments: GeneratedSegment[];
+  wrestlerThoughtProcess: WrestlerThoughtProcessOutput[];
 }
 
 // ── Input payload types (what gets injected into prompt templates) ────────────
@@ -114,6 +117,7 @@ export interface ShowOutlineInput {
   previousOutlines: ShowOutline[];
   wrestlers: WrestlerSummaryForOutline[];
   submissions: SubmissionSummaryForOutline[];
+  wrestlerThoughtProcess: WrestlerThoughtProcessOutput[];
 }
 
 export interface WrestlerForMatchBeats {
@@ -157,6 +161,40 @@ export interface AnnouncerScreenplayInput {
   matchBeats: MatchBeats;
   announcers: Announcer[];
 }
+
+// ── Wrestler Thought Process (Stage 0) ────────────────────────────────────────
+
+export interface WrestlerThoughtProcessInput {
+  wrestler: {
+    wrestlerId: string;
+    name: string;
+    gimmick: string;
+    personality: WrestlerPersonality;
+    emotionalState: WrestlerEmotions;
+  };
+  submission: {
+    wrestlerMessage: string | undefined;
+    storyRequests: StoryRequest[];
+  } | null;  // null if no submission this week
+  activeThreads: SocialThread[];  // threads where this wrestler is a subject or actor
+}
+
+export interface WrestlerThreadUpdate {
+  threadId: string;
+  care: number;    // 1–10, AI-set: how much this thread is on the wrestler's mind
+  stance: string;  // free-form e.g. 'vengeful', 'motivated', 'dismissive'
+  summary: string; // prose: wrestler's current interpretation of this thread
+}
+
+export interface WrestlerThoughtProcessOutput {
+  wrestlerId: string;
+  thoughtSummary: string;  // 2-3 sentences: what is on this wrestler's mind overall
+  threadUpdates: WrestlerThreadUpdate[];
+}
+
+export type WrestlerThoughtProcessAgentFn = (
+  input: WrestlerThoughtProcessInput
+) => Promise<WrestlerThoughtProcessOutput>;
 
 // ── Agent function interfaces ─────────────────────────────────────────────────
 

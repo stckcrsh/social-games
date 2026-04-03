@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { Wrestler, Manager, WeeklySubmission, Announcer } from '@org/wrastlin-shared';
+import type { Wrestler, Manager, WeeklySubmission, Announcer, SocialThread } from '@org/wrastlin-shared';
 import type { MatchOutlineSegment, PromoOutlineSegment, MatchBeats } from './types.js';
 import {
   buildShowOutlineInput,
   buildMatchBeatsInput,
   buildPromoScreenplayInput,
   buildAnnouncerScreenplayInput,
+  buildWrestlerThoughtProcessInput,
 } from './dataBuilders.js';
 
 function makeWrestler(id: string): Wrestler {
@@ -151,5 +152,85 @@ describe('buildAnnouncerScreenplayInput', () => {
     expect(result.matchBeats.segmentId).toBe('s-001');
     expect(result.announcers).toHaveLength(1);
     expect(result.announcers[0].name).toBe('Brock Calloway');
+  });
+});
+
+const THREAD_WITH_WRESTLER: SocialThread = {
+  threadId: 't-001',
+  title: 'Rex vs Steel Conflict',
+  subjects: ['w-001', 'w-002'],
+  tags: ['conflict'],
+  createdWeek: 1,
+  lastUpdatedWeek: 1,
+  eventIds: [],
+  actorStates: [
+    { wrestlerId: 'w-001', care: 8, stance: 'aggrieved', summary: 'Rex sees this as unfinished business' },
+    { wrestlerId: 'w-002', care: 3, stance: 'dismissive', summary: 'Steel barely remembers it' },
+  ],
+};
+
+const THREAD_UNRELATED: SocialThread = {
+  threadId: 't-002',
+  title: 'Unrelated Thread',
+  subjects: ['w-003', 'w-004'],
+  tags: ['conflict'],
+  createdWeek: 1,
+  lastUpdatedWeek: 1,
+  eventIds: [],
+  actorStates: [],
+};
+
+const SUBMISSION_W001: WeeklySubmission = {
+  submissionId: 's-001',
+  managerId: 'm-001',
+  week: 2,
+  showRequest: 'I want revenge on Steel.',
+  bribeAmount: 200,
+  storyRequests: [{ type: 'feud', target: 'w-002', bribeAmount: 200 }],
+  wrestlerMessage: 'I want revenge on Steel.',
+  submittedAt: '2026-04-01T10:00:00Z',
+};
+
+describe('buildWrestlerThoughtProcessInput', () => {
+  it('includes only threads where the wrestler is a subject', () => {
+    const wrestler = makeWrestler('w-001');
+    const result = buildWrestlerThoughtProcessInput(wrestler, SUBMISSION_W001, [THREAD_WITH_WRESTLER, THREAD_UNRELATED]);
+    expect(result.activeThreads).toHaveLength(1);
+    expect(result.activeThreads[0].threadId).toBe('t-001');
+  });
+
+  it('includes threads where the wrestler appears in actorStates but not subjects', () => {
+    const threadActorOnly: SocialThread = {
+      ...THREAD_UNRELATED,
+      threadId: 't-003',
+      subjects: ['w-003'],
+      actorStates: [{ wrestlerId: 'w-001', care: 4, stance: 'curious', summary: 'Rex is watching' }],
+    };
+    const wrestler = makeWrestler('w-001');
+    const result = buildWrestlerThoughtProcessInput(wrestler, undefined, [threadActorOnly]);
+    expect(result.activeThreads).toHaveLength(1);
+    expect(result.activeThreads[0].threadId).toBe('t-003');
+  });
+
+  it('maps submission wrestlerMessage and storyRequests', () => {
+    const wrestler = makeWrestler('w-001');
+    const result = buildWrestlerThoughtProcessInput(wrestler, SUBMISSION_W001, []);
+    expect(result.submission?.wrestlerMessage).toBe('I want revenge on Steel.');
+    expect(result.submission?.storyRequests).toHaveLength(1);
+    expect(result.submission?.storyRequests[0].type).toBe('feud');
+  });
+
+  it('sets submission to null when no submission provided', () => {
+    const wrestler = makeWrestler('w-001');
+    const result = buildWrestlerThoughtProcessInput(wrestler, undefined, []);
+    expect(result.submission).toBeNull();
+  });
+
+  it('maps wrestler identity fields', () => {
+    const wrestler = makeWrestler('w-001');
+    const result = buildWrestlerThoughtProcessInput(wrestler, undefined, []);
+    expect(result.wrestler.wrestlerId).toBe('w-001');
+    expect(result.wrestler.personality).toEqual(wrestler.personality);
+    expect(result.wrestler.emotionalState).toEqual(wrestler.emotionalState);
   });
 });
