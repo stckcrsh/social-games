@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/libs/shared/auth",
+    "types": ["node"],
+    "rootDir": "src",
+    "tsBuildInfoFile": "../../../dist/libs/shared/auth/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

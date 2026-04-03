@@ -1,0 +1,17 @@
+{
+  "name": "shared-auth",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/auth/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/libs/shared/auth"],
+      "options": {
+        "command": "pnpm vitest run",
+        "cwd": "libs/shared/auth"
+      }
+    }
+  },
+  "tags": []
+}
