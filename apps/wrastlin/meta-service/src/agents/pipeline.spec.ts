@@ -8,9 +8,11 @@ import { stubShowOutlineAgent } from './stubs/stubShowOutlineAgent.js';
 import { stubMatchBeatsAgent } from './stubs/stubMatchBeatsAgent.js';
 import { stubPromoScreenplayAgent } from './stubs/stubPromoScreenplayAgent.js';
 import { stubAnnouncerScreenplayAgent } from './stubs/stubAnnouncerScreenplayAgent.js';
+import { stubWrestlerThoughtProcessAgent } from './stubs/stubWrestlerThoughtProcessAgent.js';
 import { buildShowOutlineInput } from './dataBuilders.js';
 
 const STUB_AGENTS = {
+  wrestlerThoughtProcess: stubWrestlerThoughtProcessAgent,
   showOutline: stubShowOutlineAgent,
   matchBeats: stubMatchBeatsAgent,
   promoScreenplay: stubPromoScreenplayAgent,
@@ -51,6 +53,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, showOutline: outlineSpy },
     });
     expect(outlineSpy).toHaveBeenCalledTimes(1);
@@ -65,6 +68,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, matchBeats: beatsSpy },
     });
     // stub outline has 2 match segments
@@ -79,6 +83,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, promoScreenplay: promoSpy },
     });
     // stub outline has 1 promo segment
@@ -93,6 +98,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, announcerScreenplay: announcerSpy },
     });
     expect(announcerSpy).toHaveBeenCalledTimes(2);
@@ -105,6 +111,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: STUB_AGENTS,
     });
     const matchSegments = result.segments.filter(
@@ -124,6 +131,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: STUB_AGENTS,
     });
     const promoSegments = result.segments.filter(
@@ -140,6 +148,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: STUB_AGENTS,
     });
     const orders = result.segments.map(s => s.order);
@@ -160,6 +169,7 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
     })).rejects.toThrow(PartialRunError);
 
@@ -178,10 +188,56 @@ describe('runShowPipeline', () => {
       managers: MANAGERS,
       submissions: [],
       announcers: ANNOUNCERS,
+      threads: [],
       agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
     }).catch(e => e);
 
     expect(err).toBeInstanceOf(PartialRunError);
     expect((err as PartialRunError).failedSegmentIds.length).toBeGreaterThan(0);
+  });
+});
+
+describe('wrestler thought process stage', () => {
+  it('calls thought process agent once per wrestler', async () => {
+    const thoughtSpy = vi.fn(stubWrestlerThoughtProcessAgent);
+    await runShowPipeline({
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      wrestlers: WRESTLERS,
+      managers: MANAGERS,
+      submissions: [],
+      announcers: ANNOUNCERS,
+      threads: [],
+      agents: { ...STUB_AGENTS, wrestlerThoughtProcess: thoughtSpy },
+    });
+    expect(thoughtSpy).toHaveBeenCalledTimes(WRESTLERS.length);
+  });
+
+  it('includes wrestlerThoughtProcess in the returned show', async () => {
+    const result = await runShowPipeline({
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      wrestlers: WRESTLERS,
+      managers: MANAGERS,
+      submissions: [],
+      announcers: ANNOUNCERS,
+      threads: [],
+      agents: STUB_AGENTS,
+    });
+    expect(result.wrestlerThoughtProcess).toHaveLength(WRESTLERS.length);
+    expect(result.wrestlerThoughtProcess[0].wrestlerId).toBeDefined();
+  });
+
+  it('throws PartialRunError if any thought process agent call fails', async () => {
+    const failingAgent = vi.fn().mockRejectedValue(new Error('OpenAI down'));
+    await expect(
+      runShowPipeline({
+        showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+        wrestlers: WRESTLERS,
+        managers: MANAGERS,
+        submissions: [],
+        announcers: ANNOUNCERS,
+        threads: [],
+        agents: { ...STUB_AGENTS, wrestlerThoughtProcess: failingAgent },
+      })
+    ).rejects.toThrow(PartialRunError);
   });
 });

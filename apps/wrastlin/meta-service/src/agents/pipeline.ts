@@ -1,10 +1,12 @@
-import type { Wrestler, Manager, WeeklySubmission, Announcer } from '@org/wrastlin-shared';
+import type { Wrestler, Manager, WeeklySubmission, Announcer, SocialThread } from '@org/wrastlin-shared';
 import type {
   ShowOutlineInput,
   ShowOutlineAgentFn,
   MatchBeatsAgentFn,
   PromoScreenplayAgentFn,
   AnnouncerScreenplayAgentFn,
+  WrestlerThoughtProcessAgentFn,
+  WrestlerThoughtProcessOutput,
   GeneratedShow,
   GeneratedSegment,
   MatchOutlineSegment,
@@ -16,6 +18,7 @@ import {
   buildMatchBeatsInput,
   buildPromoScreenplayInput,
   buildAnnouncerScreenplayInput,
+  buildWrestlerThoughtProcessInput,
 } from './dataBuilders.js';
 
 export class PartialRunError extends Error {
@@ -30,7 +33,9 @@ interface PipelineParams {
   managers: Manager[];
   submissions: WeeklySubmission[];
   announcers: Announcer[];
+  threads: SocialThread[];
   agents: {
+    wrestlerThoughtProcess: WrestlerThoughtProcessAgentFn;
     showOutline: ShowOutlineAgentFn;
     matchBeats: MatchBeatsAgentFn;
     promoScreenplay: PromoScreenplayAgentFn;
@@ -44,10 +49,37 @@ type PromoResult = { type: 'promo'; segment: PromoOutlineSegment; promoScreenpla
 type SegmentResult = MatchResult | PromoResult;
 
 export async function runShowPipeline(params: PipelineParams): Promise<GeneratedShow> {
-  const { showOutlineInput, wrestlers, managers, submissions, announcers, agents } = params;
+  const { showOutlineInput, wrestlers, managers, submissions, announcers, threads, agents } = params;
+
+  // Step 0: Wrestler thought process (parallel per wrestler — runs before outline)
+  const step0Settled = await Promise.allSettled(
+    wrestlers.map(async (wrestler): Promise<WrestlerThoughtProcessOutput> => {
+      const submission = submissions.find(s => {
+        const manager = managers.find(m => m.managerId === s.managerId);
+        return manager?.wrestlerId === wrestler.wrestlerId;
+      });
+      const input = buildWrestlerThoughtProcessInput(wrestler, submission, threads);
+      return agents.wrestlerThoughtProcess(input);
+    }),
+  );
+
+  const step0Failed: string[] = [];
+  const wrestlerThoughtProcess: WrestlerThoughtProcessOutput[] = [];
+  for (let i = 0; i < step0Settled.length; i++) {
+    const result = step0Settled[i];
+    if (result.status === 'fulfilled') {
+      wrestlerThoughtProcess.push(result.value);
+    } else {
+      step0Failed.push(wrestlers[i].wrestlerId);
+    }
+  }
+  if (step0Failed.length > 0) throw new PartialRunError(step0Failed);
 
   // Step 1: Generate show outline (sequential — defines the segment list)
-  const showOutline = await agents.showOutline(showOutlineInput);
+  const showOutline = await agents.showOutline({
+    ...showOutlineInput,
+    wrestlerThoughtProcess,
+  });
 
   // Step 2: Process all segments in parallel — matches get beats, promos get screenplay
   const step2Settled = await Promise.allSettled(
@@ -108,5 +140,5 @@ export async function runShowPipeline(params: PipelineParams): Promise<Generated
   // Sort by order field to match the show card
   generatedSegments.sort((a, b) => a.order - b.order);
 
-  return { showOutline, segments: generatedSegments };
+  return { showOutline, segments: generatedSegments, wrestlerThoughtProcess };
 }
