@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@org/shared': path.resolve(root, '../../../libs/dungeon/shared/src/index.ts'),
       '@org/items':  path.resolve(root, '../../../libs/dungeon/items/src/index.ts'),
+      '@org/auth':   path.resolve(root, '../../../libs/shared/auth/src/index.ts'),
     },
   },
   test: {
