@@ -7,6 +7,7 @@ import type { BetProposition, BetEntry, BettingState } from '@org/wrastlin-share
 
 vi.mock('../api/client.js', () => ({
   api: {
+    getMe: vi.fn(),
     getBettingState: vi.fn(),
     getPropositions: vi.fn(),
     getAllEntries: vi.fn(),
@@ -52,6 +53,7 @@ function renderList() {
 
 describe('BettingList', () => {
   beforeEach(() => {
+    vi.mocked(api.getMe).mockResolvedValue({ manager: { managerId: 'm-001', wrestlerId: 'w-002', money: 1000, trustLevel: 'medium', playerId: 'p-1' }, wrestler: null });
     vi.mocked(api.getPropositions).mockResolvedValue([proposition]);
     vi.mocked(api.getAllEntries).mockResolvedValue(entries);
     mockNavigate.mockReset();

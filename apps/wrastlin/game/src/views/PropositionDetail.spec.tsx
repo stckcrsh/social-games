@@ -9,7 +9,7 @@ vi.mock('../api/client.js', () => ({
   api: {
     getBettingState: vi.fn(),
     getProposition: vi.fn(),
-    getManager: vi.fn(),
+    getMe: vi.fn(),
     getAllEntries: vi.fn(),
     placeBet: vi.fn(),
   },
@@ -54,6 +54,7 @@ const fixtureManager: Manager = {
   wrestlerId: 'w-002',
   money: 500,
   trustLevel: 'medium',
+  playerId: 'p-1',
 };
 
 const allEntries: BetEntry[] = [
@@ -75,7 +76,7 @@ describe('PropositionDetail', () => {
   beforeEach(() => {
     vi.mocked(api.getBettingState).mockResolvedValue(openState);
     vi.mocked(api.getProposition).mockResolvedValue(fixtureProposition);
-    vi.mocked(api.getManager).mockResolvedValue(fixtureManager);
+    vi.mocked(api.getMe).mockResolvedValue({ manager: fixtureManager, wrestler: null });
     vi.mocked(api.getAllEntries).mockResolvedValue(allEntries);
     vi.mocked(api.placeBet).mockResolvedValue({
       entryId: 'e-new', propositionId: 'prop-1', bettorId: 'm-001',

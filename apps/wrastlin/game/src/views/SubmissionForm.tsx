@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
-import type { MatchStyle, StoryRequestType } from '@org/wrastlin-shared';
-
-const MANAGER_ID = 'm-001';
+import type { MatchStyle, StoryRequestType, Manager } from '@org/wrastlin-shared';
 
 const MATCH_STYLES: MatchStyle[] = ['technical', 'brawl', 'high-fly', 'heel', 'face'];
 const STORY_TYPES: StoryRequestType[] = ['push', 'feud', 'betrayal', 'title-shot', 'promo'];
 
 export function SubmissionForm() {
+  const [manager, setManager] = useState<Manager | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [matchStyle, setMatchStyle] = useState<MatchStyle>('technical');
   const [targetOpponent, setTargetOpponent] = useState('');
   const [storyType, setStoryType] = useState<StoryRequestType>('feud');
@@ -17,15 +17,22 @@ export function SubmissionForm() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
+  useEffect(() => {
+    api.getMe()
+      .then(({ manager: m }) => setManager(m))
+      .catch(e => setLoadError((e as Error).message));
+  }, []);
+
+  if (loadError) return <p style={{ color: 'red' }}>Error: {loadError}</p>;
+  if (!manager) return <p>Loading...</p>;
+
   async function submit() {
+    if (!manager) return;
     setStatus('submitting');
     try {
       await api.submitWeek(
-        MANAGER_ID,
-        {
-          matchStyle,
-          targetOpponent: targetOpponent || undefined,
-        },
+        manager.managerId,
+        { matchStyle, targetOpponent: targetOpponent || undefined },
         storyTarget
           ? [{ type: storyType, target: storyTarget, bribeAmount: bribe }]
           : [],

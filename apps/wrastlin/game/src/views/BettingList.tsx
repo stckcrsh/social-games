@@ -3,11 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { computePool } from '../utils/pool.js';
 import { BettingResults } from './BettingResults.js';
-import type { BetProposition, BetEntry, BettingState } from '@org/wrastlin-shared';
-
-const MANAGER_ID = 'm-001';
+import type { BetProposition, BetEntry, BettingState, Manager } from '@org/wrastlin-shared';
 
 export function BettingList() {
+  const [manager, setManager] = useState<Manager | null>(null);
   const [state, setState] = useState<BettingState | null | undefined>(undefined);
   const [propositions, setPropositions] = useState<BetProposition[]>([]);
   const [allEntries, setAllEntries] = useState<BetEntry[]>([]);
@@ -15,8 +14,9 @@ export function BettingList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.getBettingState()
-      .then(async (s) => {
+    Promise.all([api.getMe(), api.getBettingState()])
+      .then(async ([{ manager: m }, s]) => {
+        setManager(m);
         setState(s);
         if (s !== null) {
           const [props, entries] = await Promise.all([
@@ -31,7 +31,7 @@ export function BettingList() {
   }, []);
 
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-  if (state === undefined) return <p>Loading...</p>;
+  if (state === undefined || !manager) return <p>Loading...</p>;
   if (state === null) return <p>No active betting window</p>;
 
   if (state.phase === 'settled') {
@@ -40,7 +40,7 @@ export function BettingList() {
         state={state}
         propositions={propositions}
         allEntries={allEntries}
-        managerId={MANAGER_ID}
+        managerId={manager.managerId}
       />
     );
   }

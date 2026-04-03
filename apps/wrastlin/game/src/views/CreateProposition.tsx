@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../api/client.js';
-
-const MANAGER_ID = 'm-001';
+import type { Manager } from '@org/wrastlin-shared';
 
 export function CreateProposition() {
   const navigate = useNavigate();
+  const [manager, setManager] = useState<Manager | null>(null);
   const [statement, setStatement] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    api.getMe()
+      .then(({ manager: m }) => setManager(m))
+      .catch(e => setError((e as Error).message));
+  }, []);
 
   function addOption() {
     setOptions(prev => [...prev, '']);
@@ -24,11 +30,12 @@ export function CreateProposition() {
   }
 
   async function submit() {
+    if (!manager) return;
     setError('');
     setSubmitting(true);
     try {
       const result = await api.createProposition({
-        managerId: MANAGER_ID,
+        managerId: manager.managerId,
         statement,
         options: options.map(label => ({ label })),
       });
@@ -38,6 +45,8 @@ export function CreateProposition() {
       setSubmitting(false);
     }
   }
+
+  if (!manager && !error) return <p>Loading...</p>;
 
   return (
     <div style={{ padding: '1rem', maxWidth: '500px' }}>
@@ -73,7 +82,7 @@ export function CreateProposition() {
       <button
         type="button"
         onClick={submit}
-        disabled={submitting}
+        disabled={submitting || !manager}
         style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }}
       >
         {submitting ? 'Creating...' : 'Create'}

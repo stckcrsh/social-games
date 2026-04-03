@@ -8,7 +8,10 @@ import type { BetProposition } from '@org/wrastlin-shared';
 const mockNavigate = vi.fn();
 
 vi.mock('../api/client.js', () => ({
-  api: { createProposition: vi.fn() },
+  api: {
+    getMe: vi.fn(),
+    createProposition: vi.fn(),
+  },
   ApiError: class ApiError extends Error {
     serverMessage: string;
     status: number;
@@ -40,30 +43,33 @@ function renderForm() {
 
 describe('CreateProposition', () => {
   beforeEach(() => {
+    vi.mocked(api.getMe).mockResolvedValue({ manager: { managerId: 'm-001', wrestlerId: 'w-002', money: 1000, trustLevel: 'medium', playerId: 'p-1' }, wrestler: null });
     vi.mocked(api.createProposition).mockResolvedValue(fixtureProp);
     mockNavigate.mockReset();
   });
 
-  it('renders Statement input', () => {
+  it('renders Statement input', async () => {
     renderForm();
-    expect(screen.getByLabelText('Statement')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText('Statement')).toBeInTheDocument());
   });
 
-  it('does NOT render Closes At or Event Key inputs', () => {
+  it('does NOT render Closes At or Event Key inputs', async () => {
     renderForm();
+    await waitFor(() => expect(screen.getByLabelText('Statement')).toBeInTheDocument());
     expect(screen.queryByLabelText('Closes At')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Event Key')).not.toBeInTheDocument();
   });
 
-  it('renders 2 option rows by default', () => {
+  it('renders 2 option rows by default', async () => {
     renderForm();
-    expect(screen.getByLabelText('Option 1')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText('Option 1')).toBeInTheDocument());
     expect(screen.getByLabelText('Option 2')).toBeInTheDocument();
   });
 
   it('"Add option" appends a new row', async () => {
     const user = userEvent.setup();
     renderForm();
+    await screen.findByLabelText('Statement');
     await user.click(screen.getByRole('button', { name: 'Add option' }));
     expect(screen.getByLabelText('Option 3')).toBeInTheDocument();
   });
@@ -71,6 +77,7 @@ describe('CreateProposition', () => {
   it('"Remove" removes that option row', async () => {
     const user = userEvent.setup();
     renderForm();
+    await screen.findByLabelText('Statement');
     await user.click(screen.getAllByRole('button', { name: 'Remove' })[0]);
     expect(screen.getByLabelText('Option 1')).toBeInTheDocument();
     expect(screen.queryByLabelText('Option 2')).not.toBeInTheDocument();
@@ -79,7 +86,7 @@ describe('CreateProposition', () => {
   it('submit calls createProposition with correct shape', async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Statement'), 'Steve will lose');
+    await user.type(await screen.findByLabelText('Statement'), 'Steve will lose');
     await user.type(screen.getByLabelText('Option 1'), 'Yes');
     await user.type(screen.getByLabelText('Option 2'), 'No');
     await user.click(screen.getByRole('button', { name: 'Create' }));
@@ -95,7 +102,7 @@ describe('CreateProposition', () => {
   it('navigates to /bets/:id on success', async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Statement'), 'Test');
+    await user.type(await screen.findByLabelText('Statement'), 'Test');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/bets/new-prop-1');
@@ -107,7 +114,7 @@ describe('CreateProposition', () => {
     vi.mocked(api.createProposition).mockRejectedValue(new Err('Betting window is not open', 409));
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Statement'), 'Test');
+    await user.type(await screen.findByLabelText('Statement'), 'Test');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(screen.getByText('Betting window is not open')).toBeInTheDocument();
@@ -118,7 +125,7 @@ describe('CreateProposition', () => {
     vi.mocked(api.createProposition).mockRejectedValue(new Error('Network error'));
     const user = userEvent.setup();
     renderForm();
-    await user.type(screen.getByLabelText('Statement'), 'Test');
+    await user.type(await screen.findByLabelText('Statement'), 'Test');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();

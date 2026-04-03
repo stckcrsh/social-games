@@ -4,8 +4,6 @@ import { api, ApiError } from '../api/client.js';
 import { computePool } from '../utils/pool.js';
 import type { BetProposition, BetEntry, BettingState, Manager } from '@org/wrastlin-shared';
 
-const MANAGER_ID = 'm-001';
-
 export function PropositionDetail() {
   const { id } = useParams<{ id: string }>();
   const [proposition, setProposition] = useState<BetProposition | null>(null);
@@ -20,15 +18,15 @@ export function PropositionDetail() {
 
   async function loadData() {
     try {
-      const [prop, state, mgr, entries] = await Promise.all([
+      const [prop, state, { manager: m }, entries] = await Promise.all([
         api.getProposition(id!),
         api.getBettingState(),
-        api.getManager(MANAGER_ID),
+        api.getMe(),
         api.getAllEntries(),
       ]);
       setProposition(prop);
       setBettingState(state);
-      setManager(mgr);
+      setManager(m);
       setAllEntries(entries);
     } catch (e) {
       setError((e as Error).message);
@@ -47,7 +45,7 @@ export function PropositionDetail() {
   if (!proposition || !manager) return null;
 
   const pool = computePool(allEntries, id);
-  const myEntries = allEntries.filter(e => e.bettorId === MANAGER_ID && e.propositionId === id);
+  const myEntries = allEntries.filter(e => e.bettorId === manager.managerId && e.propositionId === id);
   const isOpen = bettingState?.phase === 'open';
 
   function toggleOption(optionId: string) {
@@ -57,10 +55,10 @@ export function PropositionDetail() {
   }
 
   async function placeBet() {
-    if (!expandedOptionId) return;
+    if (!expandedOptionId || !manager) return;
     setBetError('');
     try {
-      await api.placeBet(id!, { managerId: MANAGER_ID, optionId: expandedOptionId, amount });
+      await api.placeBet(id!, { managerId: manager.managerId, optionId: expandedOptionId, amount });
       const [prop, entries] = await Promise.all([
         api.getProposition(id!),
         api.getAllEntries(),

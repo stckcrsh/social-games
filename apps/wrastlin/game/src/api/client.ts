@@ -19,8 +19,13 @@ export class ApiError extends Error {
   }
 }
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: authHeaders() });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new ApiError(
@@ -34,7 +39,7 @@ async function get<T>(path: string): Promise<T> {
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -59,7 +64,19 @@ interface PlaceEntryBody {
   amount: number;
 }
 
+export interface MeResponse {
+  manager: Manager;
+  wrestler: Wrestler | null;
+}
+
 export const api = {
+  // Auth
+  login: (username: string, password: string) =>
+    post<{ token: string }>('/auth/login', { username, password }),
+
+  // Current player
+  getMe: () => get<MeResponse>('/me'),
+
   // Wrestler / manager
   getWrestlers: () => get<Wrestler[]>('/wrestlers'),
   getWrestler: (id: string) => get<Wrestler>(`/wrestlers/${id}`),
