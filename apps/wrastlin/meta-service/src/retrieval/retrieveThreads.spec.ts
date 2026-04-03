@@ -58,7 +58,7 @@ describe('retrieveRelevantThreads', () => {
       threads,
       [],
     );
-    expect(result.length).toBeLessThanOrEqual(5);
+    expect(result).toHaveLength(5);
   });
 
   it('respects custom limit', () => {

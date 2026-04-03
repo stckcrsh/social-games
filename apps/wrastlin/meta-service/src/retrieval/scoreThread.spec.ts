@@ -136,8 +136,8 @@ describe('scoreThread', () => {
     const thread = makeThread({ subjects: ['w-001'], actorStates: [], lastUpdatedWeek: 3 });
     const withTags = scoreThread(thread, ['w-001'], 3, ['conflict']);
     const noTags = scoreThread(thread, ['w-001'], 3);
-    // thread has tags ['conflict', 'rivalry'] — without preferredTags, tagScore=0
-    expect(noTags).toBe(withTags - 1); // 1 tag matched when provided
+    expect(noTags).toBe(15);   // subjectMatch=5, care=0, recency=10, tagScore=0
+    expect(withTags).toBe(16); // adds tagScore=1 for matching 'conflict'
   });
 
   it('full score: subject + care + recency + tags', () => {
