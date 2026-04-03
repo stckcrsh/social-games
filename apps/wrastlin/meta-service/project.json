@@ -16,7 +16,7 @@
       "continuous": true,
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/build.cjs && node dist/main.js",
+        "command": "node scripts/build.cjs && node --env-file=.env dist/main.js",
         "cwd": "apps/wrastlin/meta-service"
       }
     },

@@ -3,6 +3,7 @@
     "managerId": "m-001",
     "wrestlerId": "w-002",
     "money": 1000,
-    "trustLevel": "medium"
+    "trustLevel": "medium",
+    "playerId": "REPLACE_AFTER_REGISTERING_PLAYER"
   }
 ]

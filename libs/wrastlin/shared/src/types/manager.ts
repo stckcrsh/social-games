@@ -5,4 +5,5 @@ export interface Manager {
   wrestlerId: string;
   money: number;
   trustLevel: TrustLevel;
+  playerId: string;
 }

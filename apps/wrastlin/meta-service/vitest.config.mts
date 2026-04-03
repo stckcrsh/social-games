@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@org/wrastlin-shared': path.resolve(root, '../../../libs/wrastlin/shared/src/index.ts'),
+      '@org/auth':            path.resolve(root, '../../../libs/shared/auth/src/index.ts'),
     },
   },
   test: {
