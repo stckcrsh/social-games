@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers } from './core/gameState.js';
+import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers, loadThreads } from './core/gameState.js';
 import { transitionTo } from './core/weeklyOrchestrator.js';
 import { writeDynamicJson as writeJson } from './data/persistence.js';
 import { buildShowOutlineInput } from './agents/dataBuilders.js';
@@ -11,7 +11,9 @@ import { stubShowOutlineAgent } from './agents/stubs/stubShowOutlineAgent.js';
 import { stubMatchBeatsAgent } from './agents/stubs/stubMatchBeatsAgent.js';
 import { stubPromoScreenplayAgent } from './agents/stubs/stubPromoScreenplayAgent.js';
 import { stubAnnouncerScreenplayAgent } from './agents/stubs/stubAnnouncerScreenplayAgent.js';
+import { stubWrestlerThoughtProcessAgent } from './agents/stubs/stubWrestlerThoughtProcessAgent.js';
 import { createOpenAIShowOutlineAgent } from './agents/openaiShowOutlineAgent.js';
+import { createOpenAIWrestlerThoughtProcessAgent } from './agents/openaiWrestlerThoughtProcessAgent.js';
 import type { Wrestler, WeeklySubmission } from '@org/wrastlin-shared';
 import type {
   GeneratedSegment,
@@ -19,6 +21,7 @@ import type {
   MatchBeatsInput,
   PromoScreenplayInput,
   AnnouncerScreenplayInput,
+  WrestlerThoughtProcessInput,
 } from './agents/types.js';
 
 // ── CLI args ───────────────────────────────────────────────────────────────────
@@ -116,6 +119,7 @@ async function main(): Promise<void> {
   }
   const managers = loadManagers();
   const announcers = loadAnnouncers();
+  const threads = scenarioName ? [] : loadThreads();
 
   // Set up run log
   let log: RunLog;
@@ -144,6 +148,9 @@ async function main(): Promise<void> {
   const runner = new OutboxRunner(log);
 
   const baseAgents = {
+    wrestlerThoughtProcess: useStub
+      ? stubWrestlerThoughtProcessAgent
+      : createOpenAIWrestlerThoughtProcessAgent(process.env.OPENAI_API_KEY!),
     showOutline: useStub
       ? stubShowOutlineAgent
       : createOpenAIShowOutlineAgent(process.env.OPENAI_API_KEY!, (prompt) => {
@@ -163,6 +170,8 @@ async function main(): Promise<void> {
 
   // Per-segment agents extract segmentId from their input at call time
   const agents = {
+    wrestlerThoughtProcess: (input: WrestlerThoughtProcessInput) =>
+      runner.wrap('wrestlerThoughtProcess', input.wrestler.wrestlerId, baseAgents.wrestlerThoughtProcess)(input),
     showOutline: runner.wrap('showOutline', null, baseAgents.showOutline),
     matchBeats: (input: MatchBeatsInput) =>
       runner.wrap('matchBeats', input.segment.segmentId, baseAgents.matchBeats)(input),
@@ -181,6 +190,7 @@ async function main(): Promise<void> {
       managers,
       submissions,
       announcers,
+      threads,
       agents,
     });
 
@@ -197,6 +207,12 @@ async function main(): Promise<void> {
     const nameMap = new Map(wrestlers.map(w => [w.wrestlerId, w.name]));
     console.log(`\nShow ID: ${show.showOutline.showId}`);
     console.log(`Week: ${show.showOutline.week}`);
+    console.log('\nWRESTLER THOUGHT PROCESS:');
+    show.wrestlerThoughtProcess.forEach(t => {
+      const name = nameMap.get(t.wrestlerId) ?? t.wrestlerId;
+      console.log(`  ${name}: ${t.thoughtSummary}`);
+    });
+
     console.log('\nSEGMENTS:');
     show.segments.forEach(seg => console.log(formatSegment(seg, nameMap)));
     console.log(`\nShow saved to data/shows/week-${week}.json`);
