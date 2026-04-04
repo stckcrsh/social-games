@@ -157,6 +157,7 @@ export interface PromoScreenplayInput {
   participants: ParticipantForPromo[];
   target: TargetForPromo | null;
   personas: Announcer[];
+  relevantThreads: RetrievedThread[];
 }
 
 export interface AnnouncerScreenplayInput {

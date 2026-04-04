@@ -79,6 +79,7 @@ export function buildPromoScreenplayInput(
   segment: PromoOutlineSegment,
   allWrestlers: Wrestler[],
   personas: Announcer[],
+  relevantThreads: RetrievedThread[],
 ): PromoScreenplayInput {
   const participants: ParticipantForPromo[] = segment.participants
     .map(id => {
@@ -107,7 +108,7 @@ export function buildPromoScreenplayInput(
     }
   }
 
-  return { segment, participants, target, personas };
+  return { segment, participants, target, personas, relevantThreads };
 }
 
 export function buildAnnouncerScreenplayInput(

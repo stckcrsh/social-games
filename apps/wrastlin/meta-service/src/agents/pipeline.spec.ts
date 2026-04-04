@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Wrestler, Manager, Announcer } from '@org/wrastlin-shared';
-import type { GeneratedMatchSegment, GeneratedPromoSegment } from './types.js';
+import type { GeneratedMatchSegment, GeneratedPromoSegment, PromoScreenplayInput } from './types.js';
 import { runShowPipeline } from './pipeline.js';
 import { PartialRunError } from './pipeline.js';
 import type { MatchBeatsInput, MatchBeats } from './types.js';
@@ -54,6 +54,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, showOutline: outlineSpy },
     });
     expect(outlineSpy).toHaveBeenCalledTimes(1);
@@ -69,6 +70,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, matchBeats: beatsSpy },
     });
     // stub outline has 2 match segments
@@ -84,6 +86,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, promoScreenplay: promoSpy },
     });
     // stub outline has 1 promo segment
@@ -99,6 +102,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, announcerScreenplay: announcerSpy },
     });
     expect(announcerSpy).toHaveBeenCalledTimes(2);
@@ -112,6 +116,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: STUB_AGENTS,
     });
     const matchSegments = result.segments.filter(
@@ -132,6 +137,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: STUB_AGENTS,
     });
     const promoSegments = result.segments.filter(
@@ -149,6 +155,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: STUB_AGENTS,
     });
     const orders = result.segments.map(s => s.order);
@@ -170,6 +177,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
     })).rejects.toThrow(PartialRunError);
 
@@ -189,6 +197,7 @@ describe('runShowPipeline', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, matchBeats: failingMatchBeats },
     }).catch(e => e);
 
@@ -207,6 +216,7 @@ describe('wrestler thought process stage', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: { ...STUB_AGENTS, wrestlerThoughtProcess: thoughtSpy },
     });
     expect(thoughtSpy).toHaveBeenCalledTimes(WRESTLERS.length);
@@ -220,6 +230,7 @@ describe('wrestler thought process stage', () => {
       submissions: [],
       announcers: ANNOUNCERS,
       threads: [],
+      events: [],
       agents: STUB_AGENTS,
     });
     expect(result.wrestlerThoughtProcess).toHaveLength(WRESTLERS.length);
@@ -236,8 +247,33 @@ describe('wrestler thought process stage', () => {
         submissions: [],
         announcers: ANNOUNCERS,
         threads: [],
+        events: [],
         agents: { ...STUB_AGENTS, wrestlerThoughtProcess: failingAgent },
       })
     ).rejects.toThrow(PartialRunError);
+  });
+});
+
+describe('promo thread injection', () => {
+  it('calls promoScreenplay with relevantThreads array', async () => {
+    let capturedInput: PromoScreenplayInput | null = null;
+    const promoSpy = vi.fn().mockImplementation(async (input: PromoScreenplayInput) => {
+      capturedInput = input;
+      return stubPromoScreenplayAgent(input);
+    });
+
+    await runShowPipeline({
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
+      wrestlers: WRESTLERS,
+      managers: MANAGERS,
+      submissions: [],
+      announcers: [],
+      threads: [],
+      events: [],
+      agents: { ...STUB_AGENTS, promoScreenplay: promoSpy },
+    });
+
+    expect(capturedInput).not.toBeNull();
+    expect(capturedInput!.relevantThreads).toEqual([]);
   });
 });

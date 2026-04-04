@@ -141,13 +141,13 @@ describe('buildMatchBeatsInput', () => {
 describe('buildPromoScreenplayInput', () => {
   it('maps participants from the segment', () => {
     const wrestlers = [makeWrestler('w-001'), makeWrestler('w-002')];
-    const result = buildPromoScreenplayInput(SAMPLE_PROMO_SEGMENT, wrestlers, SAMPLE_ANNOUNCERS);
+    const result = buildPromoScreenplayInput(SAMPLE_PROMO_SEGMENT, wrestlers, SAMPLE_ANNOUNCERS, []);
     expect(result.participants.map(p => p.wrestlerId)).toEqual(['w-001']);
   });
 
   it('returns target when segment has a target', () => {
     const wrestlers = [makeWrestler('w-001'), makeWrestler('w-002')];
-    const result = buildPromoScreenplayInput(SAMPLE_PROMO_SEGMENT, wrestlers, SAMPLE_ANNOUNCERS);
+    const result = buildPromoScreenplayInput(SAMPLE_PROMO_SEGMENT, wrestlers, SAMPLE_ANNOUNCERS, []);
     expect(result.target).not.toBeNull();
     expect(result.target!.wrestlerId).toBe('w-002');
   });
@@ -155,8 +155,30 @@ describe('buildPromoScreenplayInput', () => {
   it('returns null target for self-hype promos', () => {
     const promoNoTarget: PromoOutlineSegment = { ...SAMPLE_PROMO_SEGMENT, target: undefined };
     const wrestlers = [makeWrestler('w-001')];
-    const result = buildPromoScreenplayInput(promoNoTarget, wrestlers, SAMPLE_ANNOUNCERS);
+    const result = buildPromoScreenplayInput(promoNoTarget, wrestlers, SAMPLE_ANNOUNCERS, []);
     expect(result.target).toBeNull();
+  });
+
+  it('passes relevantThreads through to the output', () => {
+    const thread: RetrievedThread = {
+      thread: {
+        threadId: 't-promo',
+        title: 'Promo Rivalry',
+        subjects: ['w-001'],
+        tags: ['rivalry'],
+        createdWeek: 1,
+        lastUpdatedWeek: 1,
+        eventIds: [],
+        actorStates: [],
+      },
+      score: 10,
+      relevantActorStates: [],
+      linkedEvents: [],
+    };
+    const wrestlers = [makeWrestler('w-001'), makeWrestler('w-002')];
+    const result = buildPromoScreenplayInput(SAMPLE_PROMO_SEGMENT, wrestlers, SAMPLE_ANNOUNCERS, [thread]);
+    expect(result.relevantThreads).toHaveLength(1);
+    expect(result.relevantThreads[0].thread.threadId).toBe('t-promo');
   });
 });
 

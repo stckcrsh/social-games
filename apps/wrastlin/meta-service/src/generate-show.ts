@@ -206,6 +206,7 @@ async function main(): Promise<void> {
       submissions,
       announcers,
       threads,
+      events,
       agents,
     });
 

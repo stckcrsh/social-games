@@ -37,6 +37,13 @@ involving both the target and the participants — use them for specific callbac
 
 {{TARGET_JSON}}
 
+### Relevant Story Threads
+Active storylines and history involving the participants and target.
+Use specific events and actor stances for callbacks — "you cost me that
+title shot" beats generic trash talk every time.
+
+{{RELEVANT_THREADS_JSON}}
+
 ### Personas
 Non-wrestler characters available for this promo (interviewers, authority
 figures, etc.).

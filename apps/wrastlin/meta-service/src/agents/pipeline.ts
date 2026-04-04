@@ -1,4 +1,5 @@
-import type { Wrestler, Manager, WeeklySubmission, Announcer, SocialThread } from '@org/wrastlin-shared';
+import type { Wrestler, Manager, WeeklySubmission, Announcer, SocialThread, NarrativeEvent } from '@org/wrastlin-shared';
+import { retrieveRelevantThreads } from '../retrieval/retrieveThreads.js';
 import type {
   ShowOutlineInput,
   ShowOutlineAgentFn,
@@ -34,6 +35,7 @@ interface PipelineParams {
   submissions: WeeklySubmission[];
   announcers: Announcer[];
   threads: SocialThread[];
+  events: NarrativeEvent[];
   agents: {
     wrestlerThoughtProcess: WrestlerThoughtProcessAgentFn;
     showOutline: ShowOutlineAgentFn;
@@ -49,7 +51,7 @@ type PromoResult = { type: 'promo'; segment: PromoOutlineSegment; promoScreenpla
 type SegmentResult = MatchResult | PromoResult;
 
 export async function runShowPipeline(params: PipelineParams): Promise<GeneratedShow> {
-  const { showOutlineInput, wrestlers, managers, submissions, announcers, threads, agents } = params;
+  const { showOutlineInput, wrestlers, managers, submissions, announcers, threads, events, agents } = params;
 
   // Step 0: Wrestler thought process (parallel per wrestler — runs before outline)
   const step0Settled = await Promise.allSettled(
@@ -89,11 +91,18 @@ export async function runShowPipeline(params: PipelineParams): Promise<Generated
         const beats = await agents.matchBeats(input);
         return { type: 'match', segment, beats };
       } else {
-        const input = buildPromoScreenplayInput(
-          segment,
-          wrestlers,
-          announcers,
-        );
+        const promoWrestlerIds = [
+          ...segment.participants,
+          ...(segment.target ? [segment.target] : []),
+        ];
+        const relevantThreads = threads.length > 0
+          ? retrieveRelevantThreads(
+              { wrestlerIds: promoWrestlerIds, currentWeek: showOutlineInput.week, limit: 5 },
+              threads,
+              events,
+            )
+          : [];
+        const input = buildPromoScreenplayInput(segment, wrestlers, announcers, relevantThreads);
         const promoScreenplay = await agents.promoScreenplay(input);
         return { type: 'promo', segment, promoScreenplay };
       }
