@@ -48,7 +48,7 @@ describe('runShowPipeline', () => {
   it('calls the show outline agent once and returns a GeneratedShow', async () => {
     const outlineSpy = vi.fn(stubShowOutlineAgent);
     const result = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -63,7 +63,7 @@ describe('runShowPipeline', () => {
   it('calls match beats agent once per match segment', async () => {
     const beatsSpy = vi.fn(stubMatchBeatsAgent);
     await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -78,7 +78,7 @@ describe('runShowPipeline', () => {
   it('calls promo screenplay agent once per promo segment', async () => {
     const promoSpy = vi.fn(stubPromoScreenplayAgent);
     await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -93,7 +93,7 @@ describe('runShowPipeline', () => {
   it('calls announcer screenplay agent once per match segment (after beats)', async () => {
     const announcerSpy = vi.fn(stubAnnouncerScreenplayAgent);
     await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -106,7 +106,7 @@ describe('runShowPipeline', () => {
 
   it('generated match segments have beats and announcer screenplay', async () => {
     const result = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -126,7 +126,7 @@ describe('runShowPipeline', () => {
 
   it('generated promo segments have a promo screenplay', async () => {
     const result = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -143,7 +143,7 @@ describe('runShowPipeline', () => {
 
   it('segments are ordered by the outline order field', async () => {
     const result = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -164,7 +164,7 @@ describe('runShowPipeline', () => {
     });
 
     await expect(runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -183,7 +183,7 @@ describe('runShowPipeline', () => {
     });
 
     const err = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -201,7 +201,7 @@ describe('wrestler thought process stage', () => {
   it('calls thought process agent once per wrestler', async () => {
     const thoughtSpy = vi.fn(stubWrestlerThoughtProcessAgent);
     await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -214,7 +214,7 @@ describe('wrestler thought process stage', () => {
 
   it('includes wrestlerThoughtProcess in the returned show', async () => {
     const result = await runShowPipeline({
-      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+      showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
       wrestlers: WRESTLERS,
       managers: MANAGERS,
       submissions: [],
@@ -230,7 +230,7 @@ describe('wrestler thought process stage', () => {
     const failingAgent = vi.fn().mockRejectedValue(new Error('OpenAI down'));
     await expect(
       runShowPipeline({
-        showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], []),
+        showOutlineInput: buildShowOutlineInput(1, WRESTLERS, MANAGERS, [], [], []),
         wrestlers: WRESTLERS,
         managers: MANAGERS,
         submissions: [],

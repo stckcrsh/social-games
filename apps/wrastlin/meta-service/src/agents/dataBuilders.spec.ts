@@ -71,7 +71,7 @@ const SAMPLE_ANNOUNCERS: Announcer[] = [
 describe('buildShowOutlineInput', () => {
   it('maps each wrestler into a summary', () => {
     const wrestlers = [makeWrestler('w-001'), makeWrestler('w-002')];
-    const result = buildShowOutlineInput(1, wrestlers, [], [], []);
+    const result = buildShowOutlineInput(1, wrestlers, [], [], [], []);
     expect(result.wrestlers).toHaveLength(2);
     expect(result.wrestlers[0].wrestlerId).toBe('w-001');
   });
@@ -80,7 +80,7 @@ describe('buildShowOutlineInput', () => {
     const wrestlers = [makeWrestler('w-001'), makeWrestler('w-002')];
     const managers = [makeManager('m-001', 'w-001')];
     const submissions = [makeSubmission('m-001', 1, { showRequest: 'Main event please', bribeAmount: 500 })];
-    const result = buildShowOutlineInput(1, wrestlers, managers, submissions, []);
+    const result = buildShowOutlineInput(1, wrestlers, managers, submissions, [], []);
     expect(result.submissions[0].wrestlerId).toBe('w-001');
     expect(result.submissions[0].managerId).toBe('m-001');
     expect(result.submissions[0].showRequest).toBe('Main event please');
@@ -91,7 +91,7 @@ describe('buildShowOutlineInput', () => {
     const wrestlers = [makeWrestler('w-001')];
     const managers = [makeManager('m-001', 'w-001')];
     const submissions = [makeSubmission('m-999', 1)];  // unknown manager
-    const result = buildShowOutlineInput(1, wrestlers, managers, submissions, []);
+    const result = buildShowOutlineInput(1, wrestlers, managers, submissions, [], []);
     expect(result.submissions).toHaveLength(0);
   });
 

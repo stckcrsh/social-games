@@ -58,7 +58,7 @@ const managers: Manager[] = fs.existsSync(managersPath)
 
 // ── Build input ───────────────────────────────────────────────────────────────
 
-const input = buildShowOutlineInput(1, wrestlers, managers, submissions, []);
+const input = buildShowOutlineInput(1, wrestlers, managers, submissions, [], []);
 
 // ── Run agent ─────────────────────────────────────────────────────────────────
 
