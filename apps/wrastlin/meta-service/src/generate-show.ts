@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers, loadThreads } from './core/gameState.js';
+import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers, loadThreads, loadPreviousOutlines } from './core/gameState.js';
 import { transitionTo } from './core/weeklyOrchestrator.js';
 import { writeDynamicJson as writeJson } from './data/persistence.js';
 import { buildShowOutlineInput } from './agents/dataBuilders.js';
@@ -181,7 +181,8 @@ async function main(): Promise<void> {
       runner.wrap('announcerScreenplay', input.matchBeats.segmentId, baseAgents.announcerScreenplay)(input),
   };
 
-  const showOutlineInput = buildShowOutlineInput(week, wrestlers, managers, submissions, []);
+  const previousOutlines = scenarioName ? [] : loadPreviousOutlines(week, 3);
+  const showOutlineInput = buildShowOutlineInput(week, wrestlers, managers, submissions, previousOutlines);
 
   try {
     const show = await runShowPipeline({

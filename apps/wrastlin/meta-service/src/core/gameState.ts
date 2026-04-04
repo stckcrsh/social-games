@@ -4,6 +4,7 @@ import {
   writeDynamicJson,
 } from '../data/persistence.js';
 import type { Wrestler, Manager, WeeklyState, WeeklySubmission, Announcer, NarrativeEvent, SocialThread } from '@org/wrastlin-shared';
+import type { ShowOutline } from '../agents/types.js';
 
 export function loadWrestlers(): Wrestler[] {
   try {
@@ -75,4 +76,21 @@ export function loadThreads(): SocialThread[] {
 
 export function saveThreads(threads: SocialThread[]): void {
   writeDynamicJson('threads.json', threads);
+}
+
+interface ShowFile {
+  showOutline: ShowOutline;
+}
+
+export function loadPreviousOutlines(currentWeek: number, limit: number): ShowOutline[] {
+  const results: ShowOutline[] = [];
+  for (let w = currentWeek - 1; w >= 1 && results.length < limit; w--) {
+    try {
+      const show = readDynamicJson<ShowFile>(`shows/week-${w}.json`);
+      results.push(show.showOutline);
+    } catch {
+      // no show file for this week — skip
+    }
+  }
+  return results;
 }

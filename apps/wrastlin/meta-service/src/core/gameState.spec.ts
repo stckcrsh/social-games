@@ -112,3 +112,62 @@ describe('loadThreads / saveThreads', () => {
     expect(loadThreads()).toEqual([]);
   });
 });
+
+describe('loadPreviousOutlines', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    vi.resetModules();
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wrastlin-outlines-test-'));
+    fs.mkdirSync(path.join(tmpDir, 'shows'), { recursive: true });
+    process.env.DYNAMIC_DATA_DIR = tmpDir;
+  });
+
+  afterEach(() => {
+    delete process.env.DYNAMIC_DATA_DIR;
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  function writeShow(week: number, showId: string) {
+    fs.writeFileSync(
+      path.join(tmpDir, 'shows', `week-${week}.json`),
+      JSON.stringify({ showOutline: { showId, week, segments: [] }, segments: [], wrestlerThoughtProcess: [] }),
+    );
+  }
+
+  it('returns empty array when no shows exist', async () => {
+    const { loadPreviousOutlines } = await import('./gameState.js');
+    expect(loadPreviousOutlines(1, 3)).toEqual([]);
+  });
+
+  it('returns show outlines for previous weeks in descending order', async () => {
+    writeShow(1, 'show-1');
+    writeShow(2, 'show-2');
+    const { loadPreviousOutlines } = await import('./gameState.js');
+    const result = loadPreviousOutlines(3, 3);
+    expect(result).toHaveLength(2);
+    expect(result[0].showId).toBe('show-2'); // most recent first
+    expect(result[1].showId).toBe('show-1');
+  });
+
+  it('respects the limit', async () => {
+    writeShow(1, 'show-1');
+    writeShow(2, 'show-2');
+    writeShow(3, 'show-3');
+    const { loadPreviousOutlines } = await import('./gameState.js');
+    const result = loadPreviousOutlines(4, 2);
+    expect(result).toHaveLength(2);
+    expect(result[0].showId).toBe('show-3');
+    expect(result[1].showId).toBe('show-2');
+  });
+
+  it('skips missing weeks without error', async () => {
+    writeShow(1, 'show-1');
+    // week 2 missing
+    writeShow(3, 'show-3');
+    const { loadPreviousOutlines } = await import('./gameState.js');
+    const result = loadPreviousOutlines(4, 3);
+    expect(result).toHaveLength(2);
+    expect(result.map(s => s.showId)).toEqual(['show-3', 'show-1']);
+  });
+});
