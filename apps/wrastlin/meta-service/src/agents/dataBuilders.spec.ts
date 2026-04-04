@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Wrestler, Manager, WeeklySubmission, Announcer, SocialThread } from '@org/wrastlin-shared';
 import type { MatchOutlineSegment, PromoOutlineSegment, MatchBeats } from './types.js';
+import type { RetrievedThread } from '../retrieval/types.js';
 import {
   buildShowOutlineInput,
   buildMatchBeatsInput,
@@ -92,6 +93,27 @@ describe('buildShowOutlineInput', () => {
     const submissions = [makeSubmission('m-999', 1)];  // unknown manager
     const result = buildShowOutlineInput(1, wrestlers, managers, submissions, []);
     expect(result.submissions).toHaveLength(0);
+  });
+
+  it('passes relevantThreads through to the output', () => {
+    const thread: RetrievedThread = {
+      thread: {
+        threadId: 't-001',
+        title: 'Rex vs Steel Feud',
+        subjects: ['w-001', 'w-002'],
+        tags: ['feud'],
+        createdWeek: 1,
+        lastUpdatedWeek: 2,
+        eventIds: [],
+        actorStates: [],
+      },
+      score: 15,
+      relevantActorStates: [],
+      linkedEvents: [],
+    };
+    const result = buildShowOutlineInput(1, [makeWrestler('w-001')], [], [], [], [thread]);
+    expect(result.relevantThreads).toHaveLength(1);
+    expect(result.relevantThreads[0].thread.threadId).toBe('t-001');
   });
 });
 

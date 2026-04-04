@@ -8,6 +8,28 @@ function buildVariables(input: ShowOutlineInput): Record<string, string> {
     PREVIOUS_OUTLINES_JSON: JSON.stringify(input.previousOutlines, null, 2),
     WRESTLERS_JSON: JSON.stringify(input.wrestlers, null, 2),
     SUBMISSIONS_JSON: JSON.stringify(input.submissions, null, 2),
+    WRESTLER_THOUGHT_PROCESS_JSON: JSON.stringify(
+      input.wrestlerThoughtProcess.map(t => ({
+        wrestlerId: t.wrestlerId,
+        thoughtSummary: t.thoughtSummary,
+      })),
+      null, 2,
+    ),
+    ACTIVE_THREADS_JSON: JSON.stringify(
+      input.relevantThreads.map(rt => ({
+        threadId: rt.thread.threadId,
+        title: rt.thread.title,
+        subjects: rt.thread.subjects,
+        tags: rt.thread.tags,
+        actorStates: rt.relevantActorStates,
+        recentEvents: rt.linkedEvents.slice(0, 3).map(e => ({
+          week: e.week,
+          description: e.description,
+          tags: e.tags,
+        })),
+      })),
+      null, 2,
+    ),
   };
 }
 

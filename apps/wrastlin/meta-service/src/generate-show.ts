@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers, loadThreads, loadPreviousOutlines } from './core/gameState.js';
+import { loadWrestlers, loadManagers, loadState, saveState, loadSubmissions, loadAnnouncers, loadThreads, loadEvents, loadPreviousOutlines } from './core/gameState.js';
+import { retrieveRelevantThreads } from './retrieval/retrieveThreads.js';
+import type { RetrievedThread } from './retrieval/types.js';
 import { transitionTo } from './core/weeklyOrchestrator.js';
 import { writeDynamicJson as writeJson } from './data/persistence.js';
 import { buildShowOutlineInput } from './agents/dataBuilders.js';
@@ -181,8 +183,20 @@ async function main(): Promise<void> {
       runner.wrap('announcerScreenplay', input.matchBeats.segmentId, baseAgents.announcerScreenplay)(input),
   };
 
+  const events = scenarioName ? [] : loadEvents();
   const previousOutlines = scenarioName ? [] : loadPreviousOutlines(week, 3);
-  const showOutlineInput = buildShowOutlineInput(week, wrestlers, managers, submissions, previousOutlines);
+
+  // Retrieve top threads across all wrestlers for the show outline
+  const allWrestlerIds = wrestlers.map(w => w.wrestlerId);
+  const relevantThreads: RetrievedThread[] = threads.length > 0
+    ? retrieveRelevantThreads(
+        { wrestlerIds: allWrestlerIds, currentWeek: week, limit: 8 },
+        threads,
+        events,
+      )
+    : [];
+
+  const showOutlineInput = buildShowOutlineInput(week, wrestlers, managers, submissions, previousOutlines, relevantThreads);
 
   try {
     const show = await runShowPipeline({

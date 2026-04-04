@@ -58,6 +58,20 @@ Story requests and advice submitted this week. Apply the Booking Priority rules 
 
 {{SUBMISSIONS_JSON}}
 
+### Wrestler Mindsets
+What each wrestler is thinking going into this week's show. Use this to
+understand who wants what, who feels wronged, and who is hungry for a
+specific outcome.
+
+{{WRESTLER_THOUGHT_PROCESS_JSON}}
+
+### Active Storyline Threads
+The most significant ongoing feuds and storylines heading into this week.
+These carry narrative weight — a match involving wrestlers from a hot thread
+will feel more meaningful to the crowd than a cold one.
+
+{{ACTIVE_THREADS_JSON}}
+
 ## Output
 Respond with only valid JSON matching the schema exactly. No prose, no explanation.
 

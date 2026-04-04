@@ -6,6 +6,7 @@ import type {
   SocialThread,
   StoryRequest,
 } from '@org/wrastlin-shared';
+import type { RetrievedThread } from '../retrieval/types.js';
 
 // ── Show Outline (Agent 1 output) ────────────────────────────────────────────
 
@@ -118,6 +119,7 @@ export interface ShowOutlineInput {
   wrestlers: WrestlerSummaryForOutline[];
   submissions: SubmissionSummaryForOutline[];
   wrestlerThoughtProcess: WrestlerThoughtProcessOutput[];
+  relevantThreads: RetrievedThread[];
 }
 
 export interface WrestlerForMatchBeats {

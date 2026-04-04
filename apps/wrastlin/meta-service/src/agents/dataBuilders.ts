@@ -5,6 +5,7 @@ import type {
   Announcer,
   SocialThread,
 } from '@org/wrastlin-shared';
+import type { RetrievedThread } from '../retrieval/types.js';
 import type {
   ShowOutline,
   ShowOutlineInput,
@@ -28,6 +29,7 @@ export function buildShowOutlineInput(
   managers: Manager[],
   submissions: WeeklySubmission[],
   previousOutlines: ShowOutline[],
+  relevantThreads: RetrievedThread[],
 ): ShowOutlineInput {
   const wrestlerSummaries: WrestlerSummaryForOutline[] = wrestlers.map(w => ({
     wrestlerId: w.wrestlerId,
@@ -49,7 +51,7 @@ export function buildShowOutlineInput(
     })
     .filter((s): s is SubmissionSummaryForOutline => s !== null);
 
-  return { week, previousOutlines, wrestlers: wrestlerSummaries, submissions: submissionSummaries };
+  return { week, previousOutlines, wrestlers: wrestlerSummaries, submissions: submissionSummaries, wrestlerThoughtProcess: [], relevantThreads };
 }
 
 export function buildMatchBeatsInput(
