@@ -16,6 +16,7 @@ import { stubAnnouncerScreenplayAgent } from './agents/stubs/stubAnnouncerScreen
 import { stubWrestlerThoughtProcessAgent } from './agents/stubs/stubWrestlerThoughtProcessAgent.js';
 import { createOpenAIShowOutlineAgent } from './agents/openaiShowOutlineAgent.js';
 import { createOpenAIWrestlerThoughtProcessAgent } from './agents/openaiWrestlerThoughtProcessAgent.js';
+import { createOpenAIPromoScreenplayAgent } from './agents/openaiPromoScreenplayAgent.js';
 import type { Wrestler, WeeklySubmission } from '@org/wrastlin-shared';
 import type {
   GeneratedSegment,
@@ -166,7 +167,9 @@ async function main(): Promise<void> {
           });
         }),
     matchBeats: stubMatchBeatsAgent,
-    promoScreenplay: stubPromoScreenplayAgent,
+    promoScreenplay: useStub
+      ? stubPromoScreenplayAgent
+      : createOpenAIPromoScreenplayAgent(process.env.OPENAI_API_KEY!),  // real agent
     announcerScreenplay: stubAnnouncerScreenplayAgent,
   };
 
