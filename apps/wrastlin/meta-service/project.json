@@ -70,13 +70,6 @@
         "cwd": "apps/wrastlin/meta-service"
       }
     },
-    "build-promptfoo-vars": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "node scripts/build-promptfoo-vars.mjs",
-        "cwd": "apps/wrastlin/meta-service"
-      }
-    },
     "promptfoo": {
       "executor": "nx:run-commands",
       "options": {

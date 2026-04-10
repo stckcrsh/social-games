@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { loadPrompt } from './promptLoader.js';
 import type { ShowOutlineAgentFn, ShowOutline, ShowOutlineInput } from './types.js';
 
-function buildVariables(input: ShowOutlineInput): Record<string, string> {
+export function buildVariables(input: ShowOutlineInput): Record<string, string> {
   return {
     WEEK: String(input.week),
     PREVIOUS_OUTLINES_JSON: JSON.stringify(input.previousOutlines, null, 2),

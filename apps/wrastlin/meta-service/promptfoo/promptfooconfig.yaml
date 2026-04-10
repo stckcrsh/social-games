@@ -1,7 +1,7 @@
 description: Show Outline Agent — prompt engineering tests
 
 prompts:
-  - ../prompts/show-outline.md
+  - file://prompts/showOutlinePrompt.ts
 
 providers:
   - id: openai:gpt-4o
@@ -12,13 +12,15 @@ providers:
 tests:
   - description: "stacked-requests: two managers stack requests for the same matchup"
     vars:
-      WEEK: "1"
-      PREVIOUS_OUTLINES_JSON: "[]"
-      WRESTLERS_JSON: "file://vars/stacked-requests/wrestlers.json"
-      SUBMISSIONS_JSON: "file://vars/stacked-requests/submissions.json"
+      week: 1
+      wrestlers: file://../data/scenarios/outline/stacked-requests/wrestlers.json
+      managers: file://../data/scenarios/outline/stacked-requests/managers.json
+      submissions: file://../data/scenarios/outline/stacked-requests/submissions.json
+      thoughtProcess: file://../data/scenarios/outline/stacked-requests/thoughtProcess.json
+      threads: file://../data/scenarios/outline/stacked-requests/threads.json
     assert:
       - type: javascript
-        value: "file://assertions/bookingRules.mjs"
+        value: file://assertions/bookingRules.mjs
       - type: llm-rubric
         value: >
           The show request with the highest effective bribe became the headliner.
@@ -32,15 +34,17 @@ tests:
 
   - description: "bribing: $2000 bid wins headliner in at least 8 of 10 runs"
     vars:
-      WEEK: "1"
-      PREVIOUS_OUTLINES_JSON: "[]"
-      WRESTLERS_JSON: "file://vars/bribing/wrestlers.json"
-      SUBMISSIONS_JSON: "file://vars/bribing/submissions.json"
+      week: 1
+      wrestlers: file://../data/scenarios/outline/bribing/wrestlers.json
+      managers: file://../data/scenarios/outline/bribing/managers.json
+      submissions: file://../data/scenarios/outline/bribing/submissions.json
+      thoughtProcess: file://../data/scenarios/outline/bribing/thoughtProcess.json
+      threads: file://../data/scenarios/outline/bribing/threads.json
     options:
       numRepeat: 10
     assert:
       - type: javascript
-        value: "file://assertions/bookingRules.mjs"
+        value: file://assertions/bookingRules.mjs
         threshold: 1.0
       - type: llm-rubric
         value: >
@@ -48,3 +52,21 @@ tests:
           is in the headliner match. Their manager submitted a $2000 bribe, by far
           the highest in the card. Was this honored?
         threshold: 0.8
+
+  - description: "interference-prone: Rookie Blaze should appear as interference given personality and context"
+    vars:
+      week: 1
+      wrestlers: file://../data/scenarios/outline/interference-prone/wrestlers.json
+      managers: file://../data/scenarios/outline/interference-prone/managers.json
+      submissions: file://../data/scenarios/outline/interference-prone/submissions.json
+      thoughtProcess: file://../data/scenarios/outline/interference-prone/thoughtProcess.json
+      threads: file://../data/scenarios/outline/interference-prone/threads.json
+    assert:
+      - type: javascript
+        value: file://assertions/bookingRules.mjs
+      - type: llm-rubric
+        value: >
+          Given that Rookie Blaze (w-006) just turned heel and caused chaos last week
+          (as described in the wrestler mindsets), and one manager explicitly noted
+          Blaze might show up — did the booker book any interference involving Blaze,
+          or at minimum reflect the Blaze storyline in segment goals or promo targets?
