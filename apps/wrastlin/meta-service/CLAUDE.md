@@ -10,15 +10,17 @@ NX project: `wrastlin-service` | Port: 3002 | Runtime: Node ESM (package.json ha
 | `serve` | build + run `dist/main.js` (the Fastify server) |
 | `test` | vitest |
 | `run-outline` | Run the show outline agent against a named scenario |
-| `run-beats` | Run the match beats agent against a named scenario |
-| `run-promo` | Run the promo screenplay agent against a named scenario |
-| `run-announcer` | Run the announcer screenplay agent against a named scenario |
 | `generate-show` | Run the full pipeline (outline → beats → screenplays) |
-| `print-prompt` | Print the rendered prompt from the latest JSONL run log |
-| `close-submissions` | curl shortcut — transitions state to `submissions_closed` |
-| `advance-week` | curl shortcut — advances to next week |
+| `open-betting` | Mutate betting state directly — opens the betting window |
+| `close-betting` | Mutate betting state directly — closes the betting window |
+| `run-judge` | Run the AI judge against generated show + propositions |
+| `resolve-proposition` | Manually resolve a flagged proposition |
+| `apply-payouts` | Write winning amounts to managers' balances |
+| `promptfoo` | Run the promptfoo eval suite against outline scenarios |
 
 Always use `pnpm nx run wrastlin-service:<target>` — never run scripts directly.
+
+**Not currently NX targets**, despite source files existing in `src/`: `run-beats.ts`, `run-promo.ts`, `run-announcer.ts`, and `print-prompt.ts` are not in `scripts/build.cjs`'s entry-point list or in `project.json`, so there is no working `pnpm nx run wrastlin-service:<name>` for any of them yet. `close-submissions` and `advance-week` are not NX targets either — they're HTTP routes (`POST /state/close-submissions`, `POST /state/advance-week`) on the already-running server, invoked via `curl` (see `apps/wrastlin/CLAUDE.md` "Weekly loop").
 
 ## Agent Pipeline
 
@@ -46,7 +48,11 @@ announcer screenplays (parallel per match segment)
 pnpm nx run wrastlin-service:generate-show -- --stub --resume data/runs/<runId>.jsonl
 ```
 
-Use `pnpm nx run wrastlin-service:print-prompt` to inspect the exact prompt that was sent to the model in a previous run.
+`src/print-prompt.ts` can inspect the exact prompt from a previous run's JSONL log, but it isn't wired to an NX target yet (see "NX Targets" above). Use `run-outline`'s `--print-prompt` flag instead to inspect a prompt as it's rendered:
+
+```
+pnpm nx run wrastlin-service:run-outline -- --scenario <name> --print-prompt
+```
 
 ## Scenario System
 

@@ -11,13 +11,13 @@ For deep technical detail on the backend pipeline, agents, and scenarios: see [`
 | Service | NX project | Port | What it does |
 |---------|-----------|------|--------------|
 | `apps/wrastlin/meta-service` | `wrastlin-service` | 3002 | Fastify API — auth, submissions, show generation, betting, judge |
-| `apps/wrastlin/game` | `@org/wrastlin-game` | 5173 | React + Vite player UI |
+| `apps/wrastlin/game` | `wrastlin-game` | 4300 | React + Vite player UI |
 
 ### Starting services
 
 ```bash
 pnpm nx serve wrastlin-service     # API server (builds then starts)
-pnpm nx serve @org/wrastlin-game   # Player UI (Vite dev server)
+pnpm nx serve wrastlin-game        # Player UI (Vite dev server)
 ```
 
 ### Environment setup
@@ -82,10 +82,10 @@ submissions_open → submissions_closed → show_generated → week_advanced →
 
 ### Step 1 — Close submissions
 
-Players have submitted their booking requests. Lock the window.
+Players have submitted their booking requests. Lock the window. This is an HTTP route, not an NX target — the server must already be running (`pnpm nx serve wrastlin-service`):
 
 ```bash
-pnpm nx run wrastlin-service:close-submissions
+curl -X POST http://localhost:3002/state/close-submissions
 ```
 
 ### Step 2 — Generate show
@@ -109,10 +109,7 @@ pnpm nx run wrastlin-service:generate-show -- --force --stub --skip-tts --scenar
 pnpm nx run wrastlin-service:generate-show -- --resume data/runs/<runId>.jsonl
 ```
 
-**Inspecting prompts from a previous run:**
-```bash
-pnpm nx run wrastlin-service:print-prompt
-```
+**Inspecting prompts from a previous run:** `src/print-prompt.ts` reads the latest JSONL run log, but it isn't currently wired into `scripts/build.cjs` or an NX target — there's no working `pnpm nx run wrastlin-service:print-prompt` today. Use `run-outline`'s own `--print-prompt` flag instead (see below) to inspect a prompt as it's rendered.
 
 ### Step 3 — Open betting
 
@@ -151,10 +148,10 @@ pnpm nx run wrastlin-service:apply-payouts
 
 ### Step 7 — Advance week
 
-Increment the week counter and return to `submissions_open`.
+Increment the week counter and return to `submissions_open`. Also an HTTP route, not an NX target — requires the server to be running:
 
 ```bash
-pnpm nx run wrastlin-service:advance-week
+curl -X POST http://localhost:3002/state/advance-week
 ```
 
 ---
@@ -169,14 +166,11 @@ pnpm nx run wrastlin-service:run-outline -- --scenario stacked-requests
 pnpm nx run wrastlin-service:run-outline -- --scenario stacked-requests --stub
 pnpm nx run wrastlin-service:run-outline -- --scenario stacked-requests --print-prompt
 
-# Match beats
-pnpm nx run wrastlin-service:run-beats -- --scenario cage-match-headliner
-
-# Promo screenplay
-pnpm nx run wrastlin-service:run-promo -- --scenario <name>
-
-# Announcer screenplay
-pnpm nx run wrastlin-service:run-announcer -- --scenario <name>
+# Match beats, promo screenplay, announcer screenplay
+# src/run-beats.ts, src/run-promo.ts, src/run-announcer.ts exist but are not yet
+# wired into scripts/build.cjs or an NX target — no working `pnpm nx run` command
+# for these three today. Use `generate-show` (which runs all stages together) until
+# per-agent NX targets are added.
 ```
 
 Beats, promo, and announcer scenarios are single `.json` files in `data/scenarios/<type>/<name>.json`.
