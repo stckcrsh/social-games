@@ -28,9 +28,9 @@ if (!scenarioName) {
   process.exit(1);
 }
 
-if (!useStub) {
+if (!useStub && !printPrompt) {
   if (!process.env.OPENAI_API_KEY) {
-    console.error('OPENAI_API_KEY env var is required when not using --stub');
+    console.error('OPENAI_API_KEY env var is required when not using --stub or --print-prompt');
     process.exit(1);
   }
 }
@@ -68,25 +68,26 @@ console.log(`Wrestlers: ${wrestlers.map(w => w.name).join(', ')}`);
 console.log(`Submissions: ${submissions.length}`);
 console.log('');
 
-let renderedPrompt: string | null = null;
+// ── Print prompt only (no LLM call) ──────────────────────────────────────────
+
+if (printPrompt) {
+  const { buildVariables } = await import('./agents/openaiShowOutlineAgent.js');
+  const { loadPrompt } = await import('./agents/promptLoader.js');
+  const prompt = loadPrompt('show-outline.md', buildVariables({ ...input, wrestlerThoughtProcess: [] }));
+  console.log('PROMPT:');
+  console.log('─'.repeat(60));
+  console.log(prompt);
+  console.log('─'.repeat(60));
+  process.exit(0);
+}
+
+// ── Run agent ─────────────────────────────────────────────────────────────────
 
 const agent = useStub
   ? stubShowOutlineAgent
-  : createOpenAIShowOutlineAgent(process.env.OPENAI_API_KEY!, (prompt) => {
-      renderedPrompt = prompt;
-    });
+  : createOpenAIShowOutlineAgent(process.env.OPENAI_API_KEY!);
 
 const result = await agent(input);
-
-// ── Output ────────────────────────────────────────────────────────────────────
-
-if (printPrompt && renderedPrompt) {
-  console.log('PROMPT SENT TO MODEL:');
-  console.log('─'.repeat(60));
-  console.log(renderedPrompt);
-  console.log('─'.repeat(60));
-  console.log('');
-}
 
 console.log('SEGMENTS:');
 for (const seg of result.segments) {

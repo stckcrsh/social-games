@@ -33,12 +33,10 @@ promo screenplays (parallel per promo segment)
 announcer screenplays (parallel per match segment)
 ```
 
-- **Show outline** — OpenAI (gpt-4o). Books the card: which wrestlers face each other, in what order, who does promos.
-- **Match beats** — stub only so far. Generates the sequence of moves and the match result.
-- **Promo screenplays** — stub only. Generates the promo dialogue.
+- **Show outline** — OpenAI (gpt-4o). Books the card: which wrestlers face each other, in what order, who does promos. Receives wrestler mindsets (`wrestlerThoughtProcess`) and active storyline threads.
+- **Match beats** — OpenAI (gpt-4o). Generates the sequence of moves and the match result. Stub available via `--stub`.
+- **Promo screenplays** — OpenAI (gpt-4o). Generates the promo dialogue; receives relevant story threads per-segment. Stub available via `--stub`.
 - **Announcer screenplays** — stub only. Generates commentary over the match beats.
-
-Only the show outline uses a real AI agent. Everything else is stubs until those agents are built.
 
 ## Fault Tolerance
 
@@ -58,13 +56,15 @@ Scenarios are named folders of test data used by the per-agent wrapper scripts (
 
 Location: `data/scenarios/outline/<name>/`
 
-Each scenario folder requires three files:
+Each scenario folder requires five files:
 
 | File | Purpose |
 |------|---------|
 | `wrestlers.json` | Array of `Wrestler` objects |
 | `managers.json` | Array of `Manager` objects — maps managerId → wrestlerId |
 | `submissions.json` | Array of `WeeklySubmission` objects |
+| `thoughtProcess.json` | `WrestlerThoughtProcessOutput[]` — wrestler inner monologues (can be placeholder data) |
+| `threads.json` | `RetrievedThread[]` — active story threads (can be `[]` for no threads) |
 
 **Critical**: `managers.json` is required. Without it, all submissions are silently dropped during the manager join in `buildShowOutlineInput` and the model receives an empty submissions array. The prompt will run but ignore all bribes and story requests.
 
@@ -81,6 +81,7 @@ pnpm nx run wrastlin-service:run-outline -- --scenario <name> --print-prompt  # 
 |----------|--------------|
 | `stacked-requests` | 10 managers — m-001 and m-002 both request w-001 vs w-002, rest are neutral |
 | `bribing` | 7 managers — escalating bribes ($100→$200→$300), one stacked zero-bribe pair, m-007 bids $2000 for the main event |
+| `interference-prone` | Rookie Blaze (w-006) just turned heel and cost multiple wrestlers; expect interference or storyline acknowledgment |
 
 ### Other agent scenarios
 

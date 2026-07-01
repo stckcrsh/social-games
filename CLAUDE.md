@@ -22,6 +22,17 @@
 
 <!-- nx configuration end-->
 
+## Games in this workspace
+
+Two independent games share this monorepo. Each has its own services, data, and CLAUDE.md with detailed operational instructions.
+
+| Game | Location | Central doc |
+|------|----------|-------------|
+| **Wrastlin** — weekly wrestling manager game; AI-generated shows; live betting | `apps/wrastlin/` | [`apps/wrastlin/CLAUDE.md`](apps/wrastlin/CLAUDE.md) |
+| **Dungeon (Clockwork Abyss)** — real-time dungeon crawler | `apps/dungeon/` | [`apps/dungeon/CLAUDE.md`](apps/dungeon/CLAUDE.md) |
+
+Cross-game shared code lives in `libs/shared/`. Game-specific shared types live in `libs/wrastlin/shared/` and `libs/dungeon/shared/`.
+
 ## Git Worktrees
 
 **Always use a git worktree before starting feature work.** Never develop directly on `main`.

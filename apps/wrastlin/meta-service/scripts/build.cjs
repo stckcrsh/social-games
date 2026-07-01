@@ -39,6 +39,34 @@ esbuild.buildSync({
   },
 });
 
+esbuild.buildSync({
+  entryPoints: [path.join(root, 'src/run-outline.ts')],
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  packages: 'external',
+  outfile: path.join(root, 'dist/run-outline.js'),
+  sourcemap: true,
+  absWorkingDir: root,
+  alias: {
+    '@org/wrastlin-shared': path.resolve(root, '../../../libs/wrastlin/shared/src/index.ts'),
+  },
+});
+
+esbuild.buildSync({
+  entryPoints: [path.join(root, 'src/promptfoo-helpers.ts')],
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  packages: 'external',
+  outfile: path.join(root, 'dist/promptfoo-helpers.js'),
+  sourcemap: true,
+  absWorkingDir: root,
+  alias: {
+    '@org/wrastlin-shared': path.resolve(root, '../../../libs/wrastlin/shared/src/index.ts'),
+  },
+});
+
 const runEntries = [
   'run-open-betting',
   'run-close-betting',
@@ -65,4 +93,4 @@ for (const entry of runEntries) {
   });
 }
 
-console.log('Build complete: dist/main.js, dist/generate-show.js, ' + runEntries.map(e => `dist/${e}.js`).join(', '));
+console.log('Build complete: dist/main.js, dist/generate-show.js, dist/run-outline.js, dist/promptfoo-helpers.js, ' + runEntries.map(e => `dist/${e}.js`).join(', '));

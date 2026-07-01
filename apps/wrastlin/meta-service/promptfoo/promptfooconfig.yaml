@@ -25,8 +25,11 @@ tests:
         value: >
           The show request with the highest effective bribe became the headliner.
           (Effective bribe = sum of bribeAmounts when two managers request the same
-          matchup — a "stacked" request.) Given the SUBMISSIONS_JSON context and
-          the output, was booking priority correctly followed?
+          matchup — a "stacked" request.) Given the submissions shown here 
+          ```json
+          {{submissions}}
+          ``` 
+          and the output, was booking priority correctly followed?
       - type: llm-rubric
         value: >
           Each promo segment has exactly one stated goal: either self-hype OR

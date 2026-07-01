@@ -28,6 +28,13 @@
         "cwd": "apps/wrastlin/meta-service"
       }
     },
+    "run-outline": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/build.cjs && node dist/run-outline.js",
+        "cwd": "apps/wrastlin/meta-service"
+      }
+    },
     "generate-show": {
       "executor": "nx:run-commands",
       "options": {
@@ -72,6 +79,7 @@
     },
     "promptfoo": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "command": "pnpm exec promptfoo eval -c promptfoo/promptfooconfig.yaml",
         "cwd": "apps/wrastlin/meta-service"

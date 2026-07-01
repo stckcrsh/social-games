@@ -16,13 +16,17 @@
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildShowOutlineInput } from '../../src/agents/dataBuilders.js';
-import { buildVariables } from '../../src/agents/openaiShowOutlineAgent.js';
-import { loadPrompt } from '../../src/agents/promptLoader.js';
+import { buildShowOutlineInput, buildVariables, loadPrompt } from '../../dist/promptfoo-helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Point loadPrompt at the real prompts directory
 process.env['PROMPTS_DIR'] = path.resolve(__dirname, '../../prompts');
+
+function parseVar(v: unknown): unknown[] {
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'string') return JSON.parse(v) as unknown[];
+  return [];
+}
 
 export default function renderShowOutlinePrompt({
   vars,
@@ -31,16 +35,16 @@ export default function renderShowOutlinePrompt({
 }): string {
   const input = buildShowOutlineInput(
     Number(vars['week'] ?? 1),
-    (vars['wrestlers'] as never[]) ?? [],
-    (vars['managers'] as never[]) ?? [],
-    (vars['submissions'] as never[]) ?? [],
-    (vars['previousOutlines'] as never[]) ?? [],
-    (vars['threads'] as never[]) ?? [],
+    parseVar(vars['wrestlers']) as never[],
+    parseVar(vars['managers']) as never[],
+    parseVar(vars['submissions']) as never[],
+    parseVar(vars['previousOutlines']) as never[],
+    parseVar(vars['threads']) as never[],
   );
 
   const fullInput = {
     ...input,
-    wrestlerThoughtProcess: (vars['thoughtProcess'] as never[]) ?? [],
+    wrestlerThoughtProcess: parseVar(vars['thoughtProcess']) as never[],
   };
 
   return loadPrompt('show-outline.md', buildVariables(fullInput));
