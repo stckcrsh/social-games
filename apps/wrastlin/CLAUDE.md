@@ -11,13 +11,13 @@ For deep technical detail on the backend pipeline, agents, and scenarios: see [`
 | Service | NX project | Port | What it does |
 |---------|-----------|------|--------------|
 | `apps/wrastlin/meta-service` | `wrastlin-service` | 3002 | Fastify API — auth, submissions, show generation, betting, judge |
-| `apps/wrastlin/game` | `@org/wrastlin-game` | 5173 | React + Vite player UI |
+| `apps/wrastlin/game` | `wrastlin-game` | 4300 | React + Vite player UI |
 
 ### Starting services
 
 ```bash
 pnpm nx serve wrastlin-service     # API server (builds then starts)
-pnpm nx serve @org/wrastlin-game   # Player UI (Vite dev server)
+pnpm nx serve wrastlin-game        # Player UI (Vite dev server)
 ```
 
 ### Environment setup
