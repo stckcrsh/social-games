@@ -11,8 +11,8 @@ NX project: `wrastlin-service` | Port: 3002 | Runtime: Node ESM (package.json ha
 | `test` | vitest |
 | `run-outline` | Run the show outline agent against a named scenario |
 | `generate-show` | Run the full pipeline (outline → beats → screenplays) |
-| `open-betting` | curl shortcut — opens the betting window |
-| `close-betting` | curl shortcut — closes the betting window |
+| `open-betting` | Mutate betting state directly — opens the betting window |
+| `close-betting` | Mutate betting state directly — closes the betting window |
 | `run-judge` | Run the AI judge against generated show + propositions |
 | `resolve-proposition` | Manually resolve a flagged proposition |
 | `apply-payouts` | Write winning amounts to managers' balances |
