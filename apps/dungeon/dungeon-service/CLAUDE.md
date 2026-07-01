@@ -128,7 +128,7 @@ Response shape: `{ "state": RunState, "render": "ASCII", "slots": SlotView, "tur
 |--------|------|-------------|---------|
 | `default` | 20×20 | Walled room upper half, lever at (5,7) opens passage, exit lower-right | chase_astar, patrol_loop, charger |
 | `open` | 20×20 | Minimal walls; TMX-authored (`open-preset.tmx`); has a portal object to an `open-corridor` room whose TMX asset doesn't exist yet, so the transition currently no-ops | 2× chase_astar |
-| `maze` | 20×20 | Dense corridors | 2× chase_astar |
+| `maze` | 20×20 | Dense corridors | 1× chase_astar, 1× patrol_loop |
 | `oil_trap` | 10×10 | Dense oil field + weak wall blocking the exit corridor; default loadout Remote Mine/Hammer | 1× chase_astar |
 | `terminal_door` | 10×10 | `terminal` interactable requires Shock Baton (`electric`) activation to open a hidden door to the exit; default loadout Shock Baton | 1× patrol_loop |
 | `fire_stress` | 20×20 | Large nested oil regions for fire-propagation stress testing | none |
