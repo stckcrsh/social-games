@@ -191,7 +191,7 @@ Dungeon runs can optionally be tied to a meta-service player account:
 
 - `POST /runs` accepts optional `playerId`/`escrowId`. If supplied, the run is "meta-connected"; if omitted, it's anonymous ("bypass mode") — the pre-restructure default.
 - On run end, `reconcile.ts` builds a `ReconcilePatch` and it's written to the outbox (see Storage above). Delivery to meta-service — `POST ${META_SERVICE_URL}/runs/escrows/:escrowId/resolve` — only happens if something calls the manual debug retry endpoint (`POST /debug/reconcile-outbox/:runId/retry`), which is disabled in production. There is currently no automatic dispatch path.
-- **Ammo/consumables**: connected — on death/abandon, escrowed ammo stacks are consumed from the player's meta inventory via this flow.
+- **Ammo/consumables**: partially connected — `POST /runs/escrows/:escrowId/resolve` correctly subtracts `consume.stacks` from the player's meta inventory when called, but there is no automatic dispatch path in production; delivery only happens via the manual debug retry endpoint (`POST /debug/reconcile-outbox/:runId/retry`), which returns `403` and is unreachable in production (see Storage above).
 - **Loot drops → meta inventory**: not connected yet — `grant` is always empty; the code comment in `reconcile.ts` says explicitly "loot not wired yet".
 - **Meta inventory → dungeon loadout**: the `profile` used to build `startReceipt` comes from the request body of `POST /runs`, not fetched from meta-service by dungeon-service itself — the caller is responsible for supplying it.
 - **Auth**: the resolve callback (`/runs/escrows/:escrowId/resolve`) is explicitly unauthenticated, service-to-service. Dungeon-service's own routes don't require a meta-service JWT.
