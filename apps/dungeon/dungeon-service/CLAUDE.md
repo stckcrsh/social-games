@@ -31,6 +31,31 @@ type Grid = Tile[][];
 - `startReceipt: StartReceipt` — built when the run is created (`parsePreset(...)`). Captures what was "packed" into the run from the caller-supplied `profile`: `{ runId, escrowId?, playerId?, preset, createdAt, packed: { instances, stacks }, capacity, metaMode }`. Exposed via `GET /runs/:id/receipt`. `escrowId`/`playerId` are optional — present only when the run is meta-connected (see Meta Integration below); absent means anonymous ("bypass mode"). `metaMode: 'bypass' | 'strict'` — `'bypass'` (the default) means the run goes `active` immediately; `'strict'` means the run is created with `status: 'pending'` until something external flips it (see `POST /runs` in the API table).
 - `reconcilePatch?: ReconcilePatch` — built on run end (`computeReconcilePatch` in `src/engine/reconcile.ts`): `{ runId, escrowId?, playerId?, result, createdAt, consume: { instances, stacks }, grant: { instances, stacks }, durabilityUpdates }`. On `dead`/`abandoned`, consumes all escrowed ammo stacks from `startReceipt`; on `extracted`, consumes nothing and grants nothing (loot drops are not wired into inventory yet — see Meta Integration).
 
+**`PlayerProfile`** (`libs/dungeon/shared/src/dungeon/types.ts`) — the per-run player state, embedded in `RunState.profile`:
+
+```ts
+interface PlayerProfile {
+  inventory: Record<string, number>;   // itemId → qty (ammo stacks)
+  loadout: { slotA: string | null; slotB: string | null; activeSlot: Slot };
+}
+```
+
+Note: this is the *dungeon-run* profile shape (ammo counts + equipped slots), distinct from meta-service's
+`PlayerInventory` (`instances`/`stacks` by defId — see `meta-service/CLAUDE.md` "Inventory"). The two aren't
+auto-synced; see Meta Integration below.
+
+### Grid Helpers (`libs/dungeon/shared/src/dungeon/grid.ts`)
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `DIR_TO_DELTA` | `Record<Direction, {dx, dy}>` | Direction → unit vector |
+| `inBounds(grid, x, y)` | `boolean` | Bounds check |
+| `getTile(grid, x, y)` | `Tile \| null` | Safe tile lookup (null if out of bounds) |
+| `isWall(grid, x, y)` | `boolean` | True if out of bounds, `wall`, or `weakWall` |
+| `getNeighbors(grid, pos)` | `Pos[]` | 4-dir (cardinal) non-wall neighbors |
+| `entityAt(entities, x, y)` | `Entity \| undefined` | Entity occupying a tile |
+| `neighbors8(grid, x, y)` | `Pos[]` | 8-dir neighbors within bounds (does not filter walls) |
+
 ## Player Actions
 
 ```ts
@@ -88,6 +113,21 @@ interface ItemDef {
   id, name, ammo?, getIconKey(state), activate(ctx): ActivateResult
 }
 ```
+
+One file per weapon, plus `index.ts` which assembles the catalog:
+
+| File | Exports |
+|------|---------|
+| `hammer.ts` | `hammerModule` |
+| `rivet_gun.ts` | `rivetGunModule` |
+| `remote_mine.ts` | `remoteMineModule` |
+| `shock_baton.ts` | `shockBatonModule` |
+| `index.ts` | `ITEM_DEFS`, `META_DEFS`, `computeSlotView()`, `resolveItemActivation()`, plus re-exports of each `*Module` |
+
+- `ITEM_DEFS: Record<string, ItemDef>` — built from all four modules' `.def`, keyed by item id
+- `META_DEFS: Record<string, MetaItemDef>` — built from all four modules' `.meta` (plus any `.ammoItems`), keyed by `defId`; this is what meta-service merges into its item catalog (see `meta-service/CLAUDE.md` "Item Definitions")
+- `computeSlotView(profile, runItemState)` — builds the `SlotView` (icon/cooldown per slot) shown to the client
+- `resolveItemActivation(runState, dir, turnEvents)` — the `useActive` handler: checks cooldown/ammo, calls the item's `activate()`, applies ammo consumption and slot-state patches, pushes `item_activate`/`item_fail` events
 
 ## Game Events
 

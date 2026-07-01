@@ -188,3 +188,33 @@ Safety: atomic writes (temp → rename), per-file mutexes for concurrent access.
 | `JWT_EXPIRY` | No | 7d | |
 | `DATA_DIR` | No | `./data` (relative to service dist dir) | |
 | `NODE_ENV` | No | development | Must be `production` to disable `/admin/escrows/:escrowId/reset` |
+
+## Client UI Pages (`apps/dungeon/game/src/pages/`)
+
+Meta-service's UI surface lives in the shared `apps/dungeon/game` client, alongside (but separate from) the
+dungeon-crawl UI. These pages talk to meta-service exclusively via `src/api/meta.ts`:
+
+| Page | Route | Talks to |
+|------|-------|----------|
+| `LoginPage.tsx` | `/login` | `POST /auth/login` |
+| `RegisterPage.tsx` | `/register` | `POST /auth/register` |
+| `AccountPage.tsx` | `/account` | `POST /auth/change-password` |
+| `InventoryPage.tsx` | `/inventory` (default route) | `GET /players/me/inventory` |
+| `ShopPage.tsx` | `/shop` | `GET /shop/offers`, `POST /shop/purchase` |
+| `TradesPage.tsx` | `/trades` | `/trades*` routes |
+| `ItemDefsPage.tsx` | `/content/items` | `GET /content/item-defs` |
+| `ItemDefDetailPage.tsx` | `/content/items/:defId` | `GET /content/item-defs/:defId` |
+| `AdminPage.tsx` | `/admin` (requires admin role) | `/auth/admin/*`, `/players/me/inventory/{grant,burn,transfer}` |
+
+The dungeon-crawl side of the client (`GamePage` in `apps/dungeon/game/src/game/Game.tsx`, plus
+`LoadoutPage.tsx`, `ResultsPage.tsx`, and `DebugPage.tsx` — also under `src/pages/`) talks to dungeon-service
+instead; see [`dungeon-service/CLAUDE.md`](../dungeon-service/CLAUDE.md) ("Client Rendering").
+
+## Extensibility Points
+
+| What to add | Where |
+|------------|-------|
+| New shop offer | Edit `data/shop_offers.json` (validated against `ShopOffersFileSchema` in `src/content/schemas.ts` on load), restart service |
+| New item definition | Edit `data/item_defs.json` (validated against `ItemDefsFileSchema` in `src/content/schemas.ts` on load), restart service — or add it to `@org/items` instead if it's a dungeon-run item (see `dungeon-service/CLAUDE.md` "Extensibility Points"), since `META_DEFS` wins on a colliding `defId` |
+| New audit action | Add a call to `auditLog()` at the relevant route/service (`src/audit/`) |
+| New admin route | `src/admin/` — gate with `roles.includes('admin')` |
