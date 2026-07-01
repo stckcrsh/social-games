@@ -36,6 +36,8 @@ Two independent games share this monorepo. Each has its own services, data, and 
 | **Dungeon (Clockwork Abyss)** — real-time dungeon crawler | `apps/dungeon/` | [`apps/dungeon/CLAUDE.md`](apps/dungeon/CLAUDE.md) |
 | **Shared libraries** — cross-game and per-game shared code | `libs/shared/`, `libs/dungeon/`, `libs/wrastlin/` | (no single doc — types are self-documenting; see each game's `CLAUDE.md` "Libraries" section) |
 
+Cross-game shared code lives in `libs/shared/`. Game-specific shared types live in `libs/wrastlin/shared/` and `libs/dungeon/shared/`.
+
 ## Git Worktrees
 
 **Always use a git worktree before starting feature work.** Never develop directly on `main`.
