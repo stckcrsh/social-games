@@ -22,6 +22,10 @@
 
 <!-- nx configuration end-->
 
+## Scoping Context to the Active Project
+
+Before exploring code, identify which project(s) the task touches (Wrastlin, Dungeon, shared libs, or cross-cutting). Read that project's `CLAUDE.md` and any docs it links to. Do not read into the other game's `apps/<game>/` tree unless the task explicitly spans both games.
+
 ## Games in this workspace
 
 Two independent games share this monorepo. Each has its own services, data, and CLAUDE.md with detailed operational instructions.
@@ -30,8 +34,7 @@ Two independent games share this monorepo. Each has its own services, data, and 
 |------|----------|-------------|
 | **Wrastlin** — weekly wrestling manager game; AI-generated shows; live betting | `apps/wrastlin/` | [`apps/wrastlin/CLAUDE.md`](apps/wrastlin/CLAUDE.md) |
 | **Dungeon (Clockwork Abyss)** — real-time dungeon crawler | `apps/dungeon/` | [`apps/dungeon/CLAUDE.md`](apps/dungeon/CLAUDE.md) |
-
-Cross-game shared code lives in `libs/shared/`. Game-specific shared types live in `libs/wrastlin/shared/` and `libs/dungeon/shared/`.
+| **Shared libraries** — cross-game and per-game shared code | `libs/shared/`, `libs/dungeon/`, `libs/wrastlin/` | (no single doc — types are self-documenting; see each game's `CLAUDE.md` "Libraries" section) |
 
 ## Git Worktrees
 
