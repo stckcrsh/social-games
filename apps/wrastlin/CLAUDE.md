@@ -4,6 +4,8 @@ Wrastlin is a weekly wrestling manager game. Each player controls a manager who 
 
 For deep technical detail on the backend pipeline, agents, and scenarios: see [`apps/wrastlin/meta-service/CLAUDE.md`](meta-service/CLAUDE.md).
 
+For what's left to build — organized as tickets per section (submissions, show generation, betting, judging & payouts, participation income, end-of-week memory) plus the contracts between them: see [`docs/wrastlin-backlog/`](../../docs/wrastlin-backlog/README.md).
+
 ---
 
 ## Services
@@ -179,4 +181,4 @@ Beats, promo, and announcer scenarios are single `.json` files in `data/scenario
 
 ## Game status
 
-See [`GAME_STATUS.md`](GAME_STATUS.md) for what's built, what's stubbed, and what's needed to run a real session.
+See [`GAME_STATUS.md`](GAME_STATUS.md) for what's built, what's stubbed, and what's needed to run a real session, or [`docs/wrastlin-backlog/`](../../docs/wrastlin-backlog/README.md) for the remaining work as tickets.
