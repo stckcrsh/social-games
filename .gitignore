@@ -56,3 +56,6 @@ apps/wrastlin/meta-service/data/runs/
 
 # brainstorming visual companion
 .superpowers/
+
+# superpowers specs/plans — local working docs, not meant for the repo
+docs/superpowers/
